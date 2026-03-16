@@ -301,10 +301,13 @@
       <button class="btn btn-primary" id="loginBtn" onclick="doLogin()">Se connecter →</button>
     </div>
     <div id="registerForm" style="display:none">
-      <div class="fg"><label class="lbl">Nom complet</label><input type="text" id="regNom" placeholder="Mohammed Alami"></div>
-      <div class="fg"><label class="lbl">Email</label><input type="email" id="regEmail" placeholder="votre@email.com"></div>
-      <div class="fg"><label class="lbl">Appartement</label><input type="text" id="regApt" placeholder="Ex : 5A"></div>
-      <div class="fg" style="margin-bottom:20px"><label class="lbl">Mot de passe</label><input type="password" id="regPwd" placeholder="Minimum 6 caractères"></div>
+      <div class="fg"><label class="lbl">Nom complet <span class="req">*</span></label><input type="text" id="regNom" placeholder="Mohammed Alami"></div>
+      <div class="fg"><label class="lbl">Email <span class="req">*</span></label><input type="email" id="regEmail" placeholder="votre@email.com"></div>
+      <div class="fr2">
+        <div><label class="lbl">Appartement <span class="req">*</span></label><input type="text" id="regApt" placeholder="Ex : 5A"></div>
+        <div><label class="lbl">Téléphone <span class="req">*</span></label><input type="tel" id="regTel" placeholder="06 XX XX XX XX"></div>
+      </div>
+      <div class="fg" style="margin-bottom:20px"><label class="lbl">Mot de passe <span class="req">*</span></label><input type="password" id="regPwd" placeholder="Minimum 6 caractères"></div>
       <div class="alert alert-error" id="registerErr"></div>
       <div class="alert alert-success" id="registerOk"></div>
       <button class="btn btn-primary" id="registerBtn" onclick="doRegister()">Créer mon compte →</button>
@@ -518,14 +521,16 @@ async function doRegister() {
   const nom = document.getElementById('regNom').value.trim();
   const email = document.getElementById('regEmail').value.trim();
   const apt = document.getElementById('regApt').value.trim();
+  const tel = document.getElementById('regTel').value.trim();
   const pwd = document.getElementById('regPwd').value;
   const errEl = document.getElementById('registerErr');
   const okEl = document.getElementById('registerOk');
   errEl.style.display='none'; okEl.style.display='none';
-  if (!nom||!email||!apt||!pwd) { showErr(errEl,'Remplissez tous les champs.'); return; }
+  if (!nom||!email||!apt||!tel||!pwd) { showErr(errEl,'Remplissez tous les champs obligatoires (*)'); return; }
+  if (tel.replace(/\s/g,'').length < 9) { showErr(errEl,'Numéro de téléphone invalide.'); return; }
   const btn = document.getElementById('registerBtn');
   btn.disabled=true; btn.textContent='Création...';
-  const { error } = await db.auth.signUp({ email, password: pwd, options: { data: { nom, appartement: apt, role: 'resident' } } });
+  const { error } = await db.auth.signUp({ email, password: pwd, options: { data: { nom, appartement: apt, telephone: tel, role: 'resident' } } });
   btn.disabled=false; btn.textContent='Créer mon compte →';
   if (error) { showErr(errEl, error.message); return; }
   okEl.innerHTML='✅ Compte créé ! Vous pouvez maintenant vous connecter.';
