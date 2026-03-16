@@ -1,0 +1,9 @@
+{
+  "rewrites": [
+    { "source": "/", "destination": "/index.html" },
+    { "source": "/projet", "destination": "/projet.html" },
+    { "source": "/contact", "destination": "/contact.html" },
+    { "source": "/syndic", "destination": "/syndic-v3.html" }
+  ],
+  "cleanUrls": true
+}
