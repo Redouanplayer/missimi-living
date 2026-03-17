@@ -346,7 +346,7 @@
       </div>
       <div class="alert alert-error" id="registerErr"></div>
       <div class="alert alert-success" id="registerOk"></div>
-      <button class="btn btn-primary" id="registerBtn" onclick="doRegister()">Demander l'accès →</button>
+      <button class="btn btn-primary" id="registerBtn" onclick="doRegister()">Demander accès →</button>
     </div>
   </div>
 </div>
@@ -731,7 +731,7 @@ async function doRegister() {
   if (!nom||!email||!resNom||!apt||!tel||!pwd) { showErr(errEl,'Remplissez tous les champs obligatoires (*)'); return; }
   if (tel.replace(/\s/g,'').length < 9) { showErr(errEl,'Numéro de téléphone invalide.'); return; }
   const btn = document.getElementById('registerBtn');
-  btn.disabled=true; btn.textContent='Envoi de la demande...';
+  btn.disabled=true; btn.textContent='Envoi...';
   // Create account with status "pending"
   const { error } = await db.auth.signUp({
     email, password: pwd,
@@ -742,7 +742,7 @@ async function doRegister() {
       residence_nom: resNom
     }}
   });
-  btn.disabled=false; btn.textContent='Demander l'accès →';
+  btn.disabled=false; btn.textContent='Envoyer la demande';
   if (error) { showErr(errEl, error.message); return; }
   okEl.innerHTML = `✅ Demande envoyée pour <strong>${resNom}</strong> ! Le syndic va vérifier et valider votre inscription. Vous pourrez vous connecter une fois approuvé.`;
   okEl.style.display='block';
@@ -933,22 +933,22 @@ function renderPending(list) {
 }
 
 async function approveResident(userId, email) {
-  if (!confirm(`Approuver l'accès pour ${email} ?`)) return;
+  if (!confirm('Approuver cet utilisateur : ' + email + ' ?')) return;
   // Update user metadata to change role to resident
   const { error } = await db.rpc('approve_resident', { user_id: userId });
   if (error) {
     // Manual fallback via SQL note
-    alert(`Pour approuver manuellement:\n\nSQL Editor → Run:\n\nUPDATE auth.users\nSET raw_user_meta_data = raw_user_meta_data || '{"role":"resident"}'\nWHERE id = '${userId}';`);
+    alert('Pour approuver: SQL Editor → UPDATE auth.users SET raw_user_meta_data = raw_user_meta_data || \'{\'role\':\'resident\'}\'  WHERE id = \'' + userId + '\';');
     return;
   }
   await loadAndRenderAdmin();
 }
 
 async function rejectResident(userId, email) {
-  if (!confirm(`Refuser et supprimer la demande de ${email} ?`)) return;
+  if (!confirm('Refuser la demande de : ' + email + ' ?')) return;
   const { error } = await db.auth.admin.deleteUser(userId);
   if (error) {
-    alert(`Pour refuser manuellement:\nAuthentication → Users → Cherche ${email} → Delete`);
+    alert('Pour refuser manuellement: Authentication → Users → Cherche ' + email + ' → Delete');
     return;
   }
   await loadAndRenderAdmin();
