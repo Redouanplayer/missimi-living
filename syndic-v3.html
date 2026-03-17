@@ -332,14 +332,21 @@
     <div id="registerForm" style="display:none">
       <div class="fg"><label class="lbl">Nom complet <span class="req">*</span></label><input type="text" id="regNom" placeholder="Mohammed Alami"></div>
       <div class="fg"><label class="lbl">Email <span class="req">*</span></label><input type="email" id="regEmail" placeholder="votre@email.com"></div>
+      <div class="fg">
+        <label class="lbl">Nom de votre résidence <span class="req">*</span></label>
+        <input type="text" id="regResidence" placeholder="Ex : Résidence Missimi Living">
+      </div>
       <div class="fr2">
         <div><label class="lbl">Appartement <span class="req">*</span></label><input type="text" id="regApt" placeholder="Ex : 5A"></div>
         <div><label class="lbl">Téléphone <span class="req">*</span></label><input type="tel" id="regTel" placeholder="06 XX XX XX XX"></div>
       </div>
-      <div class="fg" style="margin-bottom:20px"><label class="lbl">Mot de passe <span class="req">*</span></label><input type="password" id="regPwd" placeholder="Minimum 6 caractères"></div>
+      <div class="fg" style="margin-bottom:8px"><label class="lbl">Mot de passe <span class="req">*</span></label><input type="password" id="regPwd" placeholder="Minimum 6 caractères"></div>
+      <div style="background:var(--orange-bg);border:1px solid var(--orange-border);border-radius:var(--radius-sm);padding:10px 14px;font-size:12px;color:var(--orange-text);margin-bottom:14px">
+        ⏳ Votre compte sera créé après validation par le syndic de votre résidence.
+      </div>
       <div class="alert alert-error" id="registerErr"></div>
       <div class="alert alert-success" id="registerOk"></div>
-      <button class="btn btn-primary" id="registerBtn" onclick="doRegister()">Créer mon compte →</button>
+      <button class="btn btn-primary" id="registerBtn" onclick="doRegister()">Demander l'accès →</button>
     </div>
   </div>
 </div>
@@ -548,6 +555,13 @@
 
     <!-- ADMIN -->
     <div class="section" id="sec-admin">
+      <!-- DEMANDES EN ATTENTE -->
+      <div id="pendingPanel" style="display:none;margin-bottom:20px">
+        <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:12px">
+          <div class="section-heading" style="margin-bottom:0">Demandes d'inscription en attente <span id="pendingCount" style="background:var(--red-bg);color:var(--red-text);font-size:10px;padding:2px 8px;border-radius:10px;margin-left:6px">0</span></div>
+        </div>
+        <div id="pendingList" style="display:flex;flex-direction:column;gap:8px;margin-bottom:20px"></div>
+      </div>
       <div class="stats-grid">
         <div class="stat-card"><div class="stat-num" id="cntOuvert" style="color:var(--blue-text)">0</div><div class="stat-label">Ouverts</div></div>
         <div class="stat-card"><div class="stat-num" id="cntEnCours" style="color:var(--orange-text)">0</div><div class="stat-label">En cours</div></div>
@@ -650,6 +664,14 @@ function selectRole(r) {
   currentRole = r;
   document.getElementById('rc-resident').classList.toggle('selected', r==='resident');
   document.getElementById('rc-admin').classList.toggle('selected', r==='admin');
+  // Cacher l'onglet "Créer un compte" pour le syndic
+  const tlRegister = document.getElementById('tlRegister');
+  if (r === 'admin') {
+    tlRegister.style.display = 'none';
+    switchLoginTab('login');
+  } else {
+    tlRegister.style.display = 'block';
+  }
 }
 
 function switchLoginTab(t) {
@@ -657,6 +679,7 @@ function switchLoginTab(t) {
   document.getElementById('registerForm').style.display = t==='register'?'block':'none';
   document.getElementById('tlLogin').classList.toggle('active', t==='login');
   document.getElementById('tlRegister').classList.toggle('active', t==='register');
+
 }
 
 async function doLogin() {
@@ -672,6 +695,14 @@ async function doLogin() {
   currentUser = data.user;
   currentRole = currentUser.user_metadata?.role || 'resident';
   currentUserMeta = currentUser.user_metadata || {};
+  // Bloquer les comptes en attente de validation
+  if (currentRole === 'resident_pending') {
+    await db.auth.signOut();
+    const resNom = currentUser.user_metadata?.residence_nom || 'votre résidence';
+    showErr(errEl, `⏳ Votre compte est en attente de validation par le syndic de ${resNom}. Réessayez plus tard.`);
+    btn.disabled = false; btn.textContent = 'Se connecter →';
+    return;
+  }
   // Vérifier si la résidence est active (admin seulement)
   if (currentRole === 'admin') {
     const { data: res } = await db.from('residences').select('actif,nom').eq('admin_id', currentUser.id).single();
@@ -689,21 +720,34 @@ async function doLogin() {
 async function doRegister() {
   const nom = document.getElementById('regNom').value.trim();
   const email = document.getElementById('regEmail').value.trim();
+  const resNom = document.getElementById('regResidence').value.trim();
+  const resId = '';
   const apt = document.getElementById('regApt').value.trim();
   const tel = document.getElementById('regTel').value.trim();
   const pwd = document.getElementById('regPwd').value;
   const errEl = document.getElementById('registerErr');
   const okEl = document.getElementById('registerOk');
   errEl.style.display='none'; okEl.style.display='none';
-  if (!nom||!email||!apt||!tel||!pwd) { showErr(errEl,'Remplissez tous les champs obligatoires (*)'); return; }
+  if (!nom||!email||!resNom||!apt||!tel||!pwd) { showErr(errEl,'Remplissez tous les champs obligatoires (*)'); return; }
   if (tel.replace(/\s/g,'').length < 9) { showErr(errEl,'Numéro de téléphone invalide.'); return; }
   const btn = document.getElementById('registerBtn');
-  btn.disabled=true; btn.textContent='Création...';
-  const { error } = await db.auth.signUp({ email, password: pwd, options: { data: { nom, appartement: apt, telephone: tel, role: 'resident' } } });
-  btn.disabled=false; btn.textContent='Créer mon compte →';
+  btn.disabled=true; btn.textContent='Envoi de la demande...';
+  // Create account with status "pending"
+  const { error } = await db.auth.signUp({
+    email, password: pwd,
+    options: { data: {
+      nom, appartement: apt, telephone: tel,
+      role: 'resident_pending',
+      residence_id: resId,
+      residence_nom: resNom
+    }}
+  });
+  btn.disabled=false; btn.textContent='Demander l'accès →';
   if (error) { showErr(errEl, error.message); return; }
-  okEl.innerHTML='✅ Compte créé ! Vous pouvez maintenant vous connecter.';
+  okEl.innerHTML = `✅ Demande envoyée pour <strong>${resNom}</strong> ! Le syndic va vérifier et valider votre inscription. Vous pourrez vous connecter une fois approuvé.`;
   okEl.style.display='block';
+  // Reset form
+  ['regNom','regEmail','regResidence','regApt','regTel','regPwd'].forEach(id => { const el=document.getElementById(id); if(el) el.value=''; });
 }
 
 async function doLogout() {
@@ -850,7 +894,64 @@ function filterRes(btn, f) {
 async function loadAndRenderAdmin() {
   document.getElementById('adminList').innerHTML = '<div class="empty-state">Chargement...</div>';
   await loadTickets();
+  await loadPendingResidents();
   renderAdmin();
+}
+
+async function loadPendingResidents() {
+  // Fetch users with role=resident_pending
+  const { data, error } = await db.rpc('get_pending_residents');
+  if (error || !data) {
+    // Fallback: try direct query
+    renderPending([]);
+    return;
+  }
+  renderPending(data);
+}
+
+function renderPending(list) {
+  const panel = document.getElementById('pendingPanel');
+  const pendingList = document.getElementById('pendingList');
+  const countEl = document.getElementById('pendingCount');
+  if (!list || !list.length) { panel.style.display='none'; return; }
+  panel.style.display='block';
+  countEl.textContent = list.length;
+  pendingList.innerHTML = list.map(u => `
+    <div class="pending-card">
+      <div style="width:40px;height:40px;border-radius:50%;background:var(--orange-bg);color:var(--orange-text);display:flex;align-items:center;justify-content:center;font-weight:700;font-size:14px;flex-shrink:0">
+        ${(u.nom||u.email||'?')[0].toUpperCase()}
+      </div>
+      <div class="pc-info">
+        <div class="pc-name">${u.nom || 'Inconnu'}</div>
+        <div class="pc-meta">📧 ${u.email} · 🏠 Apt ${u.appartement||'?'} · 📞 ${u.telephone||'?'}</div>
+      </div>
+      <div class="pc-actions">
+        <button class="btn-approve" onclick="approveResident('${u.id}','${u.email}')">✅ Approuver</button>
+        <button class="btn-reject" onclick="rejectResident('${u.id}','${u.email}')">❌ Refuser</button>
+      </div>
+    </div>`).join('');
+}
+
+async function approveResident(userId, email) {
+  if (!confirm(`Approuver l'accès pour ${email} ?`)) return;
+  // Update user metadata to change role to resident
+  const { error } = await db.rpc('approve_resident', { user_id: userId });
+  if (error) {
+    // Manual fallback via SQL note
+    alert(`Pour approuver manuellement:\n\nSQL Editor → Run:\n\nUPDATE auth.users\nSET raw_user_meta_data = raw_user_meta_data || '{"role":"resident"}'\nWHERE id = '${userId}';`);
+    return;
+  }
+  await loadAndRenderAdmin();
+}
+
+async function rejectResident(userId, email) {
+  if (!confirm(`Refuser et supprimer la demande de ${email} ?`)) return;
+  const { error } = await db.auth.admin.deleteUser(userId);
+  if (error) {
+    alert(`Pour refuser manuellement:\nAuthentication → Users → Cherche ${email} → Delete`);
+    return;
+  }
+  await loadAndRenderAdmin();
 }
 
 function renderAdmin() {
