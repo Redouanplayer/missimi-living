@@ -349,7 +349,7 @@
   <div class="nav">
     <div class="nav-left">
       <div class="nav-logo">SR</div>
-      <span class="nav-name">Syndic Résidence</span>
+      <span class="nav-name" id="navResName">Syndic Résidence</span>
     </div>
     <div class="nav-right">
       <a href="index.html" style="font-size:12px;color:var(--muted);text-decoration:none;padding:5px 12px;border:1px solid var(--border2);border-radius:var(--radius-sm);transition:all 0.15s;" onmouseover="this.style.background='var(--bg)'" onmouseout="this.style.background='transparent'">← Accueil</a>
@@ -672,6 +672,17 @@ async function doLogin() {
   currentUser = data.user;
   currentRole = currentUser.user_metadata?.role || 'resident';
   currentUserMeta = currentUser.user_metadata || {};
+  // Vérifier si la résidence est active (admin seulement)
+  if (currentRole === 'admin') {
+    const { data: res } = await db.from('residences').select('actif,nom').eq('admin_id', currentUser.id).single();
+    if (res && !res.actif) {
+      await db.auth.signOut();
+      showErr(document.getElementById('loginErr'), '⛔ Votre accès a été suspendu. Contactez RedTech.');
+      btn.disabled = false; btn.textContent = 'Se connecter →';
+      return;
+    }
+    if (res) currentUserMeta.residence_nom = res.nom;
+  }
   showApp();
 }
 
@@ -714,6 +725,9 @@ function showApp() {
   const tabNouveau = document.getElementById('tabNouveau');
   if (currentRole==='admin') {
     pill.textContent='Admin · Syndic'; pill.className='role-pill pill-admin';
+    if (currentUserMeta.residence_nom) {
+      document.getElementById('navResName').textContent = currentUserMeta.residence_nom;
+    }
     tabAdmin.style.display='block'; tabNouveau.style.display='none'; tabSuivi.style.display='none';
     document.getElementById('tabServices').style.display='block';
     document.getElementById('tabCompta').style.display='block';
