@@ -933,14 +933,19 @@ async function loadAndRenderAdmin() {
 }
 
 async function loadPendingResidents() {
-  // Fetch users with role=resident_pending
   const { data, error } = await db.rpc('get_pending_residents');
   if (error || !data) {
-    // Fallback: try direct query
     renderPending([]);
     return;
   }
-  renderPending(data);
+  // Filtrer uniquement les demandes pour la résidence de cet admin
+  const { data: myRes } = await db.from('residences')
+    .select('id, nom')
+    .eq('admin_id', currentUser.id)
+    .single();
+  if (!myRes) { renderPending([]); return; }
+  const filtered = data.filter(u => u.residence_id === myRes.id);
+  renderPending(filtered);
 }
 
 function renderPending(list) {
@@ -950,42 +955,57 @@ function renderPending(list) {
   if (!list || !list.length) { panel.style.display='none'; return; }
   panel.style.display='block';
   countEl.textContent = list.length;
-  pendingList.innerHTML = list.map(u => `
+  pendingList.innerHTML = list.map(u => {
+    const initiale = (u.nom||u.email||'?')[0].toUpperCase();
+    const dateStr = u.created_at ? new Date(u.created_at).toLocaleDateString('fr-FR',{day:'numeric',month:'short',hour:'2-digit',minute:'2-digit'}) : '';
+    return `
     <div class="pending-card">
-      <div style="width:40px;height:40px;border-radius:50%;background:var(--orange-bg);color:var(--orange-text);display:flex;align-items:center;justify-content:center;font-weight:700;font-size:14px;flex-shrink:0">
-        ${(u.nom||u.email||'?')[0].toUpperCase()}
+      <div style="width:44px;height:44px;border-radius:50%;background:var(--orange-bg);color:var(--orange-text);display:flex;align-items:center;justify-content:center;font-weight:700;font-size:16px;flex-shrink:0;border:2px solid var(--orange-border)">
+        ${initiale}
       </div>
       <div class="pc-info">
         <div class="pc-name">${u.nom || 'Inconnu'}</div>
-        <div class="pc-meta">📧 ${u.email} · 🏠 Apt ${u.appartement||'?'} · 📞 ${u.telephone||'?'}</div>
+        <div class="pc-meta">
+          📧 ${u.email}
+          &nbsp;·&nbsp; 🏠 Apt <strong>${u.appartement||'?'}</strong>
+          &nbsp;·&nbsp; 📞 ${u.telephone||'?'}
+          ${dateStr ? '&nbsp;·&nbsp; 🕐 ' + dateStr : ''}
+        </div>
       </div>
       <div class="pc-actions">
         <button class="btn-approve" onclick="approveResident('${u.id}','${u.email}')">✅ Approuver</button>
         <button class="btn-reject" onclick="rejectResident('${u.id}','${u.email}')">❌ Refuser</button>
       </div>
-    </div>`).join('');
+    </div>`;
+  }).join('');
 }
 
 async function approveResident(userId, email) {
-  if (!confirm('Approuver cet utilisateur : ' + email + ' ?')) return;
-  // Update user metadata to change role to resident
+  if (!confirm('Approuver ' + email + ' ?')) return;
   const { error } = await db.rpc('approve_resident', { user_id: userId });
-  if (error) {
-    // Manual fallback via SQL note
-    alert('Pour approuver: SQL Editor → UPDATE auth.users SET raw_user_meta_data = raw_user_meta_data || \'{\'role\':\'resident\'}\'  WHERE id = \'' + userId + '\';');
-    return;
-  }
+  if (error) { alert('Erreur : ' + error.message); return; }
+  // Show success toast
+  showToast('✅ ' + email + ' est maintenant approuvé et peut se connecter.', 'success');
   await loadAndRenderAdmin();
 }
 
 async function rejectResident(userId, email) {
-  if (!confirm('Refuser la demande de : ' + email + ' ?')) return;
-  const { error } = await db.auth.admin.deleteUser(userId);
-  if (error) {
-    alert('Pour refuser manuellement: Authentication → Users → Cherche ' + email + ' → Delete');
-    return;
-  }
+  if (!confirm('Refuser la demande de ' + email + ' ?')) return;
+  const { error } = await db.rpc('reject_resident', { user_id: userId });
+  if (error) { alert('Erreur : ' + error.message); return; }
+  showToast('❌ Demande de ' + email + ' refusée.', 'error');
   await loadAndRenderAdmin();
+}
+
+function showToast(msg, type) {
+  const t = document.createElement('div');
+  t.style.cssText = 'position:fixed;bottom:24px;right:24px;z-index:999;padding:12px 20px;border-radius:10px;font-size:13px;font-weight:500;box-shadow:0 4px 20px rgba(0,0,0,0.15);animation:fadeUp .3s ease;max-width:360px;';
+  t.style.background = type === 'success' ? 'var(--green-bg)' : 'var(--red-bg)';
+  t.style.color = type === 'success' ? 'var(--green-text)' : 'var(--red-text)';
+  t.style.border = type === 'success' ? '1px solid var(--green-border)' : '1px solid var(--red-border)';
+  t.textContent = msg;
+  document.body.appendChild(t);
+  setTimeout(() => t.remove(), 5000);
 }
 
 function renderAdmin() {
