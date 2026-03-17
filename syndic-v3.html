@@ -364,6 +364,7 @@
       <span class="tab-badge" id="unreadBadge" style="display:none">0</span>
     </div>
     <div class="tab" data-tab="services" onclick="showTab('services',this)" id="tabServices" style="display:none">Annuaire</div>
+    <div class="tab" data-tab="compta" onclick="showTab('compta',this)" id="tabCompta" style="display:none">Comptabilité</div>
     <div class="tab" data-tab="admin" onclick="showTab('admin',this)" id="tabAdmin" style="display:none">Administration</div>
   </div>
 
@@ -480,6 +481,71 @@
       <div id="proList" style="display:grid;grid-template-columns:repeat(auto-fill,minmax(280px,1fr));gap:12px;"></div>
     </div>
 
+    <!-- COMPTABILITE -->
+    <div class="section" id="sec-compta">
+      <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:12px;margin-bottom:20px">
+        <div class="stat-card"><div class="stat-num" id="totalRecettes" style="color:var(--green-text)">0</div><div class="stat-label">Recettes DH</div></div>
+        <div class="stat-card"><div class="stat-num" id="totalDepenses" style="color:var(--red-text)">0</div><div class="stat-label">Dépenses DH</div></div>
+        <div class="stat-card"><div class="stat-num" id="soldeNet">0</div><div class="stat-label">Solde net DH</div></div>
+      </div>
+      <div class="card" style="margin-bottom:16px">
+        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:16px">
+          <div class="card-title">Saisir une opération</div>
+          <div style="display:flex;gap:8px">
+            <button onclick="setTypeCompta('recette',this)" id="btnRecette" class="btn-xs btn-green" style="font-size:12px;padding:7px 16px;font-weight:600">+ Recette</button>
+            <button onclick="setTypeCompta('depense',this)" id="btnDepense" class="btn-xs btn-orange" style="font-size:12px;padding:7px 16px">− Dépense</button>
+          </div>
+        </div>
+        <input type="hidden" id="comptaType" value="recette">
+        <div class="fr2">
+          <div><label class="lbl">Date <span class="req">*</span></label><input type="date" id="comptaDate"></div>
+          <div><label class="lbl">Montant (DH) <span class="req">*</span></label><input type="number" id="comptaMontant" placeholder="0.00" min="0" step="0.01"></div>
+        </div>
+        <div class="fr2">
+          <div>
+            <label class="lbl">Catégorie <span class="req">*</span></label>
+            <select id="comptaCat">
+              <option value="">Choisir...</option>
+              <optgroup label="Recettes"><option>Charges copropriété</option><option>Fonds de réserve</option><option>Subvention</option><option>Autre recette</option></optgroup>
+              <optgroup label="Dépenses"><option>Entretien</option><option>Réparation</option><option>Salaires gardiennage</option><option>Eau & électricité</option><option>Assurance</option><option>Nettoyage</option><option>Jardinage</option><option>Administratif</option><option>Autre dépense</option></optgroup>
+            </select>
+          </div>
+          <div><label class="lbl">Libellé <span class="req">*</span></label><input type="text" id="comptaLibelle" placeholder="Description de l'opération"></div>
+        </div>
+        <div class="fg">
+          <label class="lbl">Pièce jointe (facture)</label>
+          <div class="upload-zone" onclick="document.getElementById('comptaFile').click()" style="padding:14px">
+            <div>📎 Joindre une facture (PDF, image)</div>
+          </div>
+          <input type="file" id="comptaFile" accept=".pdf,image/*" style="display:none" onchange="handleComptaFile(this)">
+          <div id="comptaFileChip"></div>
+        </div>
+        <div class="alert alert-error" id="comptaErr"></div>
+        <div class="alert alert-success" id="comptaOk"></div>
+        <div class="btn-row">
+          <button class="btn btn-ghost" onclick="resetComptaForm()">Réinitialiser</button>
+          <button class="btn btn-primary" style="width:auto" id="comptaSubmitBtn" onclick="saveCompta()">Enregistrer →</button>
+        </div>
+      </div>
+      <div class="card" style="margin-bottom:16px">
+        <div style="display:flex;gap:12px;align-items:flex-end;flex-wrap:wrap">
+          <div style="flex:1;min-width:140px"><label class="lbl">Du</label><input type="date" id="filterFrom"></div>
+          <div style="flex:1;min-width:140px"><label class="lbl">Au</label><input type="date" id="filterTo"></div>
+          <div><label class="lbl">Type</label><select id="filterType" style="min-width:130px"><option value="all">Tout</option><option value="recette">Recettes</option><option value="depense">Dépenses</option></select></div>
+          <button class="btn btn-ghost" onclick="applyComptaFilter()">Filtrer</button>
+          <button class="btn btn-primary" style="width:auto" onclick="exportExcel()">📥 Export Excel</button>
+        </div>
+      </div>
+      <div class="card" style="margin-bottom:16px">
+        <div class="section-heading">Évolution mensuelle P&L</div>
+        <canvas id="plChart" height="90"></canvas>
+      </div>
+      <div class="card">
+        <div class="section-heading">Tableau des opérations</div>
+        <div id="comptaTable"></div>
+      </div>
+    </div>
+
     <!-- ADMIN -->
     <div class="section" id="sec-admin">
       <div class="stats-grid">
@@ -508,7 +574,12 @@
         <div class="modal-title" id="mTitle"></div>
         <div style="display:flex;gap:6px;margin-top:6px;flex-wrap:wrap" id="mBadges"></div>
       </div>
-      <button class="modal-close" onclick="closeModalDirect()">×</button>
+      <div style="display:flex;gap:6px;align-items:center;flex-shrink:0">
+        <button onclick="shareWhatsApp()" title="Partager WhatsApp" style="background:var(--green-bg);border:1px solid var(--green-border);color:var(--green-text);padding:6px 10px;border-radius:var(--radius-sm);cursor:pointer;font-size:12px;font-weight:500;font-family:'DM Sans',sans-serif">📱 WhatsApp</button>
+        <button onclick="shareEmail()" title="Partager Email" style="background:var(--blue-bg);border:1px solid var(--blue-border);color:var(--blue-text);padding:6px 10px;border-radius:var(--radius-sm);cursor:pointer;font-size:12px;font-weight:500;font-family:'DM Sans',sans-serif">✉️ Email</button>
+        <button onclick="downloadPDF()" title="Télécharger PDF" style="background:var(--bg);border:1px solid var(--border2);color:var(--muted);padding:6px 10px;border-radius:var(--radius-sm);cursor:pointer;font-size:12px;font-weight:500;font-family:'DM Sans',sans-serif">📄 PDF</button>
+        <button class="modal-close" onclick="closeModalDirect()">×</button>
+      </div>
     </div>
     <div class="modal-body">
       <div class="modal-section">
@@ -538,6 +609,7 @@
   </div>
 </div>
 
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
 <script>
 const SUPABASE_URL = 'https://nwusjraxjfirsonbndfy.supabase.co';
 const SUPABASE_KEY = 'sb_publishable_A8Re17ZjBi7-b8iZgnUceg_wGoeQJ77';
@@ -644,6 +716,7 @@ function showApp() {
     pill.textContent='Admin · Syndic'; pill.className='role-pill pill-admin';
     tabAdmin.style.display='block'; tabNouveau.style.display='none'; tabSuivi.style.display='none';
     document.getElementById('tabServices').style.display='block';
+    document.getElementById('tabCompta').style.display='block';
     showTab('admin', tabAdmin);
   } else {
     pill.textContent='Résident · Apt '+(currentUserMeta.appartement||'');
@@ -663,6 +736,7 @@ function showTab(tab, el) {
   if(tab==='suivi') loadAndRenderSuivi();
   if(tab==='admin') loadAndRenderAdmin();
   if(tab==='services') loadAndRenderPros();
+  if(tab==='compta') loadAndRenderCompta();
 }
 
 async function loadTickets() {
@@ -1079,6 +1153,284 @@ async function deletePro(id, nom) {
   const { error } = await db.from('professionnels').update({ actif: false }).eq('id', id);
   if (error) { alert('Erreur : ' + error.message); return; }
   await loadAndRenderPros();
+}
+
+// ========================
+// PARTAGE TICKET
+// ========================
+function getTicketShareText() {
+  const t = tickets.find(x => x.id === currentTicketId);
+  if (!t) return '';
+  return `🏢 Missimi Living — Ticket #${t.id.substring(0,8).toUpperCase()}
+📋 ${t.titre}
+📁 Catégorie : ${t.categorie}
+🚨 Urgence : ${t.urgence}
+📍 Appartement : ${t.appartement}
+🔄 Statut : ${t.statut}
+📅 Date : ${fmtDate(t.created_at)}
+${t.description ? '📝 ' + t.description : ''}`;
+}
+
+function shareWhatsApp() {
+  const text = encodeURIComponent(getTicketShareText());
+  window.open(`https://wa.me/?text=${text}`, '_blank');
+}
+
+function shareEmail() {
+  const t = tickets.find(x => x.id === currentTicketId);
+  if (!t) return;
+  const subject = encodeURIComponent(`Ticket Missimi Living — ${t.titre}`);
+  const body = encodeURIComponent(getTicketShareText());
+  window.open(`mailto:?subject=${subject}&body=${body}`, '_blank');
+}
+
+function downloadPDF() {
+  const t = tickets.find(x => x.id === currentTicketId);
+  if (!t) return;
+  const win = window.open('', '_blank');
+  win.document.write(`<!DOCTYPE html><html><head><meta charset="UTF-8">
+<title>Ticket ${t.id.substring(0,8).toUpperCase()}</title>
+<style>
+  body{font-family:Arial,sans-serif;max-width:700px;margin:40px auto;padding:0 20px;color:#1c1c1a;}
+  .header{border-bottom:2px solid #b8975a;padding-bottom:16px;margin-bottom:24px;display:flex;justify-content:space-between;align-items:flex-end;}
+  .logo{font-size:22px;font-weight:700;letter-spacing:0.06em;}
+  .logo span{color:#b8975a;}
+  .ref{font-size:12px;color:#78766e;}
+  h1{font-size:18px;margin-bottom:20px;}
+  .grid{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:20px;}
+  .field{padding:10px 14px;background:#f5f4f1;border-radius:6px;}
+  .fl{font-size:10px;text-transform:uppercase;letter-spacing:0.1em;color:#78766e;margin-bottom:4px;}
+  .fv{font-size:14px;font-weight:500;}
+  .badge{display:inline-block;padding:4px 12px;border-radius:20px;font-size:12px;font-weight:500;}
+  .desc{padding:14px;background:#f5f4f1;border-radius:6px;font-size:14px;line-height:1.65;}
+  .footer{margin-top:40px;padding-top:16px;border-top:1px solid #e3e1db;font-size:11px;color:#aba9a1;text-align:center;}
+  @media print{body{margin:0;}}
+</style>
+</head><body>
+<div class="header">
+  <div class="logo">MISSIMI <span>LIVING</span></div>
+  <div class="ref">Ticket #${t.id.substring(0,8).toUpperCase()} · ${fmtDate(t.created_at)}</div>
+</div>
+<h1>${t.titre}</h1>
+<div class="grid">
+  <div class="field"><div class="fl">Catégorie</div><div class="fv">${t.categorie}</div></div>
+  <div class="field"><div class="fl">Type</div><div class="fv">${t.type}</div></div>
+  <div class="field"><div class="fl">Appartement</div><div class="fv">${t.appartement}</div></div>
+  <div class="field"><div class="fl">Urgence</div><div class="fv">${t.urgence}</div></div>
+  <div class="field"><div class="fl">Statut</div><div class="fv">${t.statut}</div></div>
+  <div class="field"><div class="fl">Date d'ouverture</div><div class="fv">${fmtDate(t.created_at)}</div></div>
+</div>
+${t.description ? `<div class="fl" style="margin-bottom:6px">Description</div><div class="desc">${t.description}</div>` : ''}
+<div class="footer">Résidence Missimi Living — Casablanca, Maroc · missimi-living.vercel.app</div>
+<script>window.onload=()=>{window.print();}<\/script>
+</body></html>`);
+  win.document.close();
+}
+
+// ========================
+// COMPTABILITE
+// ========================
+let comptaData = [];
+let comptaFiltered = [];
+let plChartInstance = null;
+
+function setTypeCompta(type, btn) {
+  document.getElementById('comptaType').value = type;
+  document.getElementById('btnRecette').style.fontWeight = type === 'recette' ? '700' : '400';
+  document.getElementById('btnDepense').style.fontWeight = type === 'depense' ? '700' : '400';
+}
+
+function handleComptaFile(input) {
+  const chip = document.getElementById('comptaFileChip');
+  if (input.files[0]) {
+    chip.innerHTML = `<div class="file-chip" style="margin-top:8px">📄 ${input.files[0].name}</div>`;
+  }
+}
+
+function resetComptaForm() {
+  ['comptaDate','comptaMontant','comptaLibelle'].forEach(id => document.getElementById(id).value = '');
+  document.getElementById('comptaCat').value = '';
+  document.getElementById('comptaType').value = 'recette';
+  document.getElementById('comptaFileChip').innerHTML = '';
+  document.getElementById('comptaFile').value = '';
+  document.getElementById('comptaErr').style.display = 'none';
+  document.getElementById('comptaOk').style.display = 'none';
+  document.getElementById('btnRecette').style.fontWeight = '600';
+  document.getElementById('btnDepense').style.fontWeight = '400';
+}
+
+async function saveCompta() {
+  const type = document.getElementById('comptaType').value;
+  const date = document.getElementById('comptaDate').value;
+  const montant = parseFloat(document.getElementById('comptaMontant').value);
+  const cat = document.getElementById('comptaCat').value;
+  const libelle = document.getElementById('comptaLibelle').value.trim();
+  const errEl = document.getElementById('comptaErr');
+  const okEl = document.getElementById('comptaOk');
+  errEl.style.display = 'none'; okEl.style.display = 'none';
+  if (!date || !montant || !cat || !libelle) {
+    errEl.textContent = '⚠️ Remplissez tous les champs obligatoires.';
+    errEl.style.display = 'block'; return;
+  }
+  const btn = document.getElementById('comptaSubmitBtn');
+  btn.disabled = true; btn.textContent = 'Enregistrement...';
+  const { error } = await db.from('comptabilite').insert({
+    type, categorie: cat, libelle, montant, date_op: date,
+    created_by: currentUser.id
+  });
+  btn.disabled = false; btn.textContent = 'Enregistrer →';
+  if (error) { errEl.textContent = '❌ ' + error.message; errEl.style.display = 'block'; return; }
+  okEl.textContent = `✅ Opération enregistrée — ${montant.toFixed(2)} DH (${type})`;
+  okEl.style.display = 'block';
+  resetComptaForm();
+  await loadAndRenderCompta();
+  setTimeout(() => { okEl.style.display = 'none'; }, 4000);
+}
+
+async function loadAndRenderCompta() {
+  const { data, error } = await db.from('comptabilite')
+    .select('*').order('date_op', { ascending: false });
+  if (!error && data) comptaData = data;
+  comptaFiltered = [...comptaData];
+  renderCompta();
+}
+
+function applyComptaFilter() {
+  const from = document.getElementById('filterFrom').value;
+  const to = document.getElementById('filterTo').value;
+  const type = document.getElementById('filterType').value;
+  comptaFiltered = comptaData.filter(op => {
+    const d = op.date_op;
+    const matchFrom = !from || d >= from;
+    const matchTo = !to || d <= to;
+    const matchType = type === 'all' || op.type === type;
+    return matchFrom && matchTo && matchType;
+  });
+  renderCompta();
+}
+
+function renderCompta() {
+  const recettes = comptaFiltered.filter(o => o.type === 'recette').reduce((s, o) => s + parseFloat(o.montant), 0);
+  const depenses = comptaFiltered.filter(o => o.type === 'depense').reduce((s, o) => s + parseFloat(o.montant), 0);
+  const solde = recettes - depenses;
+  document.getElementById('totalRecettes').textContent = recettes.toLocaleString('fr-MA', {minimumFractionDigits:2, maximumFractionDigits:2});
+  document.getElementById('totalDepenses').textContent = depenses.toLocaleString('fr-MA', {minimumFractionDigits:2, maximumFractionDigits:2});
+  const soldeEl = document.getElementById('soldeNet');
+  soldeEl.textContent = solde.toLocaleString('fr-MA', {minimumFractionDigits:2, maximumFractionDigits:2});
+  soldeEl.style.color = solde >= 0 ? 'var(--green-text)' : 'var(--red-text)';
+  renderPLChart();
+  renderComptaTable();
+}
+
+function renderPLChart() {
+  // Group by month
+  const months = {};
+  comptaFiltered.forEach(op => {
+    const m = op.date_op.substring(0, 7);
+    if (!months[m]) months[m] = { recettes: 0, depenses: 0 };
+    if (op.type === 'recette') months[m].recettes += parseFloat(op.montant);
+    else months[m].depenses += parseFloat(op.montant);
+  });
+  const labels = Object.keys(months).sort();
+  const recData = labels.map(m => Math.round(months[m].recettes));
+  const depData = labels.map(m => Math.round(months[m].depenses));
+  const solData = labels.map(m => Math.round(months[m].recettes - months[m].depenses));
+  const ctx = document.getElementById('plChart');
+  if (!ctx) return;
+  if (plChartInstance) { plChartInstance.destroy(); plChartInstance = null; }
+  if (!labels.length) { ctx.parentElement.innerHTML += '<p style="text-align:center;color:var(--muted);font-size:13px;padding:20px 0">Aucune donnée à afficher</p>'; return; }
+  plChartInstance = new Chart(ctx, {
+    type: 'bar',
+    data: {
+      labels: labels.map(m => { const [y,mo] = m.split('-'); return ['Jan','Fév','Mar','Avr','Mai','Jun','Jul','Aoû','Sep','Oct','Nov','Déc'][parseInt(mo)-1]+' '+y; }),
+      datasets: [
+        { label: 'Recettes', data: recData, backgroundColor: 'rgba(21,128,61,0.7)', borderRadius: 4 },
+        { label: 'Dépenses', data: depData, backgroundColor: 'rgba(185,28,28,0.7)', borderRadius: 4 },
+        { label: 'Solde net', data: solData, type: 'line', borderColor: '#b8975a', backgroundColor: 'rgba(184,151,90,0.1)', tension: 0.3, fill: true, pointBackgroundColor: '#b8975a' }
+      ]
+    },
+    options: {
+      responsive: true,
+      plugins: { legend: { position: 'top' } },
+      scales: {
+        y: { beginAtZero: true, ticks: { callback: v => v.toLocaleString('fr-MA') + ' DH' } }
+      }
+    }
+  });
+}
+
+function renderComptaTable() {
+  const el = document.getElementById('comptaTable');
+  if (!comptaFiltered.length) { el.innerHTML = '<div class="empty-state">📭 Aucune opération trouvée</div>'; return; }
+  el.innerHTML = `
+  <div style="overflow-x:auto">
+  <table style="width:100%;border-collapse:collapse;font-size:13px;">
+    <thead>
+      <tr style="background:var(--bg);text-align:left">
+        <th style="padding:9px 12px;font-size:10px;text-transform:uppercase;letter-spacing:0.08em;color:var(--muted);border-bottom:1px solid var(--border);font-weight:500">Date</th>
+        <th style="padding:9px 12px;font-size:10px;text-transform:uppercase;letter-spacing:0.08em;color:var(--muted);border-bottom:1px solid var(--border);font-weight:500">Type</th>
+        <th style="padding:9px 12px;font-size:10px;text-transform:uppercase;letter-spacing:0.08em;color:var(--muted);border-bottom:1px solid var(--border);font-weight:500">Catégorie</th>
+        <th style="padding:9px 12px;font-size:10px;text-transform:uppercase;letter-spacing:0.08em;color:var(--muted);border-bottom:1px solid var(--border);font-weight:500">Libellé</th>
+        <th style="padding:9px 12px;font-size:10px;text-transform:uppercase;letter-spacing:0.08em;color:var(--muted);border-bottom:1px solid var(--border);font-weight:500;text-align:right">Montant (DH)</th>
+        <th style="padding:9px 12px;font-size:10px;text-transform:uppercase;letter-spacing:0.08em;color:var(--muted);border-bottom:1px solid var(--border);font-weight:500;text-align:center">Action</th>
+      </tr>
+    </thead>
+    <tbody>
+      ${comptaFiltered.map((op, i) => `
+      <tr style="border-bottom:0.5px solid var(--border);${i%2===0?'background:var(--surface)':'background:var(--bg)'}">
+        <td style="padding:9px 12px;color:var(--muted)">${op.date_op}</td>
+        <td style="padding:9px 12px">
+          <span style="font-size:10px;font-weight:500;padding:3px 9px;border-radius:10px;${op.type==='recette'?'background:var(--green-bg);color:var(--green-text)':'background:var(--red-bg);color:var(--red-text)'}">${op.type==='recette'?'Recette':'Dépense'}</span>
+        </td>
+        <td style="padding:9px 12px;color:var(--muted)">${op.categorie}</td>
+        <td style="padding:9px 12px;font-weight:500">${op.libelle}</td>
+        <td style="padding:9px 12px;text-align:right;font-weight:600;${op.type==='recette'?'color:var(--green-text)':'color:var(--red-text)'}">${op.type==='recette'?'+':'−'}${parseFloat(op.montant).toLocaleString('fr-MA',{minimumFractionDigits:2,maximumFractionDigits:2})}</td>
+        <td style="padding:9px 12px;text-align:center"><button onclick="deleteCompta('${op.id}')" style="background:none;border:none;cursor:pointer;color:var(--red-text);font-size:14px" title="Supprimer">🗑️</button></td>
+      </tr>`).join('')}
+    </tbody>
+    <tfoot>
+      <tr style="background:var(--bg);font-weight:600;border-top:2px solid var(--border)">
+        <td colspan="4" style="padding:10px 12px;font-size:12px;text-transform:uppercase;letter-spacing:0.06em">Total période</td>
+        <td style="padding:10px 12px;text-align:right;font-size:14px;color:${comptaFiltered.reduce((s,o)=>s+(o.type==='recette'?parseFloat(o.montant):-parseFloat(o.montant)),0)>=0?'var(--green-text)':'var(--red-text)'}">
+          ${comptaFiltered.reduce((s,o)=>s+(o.type==='recette'?parseFloat(o.montant):-parseFloat(o.montant)),0).toLocaleString('fr-MA',{minimumFractionDigits:2,maximumFractionDigits:2})} DH
+        </td>
+        <td></td>
+      </tr>
+    </tfoot>
+  </table>
+  </div>`;
+}
+
+async function deleteCompta(id) {
+  if (!confirm('Supprimer cette opération ?')) return;
+  await db.from('comptabilite').delete().eq('id', id);
+  await loadAndRenderCompta();
+}
+
+function exportExcel() {
+  if (!comptaFiltered.length) { alert('Aucune donnée à exporter.'); return; }
+  const from = document.getElementById('filterFrom').value || 'début';
+  const to = document.getElementById('filterTo').value || 'aujourd\'hui';
+  const rows = [
+    ['Date', 'Type', 'Catégorie', 'Libellé', 'Montant (DH)'],
+    ...comptaFiltered.map(op => [
+      op.date_op,
+      op.type === 'recette' ? 'Recette' : 'Dépense',
+      op.categorie,
+      op.libelle,
+      op.type === 'recette' ? parseFloat(op.montant) : -parseFloat(op.montant)
+    ]),
+    [],
+    ['', '', '', 'Total Recettes', comptaFiltered.filter(o=>o.type==='recette').reduce((s,o)=>s+parseFloat(o.montant),0)],
+    ['', '', '', 'Total Dépenses', -comptaFiltered.filter(o=>o.type==='depense').reduce((s,o)=>s+parseFloat(o.montant),0)],
+    ['', '', '', 'Solde Net', comptaFiltered.reduce((s,o)=>s+(o.type==='recette'?parseFloat(o.montant):-parseFloat(o.montant)),0)],
+  ];
+  const csv = rows.map(r => r.map(c => `"${String(c).replace(/"/g,'""')}"`).join(',')).join('\n');
+  const blob = new Blob(['\uFEFF' + csv], { type: 'text/csv;charset=utf-8;' });
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(blob);
+  a.download = `Comptabilite_Missimi_${from}_${to}.csv`;
+  a.click();
 }
 
 init();
