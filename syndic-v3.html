@@ -752,23 +752,35 @@ async function doRegister() {
   const pwdConfirm = document.getElementById('regPwdConfirm').value;
   if (pwd !== pwdConfirm) { showErr(errEl,'Les mots de passe ne correspondent pas.'); return; }
   if (pwd.length < 6) { showErr(errEl,'Le mot de passe doit contenir au moins 6 caractères.'); return; }
+  // Vérifier que la résidence existe dans Supabase
   const btn = document.getElementById('registerBtn');
-  btn.disabled=true; btn.textContent='Envoi...';
-  // Create account with status "pending"
+  btn.disabled=true; btn.textContent='Vérification...';
+  const { data: resData, error: resErr } = await db
+    .from('residences')
+    .select('id, nom')
+    .ilike('nom', resNom)
+    .eq('actif', true)
+    .single();
+  if (resErr || !resData) {
+    btn.disabled=false; btn.textContent='Envoyer la demande';
+    showErr(errEl, `❌ La résidence "${resNom}" est introuvable. Vérifiez l'orthographe exacte auprès de votre syndic et réessayez.`);
+    return;
+  }
+  // résidence trouvée — on procède à l'inscription
+  btn.disabled=true; btn.textContent='Envoi en cours...';
   const { error } = await db.auth.signUp({
     email, password: pwd,
     options: { data: {
       nom, appartement: apt, telephone: tel,
       role: 'resident_pending',
-      residence_id: resId,
-      residence_nom: resNom
+      residence_id: resData.id,
+      residence_nom: resData.nom
     }}
   });
   btn.disabled=false; btn.textContent='Envoyer la demande';
   if (error) { showErr(errEl, error.message); return; }
-  okEl.innerHTML = `✅ Demande envoyée pour <strong>${resNom}</strong> ! Le syndic va vérifier et valider votre inscription. Vous pourrez vous connecter une fois approuvé.`;
+  okEl.innerHTML = `✅ Demande envoyée pour <strong>${resData.nom}</strong> ! Le syndic va vérifier et valider votre inscription. Vous pourrez vous connecter une fois approuvé.`;
   okEl.style.display='block';
-  // Reset form
   ['regNom','regEmail','regResidence','regApt','regTel','regPwd','regPwdConfirm'].forEach(id => { const el=document.getElementById(id); if(el) el.value=''; });
 }
 
