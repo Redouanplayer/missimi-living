@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Syndic Résidence</title>
+<title>RedTech — Gestion d'espaces partagés</title>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <style>
   @import url('https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600&family=DM+Mono:wght@400;500&display=swap');
@@ -29,7 +29,7 @@
   /* LOGIN */
   #loginScreen{min-height:100vh;display:none;align-items:center;justify-content:center;padding:20px;}
   .login-box{background:var(--surface);border:1px solid var(--border);border-radius:14px;width:100%;max-width:400px;padding:36px 32px;box-shadow:var(--shadow);}
-  .login-logo{width:44px;height:44px;background:var(--blue);border-radius:var(--radius-sm);display:flex;align-items:center;justify-content:center;color:white;font-weight:700;font-size:18px;margin:0 auto 18px;}
+  .login-logo{display:flex;align-items:center;justify-content:center;gap:8px;margin:0 auto 16px;}
   .login-title{text-align:center;font-size:20px;font-weight:600;margin-bottom:4px;}
   .login-sub{text-align:center;font-size:13px;color:var(--muted);margin-bottom:24px;}
   .role-select{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:22px;}
@@ -76,7 +76,7 @@
   #appScreen{display:none;}
   .nav{background:var(--surface);border-bottom:1px solid var(--border);padding:0 24px;height:56px;display:flex;align-items:center;justify-content:space-between;position:sticky;top:0;z-index:100;}
   .nav-left{display:flex;align-items:center;gap:10px;}
-  .nav-logo{width:32px;height:32px;background:var(--blue);border-radius:6px;display:flex;align-items:center;justify-content:center;color:white;font-weight:700;font-size:13px;}
+  .nav-logo{display:none;}
   .nav-name{font-weight:600;font-size:15px;}
   .nav-right{display:flex;align-items:center;gap:10px;}
   .role-pill{font-size:11px;font-weight:500;padding:3px 10px;border-radius:20px;}
@@ -308,9 +308,12 @@
 <!-- LOGIN -->
 <div id="loginScreen">
   <div class="login-box">
-    <div class="login-logo">SR</div>
-    <div class="login-title">Syndic Résidence</div>
-    <div class="login-sub">Syndic Ticket</div>
+    <div class="login-logo">
+      <div style="width:40px;height:40px;background:#e63946;border-radius:10px;display:flex;align-items:center;justify-content:center;color:white;font-weight:800;font-size:17px;flex-shrink:0">R</div>
+      <span style="font-size:22px;font-weight:800;letter-spacing:-.03em;color:#0d1b2a">Red<span style="color:#e63946">Tech</span></span>
+    </div>
+    <div class="login-title" style="font-size:17px;font-weight:700;margin-bottom:4px">Espace de gestion</div>
+    <div class="login-sub">Connectez-vous à votre espace RedTech</div>
     <div class="role-select">
       <div class="role-card selected" id="rc-resident" onclick="selectRole('resident')">
         <div class="rc-icon">🏠</div><div class="rc-label">Résident</div><div class="rc-sub">Mes tickets</div>
@@ -374,8 +377,8 @@
 <div id="appScreen">
   <div class="nav">
     <div class="nav-left">
-      <div class="nav-logo">SR</div>
-      <span class="nav-name" id="navResName">Syndic Résidence</span>
+      <div style="width:30px;height:30px;background:#e63946;border-radius:7px;display:flex;align-items:center;justify-content:center;color:white;font-weight:800;font-size:13px;flex-shrink:0">R</div>
+      <span style="font-size:15px;font-weight:800;letter-spacing:-.02em;color:var(--text)">Red<span style="color:#e63946">Tech</span> &nbsp;<span id="navResName" style="font-weight:500;color:var(--muted);font-size:13px"></span></span>
     </div>
     <div class="nav-right">
       <a href="index.html" style="font-size:12px;color:var(--muted);text-decoration:none;padding:5px 12px;border:1px solid var(--border2);border-radius:var(--radius-sm);transition:all 0.15s;" onmouseover="this.style.background='var(--bg)'" onmouseout="this.style.background='transparent'">← Accueil</a>
@@ -672,6 +675,8 @@ async function init() {
     currentUser = session.user;
     currentRole = currentUser.user_metadata?.role || 'resident';
     currentUserMeta = currentUser.user_metadata || {};
+    // Apply sector vocabulary before showing app
+    applyVocabulaire(currentUserMeta.secteur||'residence');
     showApp();
   } else {
     document.getElementById('loader').style.display = 'none';
@@ -714,6 +719,7 @@ async function doLogin() {
   currentUser = data.user;
   currentRole = currentUser.user_metadata?.role || 'resident';
   currentUserMeta = currentUser.user_metadata || {};
+  applyVocabulaire(currentUserMeta.secteur||'residence');
   // Bloquer les comptes en attente de validation
   if (currentRole === 'resident_pending') {
     await db.auth.signOut();
@@ -766,7 +772,8 @@ async function doRegister() {
     showErr(errEl, `❌ La résidence "${resNom}" est introuvable. Vérifiez l'orthographe exacte auprès de votre syndic et réessayez.`);
     return;
   }
-  // résidence trouvée — on procède à l'inscription
+  // résidence trouvée — adapter le vocabulaire
+  if (resData.secteur) applyVocabulaire(resData.secteur);
   btn.disabled=true; btn.textContent='Envoi en cours...';
   const { error } = await db.auth.signUp({
     email, password: pwd,
@@ -774,7 +781,8 @@ async function doRegister() {
       nom, appartement: apt, telephone: tel,
       role: 'resident_pending',
       residence_id: resData.id,
-      residence_nom: resData.nom
+      residence_nom: resData.nom,
+      secteur: resData.secteur||'residence'
     }}
   });
   btn.disabled=false; btn.textContent='Envoyer la demande';
@@ -802,7 +810,9 @@ function showApp() {
   const tabSuivi = document.getElementById('tabSuivi');
   const tabNouveau = document.getElementById('tabNouveau');
   if (currentRole==='admin') {
-    pill.textContent='Admin · Syndic'; pill.className='role-pill pill-admin';
+    const vAdmin = getSecteurVocab(currentUserMeta.secteur||'residence');
+    pill.textContent = vAdmin.adminLabel + ' · Admin'; pill.className='role-pill pill-admin';
+    document.getElementById('tabAdmin').textContent = vAdmin.adminSub;
     if (currentUserMeta.residence_nom) {
       document.getElementById('navResName').textContent = currentUserMeta.residence_nom;
     }
@@ -811,7 +821,11 @@ function showApp() {
     document.getElementById('tabCompta').style.display='block';
     showTab('admin', tabAdmin);
   } else {
-    pill.textContent='Résident · Apt '+(currentUserMeta.appartement||'');
+    const vRes = getSecteurVocab(currentUserMeta.secteur||'residence');
+    pill.textContent = vRes.pilLabel + (currentUserMeta.appartement||'');
+    // Update tab label
+    const tabSuiviEl = document.getElementById('tabSuivi');
+    if (tabSuiviEl) tabSuiviEl.childNodes[0].textContent = vRes.userSub + ' ';
     pill.className='role-pill pill-resident';
     tabAdmin.style.display='none';
     document.getElementById('fApt').value = currentUserMeta.appartement||'';
@@ -1600,6 +1614,51 @@ function exportExcel() {
   a.href = URL.createObjectURL(blob);
   a.download = `Comptabilite_Missimi_${from}_${to}.csv`;
   a.click();
+}
+
+// ========================
+// VOCABULAIRE PAR SECTEUR
+// ========================
+const SECTEURS = {
+  residence:   { userIcon:'🏠', userLabel:'Résident',    userSub:'Mes tickets',   adminIcon:'⚙️', adminLabel:'Syndic',        adminSub:'Administration', pilLabel:'Résident · Apt ' },
+  hotel:       { userIcon:'🛎️', userLabel:'Client',      userSub:'Mes demandes',  adminIcon:'👔', adminLabel:'Directeur',     adminSub:'Gestion',        pilLabel:'Client · Ch. '    },
+  campus:      { userIcon:'🎓', userLabel:'Étudiant',    userSub:'Mes demandes',  adminIcon:'🏛️', adminLabel:'Administration',adminSub:'Direction',       pilLabel:'Étudiant · '      },
+  industrie:   { userIcon:'🏭', userLabel:'Entreprise',  userSub:'Mes tickets',   adminIcon:'🔧', adminLabel:'Facility Mgr',  adminSub:'Gestion',        pilLabel:'Entreprise · '    },
+  mall:        { userIcon:'🏬', userLabel:'Commerçant',  userSub:'Mes demandes',  adminIcon:'📊', adminLabel:'Direction Mall', adminSub:'Administration', pilLabel:'Commerçant · '    },
+  collectivite:{ userIcon:'🏛️', userLabel:'Citoyen',     userSub:'Mes signalements',adminIcon:'🏛️',adminLabel:'Municipalité', adminSub:'Administration', pilLabel:'Citoyen · '      },
+};
+const DEFAULT_SECTEUR = SECTEURS.residence;
+
+function getSecteurVocab(secteur) {
+  return SECTEURS[secteur] || DEFAULT_SECTEUR;
+}
+
+function applyVocabulaire(secteur) {
+  const v = getSecteurVocab(secteur);
+  // Role cards on login
+  const rcRes = document.getElementById('rc-resident');
+  const rcAdm = document.getElementById('rc-admin');
+  if (rcRes) {
+    rcRes.querySelector('.rc-icon').textContent  = v.userIcon;
+    rcRes.querySelector('.rc-label').textContent = v.userLabel;
+    rcRes.querySelector('.rc-sub').textContent   = v.userSub;
+  }
+  if (rcAdm) {
+    rcAdm.querySelector('.rc-icon').textContent  = v.adminIcon;
+    rcAdm.querySelector('.rc-label').textContent = v.adminLabel;
+    rcAdm.querySelector('.rc-sub').textContent   = v.adminSub;
+  }
+}
+
+async function loadSecteurFromResidence(resNomOrId) {
+  if (!resNomOrId) return;
+  const { data } = await db.from('residences')
+    .select('secteur')
+    .or(`nom.ilike.${resNomOrId},id.eq.${resNomOrId}`)
+    .single();
+  if (data && data.secteur) {
+    applyVocabulaire(data.secteur);
+  }
 }
 
 // ========================
