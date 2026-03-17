@@ -282,6 +282,11 @@
   .pro-call-btn{display:block;text-align:center;background:var(--blue);color:white;padding:9px;border-radius:var(--radius-sm);font-size:12px;font-weight:500;text-decoration:none;letter-spacing:0.04em;transition:background 0.15s;}
   .pro-call-btn:hover{background:#1d4ed8;}
   .pro-empty{text-align:center;padding:48px 20px;color:var(--muted);font-size:14px;grid-column:1/-1;}
+  /* SECTOR REGISTER BUTTONS */
+  .sector-btn{border:1.5px solid var(--border);border-radius:var(--radius-sm);padding:10px 8px;text-align:center;cursor:pointer;transition:all .15s;display:flex;flex-direction:column;align-items:center;gap:5px;color:var(--muted);font-family:'DM Sans',sans-serif;}
+  .sector-btn:hover{border-color:var(--blue);color:var(--blue-text);background:var(--blue-bg);}
+  .sector-btn.active{border-color:var(--blue);background:var(--blue-bg);color:var(--blue-text);}
+  .sector-btn span{font-size:11px;font-weight:600;}
 
 
   @media(max-width:600px){
@@ -339,36 +344,59 @@
       <button class="btn btn-primary" id="loginBtn" onclick="doLogin()">Se connecter →</button>
     </div>
     <div id="registerForm" style="display:none">
-      <div class="fg"><label class="lbl">Nom complet <span class="req">*</span></label><input type="text" id="regNom" placeholder="Mohammed Alami"></div>
-      <div class="fg"><label class="lbl">Email <span class="req">*</span></label><input type="email" id="regEmail" placeholder="votre@email.com"></div>
-      <div class="fg">
-        <label class="lbl">Nom de votre résidence <span class="req">*</span></label>
-        <input type="text" id="regResidence" placeholder="Ex : Résidence Missimi Living">
-      </div>
-      <div class="fr2">
-        <div><label class="lbl">Appartement <span class="req">*</span></label><input type="text" id="regApt" placeholder="Ex : 5A"></div>
-        <div><label class="lbl">Téléphone <span class="req">*</span></label><input type="tel" id="regTel" placeholder="06 XX XX XX XX"></div>
-      </div>
-      <div class="fg">
-        <label class="lbl">Mot de passe <span class="req">*</span></label>
-        <div style="position:relative">
-          <input type="password" id="regPwd" placeholder="Minimum 6 caractères" style="padding-right:44px">
-          <button type="button" onclick="togglePwd('regPwd',this)" style="position:absolute;right:12px;top:50%;transform:translateY(-50%);background:none;border:none;cursor:pointer;font-size:16px;color:var(--muted);padding:0;line-height:1">👁</button>
+
+      <!-- ÉTAPE 1 : Choix du secteur -->
+      <div id="regStep1">
+        <div style="font-size:12px;font-weight:600;color:var(--muted);text-transform:uppercase;letter-spacing:.08em;margin-bottom:12px">Votre secteur d'activité</div>
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:16px">
+          <div class="sector-btn" onclick="selectRegSector('residence',this)">🏢<span>Résidence</span></div>
+          <div class="sector-btn" onclick="selectRegSector('hotel',this)">🏨<span>Hôtel & Riad</span></div>
+          <div class="sector-btn" onclick="selectRegSector('campus',this)">🎓<span>Campus</span></div>
+          <div class="sector-btn" onclick="selectRegSector('industrie',this)">🏭<span>Zone industrielle</span></div>
+          <div class="sector-btn" onclick="selectRegSector('mall',this)">🏬<span>Centre commercial</span></div>
+          <div class="sector-btn" onclick="selectRegSector('collectivite',this)">🏛️<span>Collectivité</span></div>
         </div>
       </div>
-      <div class="fg" style="margin-bottom:8px">
-        <label class="lbl">Confirmer le mot de passe <span class="req">*</span></label>
-        <div style="position:relative">
-          <input type="password" id="regPwdConfirm" placeholder="Répétez votre mot de passe" style="padding-right:44px">
-          <button type="button" onclick="togglePwd('regPwdConfirm',this)" style="position:absolute;right:12px;top:50%;transform:translateY(-50%);background:none;border:none;cursor:pointer;font-size:16px;color:var(--muted);padding:0;line-height:1">👁</button>
+
+      <!-- ÉTAPE 2 : Formulaire (masqué jusqu'à sélection secteur) -->
+      <div id="regStep2" style="display:none">
+        <div style="display:flex;align-items:center;gap:8px;margin-bottom:16px;padding:8px 12px;background:var(--blue-bg);border-radius:var(--radius-sm);">
+          <span id="regSectorIcon" style="font-size:16px">🏢</span>
+          <span id="regSectorLabel" style="font-size:12px;font-weight:600;color:var(--blue-text)">Résidence</span>
+          <button onclick="resetRegSector()" style="margin-left:auto;background:none;border:none;cursor:pointer;font-size:11px;color:var(--muted);font-family:'DM Sans',sans-serif;">Changer ↩</button>
         </div>
+        <div class="fg"><label class="lbl">Nom complet <span class="req">*</span></label><input type="text" id="regNom" placeholder="Mohammed Alami"></div>
+        <div class="fg"><label class="lbl">Email <span class="req">*</span></label><input type="email" id="regEmail" placeholder="votre@email.com"></div>
+        <div class="fg">
+          <label class="lbl"><span id="lblSpace">Nom de votre résidence</span> <span class="req">*</span></label>
+          <input type="text" id="regResidence" placeholder="Ex : Résidence Missimi Living">
+        </div>
+        <div class="fr2">
+          <div><label class="lbl"><span id="lblUnit">Appartement</span> <span class="req">*</span></label><input type="text" id="regApt" placeholder="Ex : 5A"></div>
+          <div><label class="lbl">Téléphone <span class="req">*</span></label><input type="tel" id="regTel" placeholder="06 XX XX XX XX"></div>
+        </div>
+        <div class="fg">
+          <label class="lbl">Mot de passe <span class="req">*</span></label>
+          <div style="position:relative">
+            <input type="password" id="regPwd" placeholder="Minimum 6 caractères" style="padding-right:44px">
+            <button type="button" onclick="togglePwd('regPwd',this)" style="position:absolute;right:12px;top:50%;transform:translateY(-50%);background:none;border:none;cursor:pointer;font-size:16px;color:var(--muted);padding:0;line-height:1">👁</button>
+          </div>
+        </div>
+        <div class="fg" style="margin-bottom:8px">
+          <label class="lbl">Confirmer le mot de passe <span class="req">*</span></label>
+          <div style="position:relative">
+            <input type="password" id="regPwdConfirm" placeholder="Répétez votre mot de passe" style="padding-right:44px">
+            <button type="button" onclick="togglePwd('regPwdConfirm',this)" style="position:absolute;right:12px;top:50%;transform:translateY(-50%);background:none;border:none;cursor:pointer;font-size:16px;color:var(--muted);padding:0;line-height:1">👁</button>
+          </div>
+        </div>
+        <div style="background:var(--orange-bg);border:1px solid var(--orange-border);border-radius:var(--radius-sm);padding:10px 14px;font-size:12px;color:var(--orange-text);margin-bottom:14px">
+          ⏳ Votre compte sera créé après validation par le gestionnaire de votre espace.
+        </div>
+        <div class="alert alert-error" id="registerErr"></div>
+        <div class="alert alert-success" id="registerOk"></div>
+        <button class="btn btn-primary" id="registerBtn" onclick="doRegister()">Demander accès →</button>
       </div>
-      <div style="background:var(--orange-bg);border:1px solid var(--orange-border);border-radius:var(--radius-sm);padding:10px 14px;font-size:12px;color:var(--orange-text);margin-bottom:14px">
-        ⏳ Votre compte sera créé après validation par le syndic de votre résidence.
-      </div>
-      <div class="alert alert-error" id="registerErr"></div>
-      <div class="alert alert-success" id="registerOk"></div>
-      <button class="btn btn-primary" id="registerBtn" onclick="doRegister()">Demander accès →</button>
+
     </div>
   </div>
 </div>
@@ -703,7 +731,11 @@ function switchLoginTab(t) {
   document.getElementById('registerForm').style.display = t==='register'?'block':'none';
   document.getElementById('tlLogin').classList.toggle('active', t==='login');
   document.getElementById('tlRegister').classList.toggle('active', t==='register');
-
+  if (t==='register') {
+    document.getElementById('regStep1').style.display='block';
+    document.getElementById('regStep2').style.display='none';
+    document.querySelectorAll('.sector-btn').forEach(b=>b.classList.remove('active'));
+  }
 }
 
 async function doLogin() {
@@ -740,6 +772,34 @@ async function doLogin() {
     if (res) currentUserMeta.residence_nom = res.nom;
   }
   showApp();
+}
+
+let currentRegSector = 'residence';
+
+function selectRegSector(secteur, btn) {
+  currentRegSector = secteur;
+  document.querySelectorAll('.sector-btn').forEach(b => b.classList.remove('active'));
+  btn.classList.add('active');
+  applyVocabulaire(secteur);
+  const v = getSecteurVocab(secteur);
+  document.getElementById('regSectorIcon').textContent  = v.userIcon;
+  document.getElementById('regSectorLabel').textContent = v.spaceName;
+  setTimeout(() => {
+    document.getElementById('regStep1').style.display = 'none';
+    document.getElementById('regStep2').style.display = 'block';
+    document.getElementById('regNom').focus();
+  }, 180);
+}
+
+function resetRegSector() {
+  document.getElementById('regStep1').style.display = 'block';
+  document.getElementById('regStep2').style.display = 'none';
+  document.querySelectorAll('.sector-btn').forEach(b => b.classList.remove('active'));
+  ['regNom','regEmail','regResidence','regApt','regTel','regPwd','regPwdConfirm'].forEach(id => {
+    const el = document.getElementById(id); if(el) el.value='';
+  });
+  document.getElementById('registerErr').style.display='none';
+  document.getElementById('registerOk').style.display='none';
 }
 
 async function doRegister() {
@@ -782,7 +842,7 @@ async function doRegister() {
       role: 'resident_pending',
       residence_id: resData.id,
       residence_nom: resData.nom,
-      secteur: resData.secteur||'residence'
+      secteur: resData.secteur || currentRegSector
     }}
   });
   btn.disabled=false; btn.textContent='Envoyer la demande';
@@ -1620,12 +1680,12 @@ function exportExcel() {
 // VOCABULAIRE PAR SECTEUR
 // ========================
 const SECTEURS = {
-  residence:   { userIcon:'🏠', userLabel:'Résident',    userSub:'Mes tickets',   adminIcon:'⚙️', adminLabel:'Syndic',        adminSub:'Administration', pilLabel:'Résident · Apt ' },
-  hotel:       { userIcon:'🛎️', userLabel:'Client',      userSub:'Mes demandes',  adminIcon:'👔', adminLabel:'Directeur',     adminSub:'Gestion',        pilLabel:'Client · Ch. '    },
-  campus:      { userIcon:'🎓', userLabel:'Étudiant',    userSub:'Mes demandes',  adminIcon:'🏛️', adminLabel:'Administration',adminSub:'Direction',       pilLabel:'Étudiant · '      },
-  industrie:   { userIcon:'🏭', userLabel:'Entreprise',  userSub:'Mes tickets',   adminIcon:'🔧', adminLabel:'Facility Mgr',  adminSub:'Gestion',        pilLabel:'Entreprise · '    },
-  mall:        { userIcon:'🏬', userLabel:'Commerçant',  userSub:'Mes demandes',  adminIcon:'📊', adminLabel:'Direction Mall', adminSub:'Administration', pilLabel:'Commerçant · '    },
-  collectivite:{ userIcon:'🏛️', userLabel:'Citoyen',     userSub:'Mes signalements',adminIcon:'🏛️',adminLabel:'Municipalité', adminSub:'Administration', pilLabel:'Citoyen · '      },
+  residence:   { userIcon:'🏠', userLabel:'Résident',    userSub:'Mes tickets',      adminIcon:'⚙️', adminLabel:'Syndic',         adminSub:'Administration', pilLabel:'Résident · Apt ',   spaceName:'Nom de votre résidence', unitName:'Appartement', unitPlaceholder:'Ex : 5A'   },
+  hotel:       { userIcon:'🛎️', userLabel:'Client',      userSub:'Mes demandes',     adminIcon:'👔', adminLabel:'Directeur',      adminSub:'Gestion',        pilLabel:'Client · Ch. ',     spaceName:'Nom de votre hôtel',     unitName:'N° Chambre',  unitPlaceholder:'Ex : 204'  },
+  campus:      { userIcon:'🎓', userLabel:'Étudiant',    userSub:'Mes demandes',     adminIcon:'🏛️', adminLabel:'Administration', adminSub:'Direction',      pilLabel:'Étudiant · ',       spaceName:'Nom du campus',          unitName:'Chambre/Salle',unitPlaceholder:'Ex : B12' },
+  industrie:   { userIcon:'🏭', userLabel:'Entreprise',  userSub:'Mes tickets',      adminIcon:'🔧', adminLabel:'Facility Mgr',   adminSub:'Gestion',        pilLabel:'Entreprise · ',     spaceName:'Nom du parc industriel', unitName:'N° Lot/Hangar',unitPlaceholder:'Ex : Lot 5'},
+  mall:        { userIcon:'🏬', userLabel:'Commerçant',  userSub:'Mes demandes',     adminIcon:'📊', adminLabel:'Direction Mall', adminSub:'Administration', pilLabel:'Commerçant · ',     spaceName:'Nom du centre commercial',unitName:'N° Boutique',unitPlaceholder:'Ex : B24'  },
+  collectivite:{ userIcon:'🏛️', userLabel:'Citoyen',     userSub:'Mes signalements', adminIcon:'🏛️', adminLabel:'Municipalité',  adminSub:'Administration', pilLabel:'Citoyen · ',        spaceName:'Nom de votre commune',   unitName:'Adresse',     unitPlaceholder:'Ex : 12 Rue Hassan II'},
 };
 const DEFAULT_SECTEUR = SECTEURS.residence;
 
@@ -1648,6 +1708,15 @@ function applyVocabulaire(secteur) {
     rcAdm.querySelector('.rc-label').textContent = v.adminLabel;
     rcAdm.querySelector('.rc-sub').textContent   = v.adminSub;
   }
+  // Update registration form labels
+  const lblSpace = document.getElementById('lblSpace');
+  const lblUnit  = document.getElementById('lblUnit');
+  const inpUnit  = document.getElementById('regApt');
+  const inpSpace = document.getElementById('regResidence');
+  if (lblSpace) lblSpace.textContent = v.spaceName;
+  if (lblUnit)  lblUnit.textContent  = v.unitName;
+  if (inpUnit)  inpUnit.placeholder  = v.unitPlaceholder;
+  if (inpSpace) inpSpace.placeholder = v.spaceName + '...';
 }
 
 async function loadSecteurFromResidence(resNomOrId) {
