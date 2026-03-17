@@ -254,7 +254,36 @@
   .stl-step.done .stl-label{color:var(--blue-text);}
   .stl-step.current .stl-label{color:var(--blue);font-weight:600;}
 
-  /* RESPONSIVE */
+  /* PRO CARDS */
+  .pro-card{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);padding:18px 20px;transition:all 0.15s;display:flex;flex-direction:column;gap:10px;}
+  .pro-card:hover{border-color:var(--border2);box-shadow:0 2px 12px rgba(0,0,0,0.07);}
+  .pro-header{display:flex;align-items:center;gap:12px;}
+  .pro-avatar{width:44px;height:44px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:20px;flex-shrink:0;}
+  .pro-av-plomberie{background:#eff6ff;}
+  .pro-av-electricite{background:#fefce8;}
+  .pro-av-serrurerie{background:#f0fdf4;}
+  .pro-av-peinture{background:#fdf4ff;}
+  .pro-av-climatisation{background:#ecfeff;}
+  .pro-av-jardinage{background:#f0fdf4;}
+  .pro-av-nettoyage{background:#fff7ed;}
+  .pro-name{font-size:14px;font-weight:600;color:var(--text);}
+  .pro-cat-badge{font-size:10px;font-weight:500;padding:2px 8px;border-radius:10px;display:inline-block;margin-top:2px;}
+  .pro-cat-plomberie{background:#eff6ff;color:#1d4ed8;}
+  .pro-cat-electricite{background:#fefce8;color:#a16207;}
+  .pro-cat-serrurerie{background:#f0fdf4;color:#15803d;}
+  .pro-cat-peinture{background:#fdf4ff;color:#7e22ce;}
+  .pro-cat-climatisation{background:#ecfeff;color:#0e7490;}
+  .pro-cat-jardinage{background:#f0fdf4;color:#15803d;}
+  .pro-cat-nettoyage{background:#fff7ed;color:#c2410c;}
+  .pro-divider{height:1px;background:var(--border);}
+  .pro-tel{display:flex;align-items:center;gap:8px;font-size:13px;color:var(--muted);}
+  .pro-tel a{color:var(--blue);text-decoration:none;font-weight:500;}
+  .pro-tel a:hover{text-decoration:underline;}
+  .pro-call-btn{display:block;text-align:center;background:var(--blue);color:white;padding:9px;border-radius:var(--radius-sm);font-size:12px;font-weight:500;text-decoration:none;letter-spacing:0.04em;transition:background 0.15s;}
+  .pro-call-btn:hover{background:#1d4ed8;}
+  .pro-empty{text-align:center;padding:48px 20px;color:var(--muted);font-size:14px;grid-column:1/-1;}
+
+
   @media(max-width:600px){
     .fr2{grid-template-columns:1fr;}
     .res-stats,.stats-grid{grid-template-columns:repeat(3,1fr);}
@@ -334,6 +363,7 @@
       Mes tickets
       <span class="tab-badge" id="unreadBadge" style="display:none">0</span>
     </div>
+    <div class="tab" data-tab="services" onclick="showTab('services',this)" id="tabServices" style="display:none">Annuaire</div>
     <div class="tab" data-tab="admin" onclick="showTab('admin',this)" id="tabAdmin" style="display:none">Administration</div>
   </div>
 
@@ -393,6 +423,61 @@
         <button class="filter-btn" onclick="filterRes(this,'Résolu')">Résolus</button>
       </div>
       <div class="res-ticket-list" id="resTicketList"></div>
+    </div>
+
+    <!-- ANNUAIRE SERVICES -->
+    <div class="section" id="sec-services">
+      <!-- ADMIN: Formulaire ajout -->
+      <div class="card" id="adminProForm" style="display:none;margin-bottom:16px;border-left:3px solid var(--blue);">
+        <div class="card-title" style="margin-bottom:4px">Gérer l'annuaire</div>
+        <div class="card-sub">Ajouter ou supprimer un professionnel</div>
+        <div class="fr2">
+          <div><label class="lbl">Nom <span class="req">*</span></label><input type="text" id="proNom" placeholder="Hassan Benmoussa"></div>
+          <div><label class="lbl">Téléphone <span class="req">*</span></label><input type="tel" id="proTel" placeholder="06 61 23 45 67"></div>
+        </div>
+        <div class="fr2">
+          <div>
+            <label class="lbl">Catégorie <span class="req">*</span></label>
+            <select id="proCat">
+              <option value="">Choisir...</option>
+              <option>Plomberie</option><option>Électricité</option>
+              <option>Serrurerie</option><option>Peinture</option>
+              <option>Climatisation</option><option>Jardinage</option><option>Nettoyage</option>
+            </select>
+          </div>
+          <div><label class="lbl">Description</label><input type="text" id="proDesc" placeholder="Spécialité, disponibilité..."></div>
+        </div>
+        <div class="alert alert-error" id="proErr"></div>
+        <div class="alert alert-success" id="proOk"></div>
+        <div class="btn-row" style="margin-top:4px">
+          <button class="btn btn-ghost" onclick="resetProForm()">Annuler</button>
+          <button class="btn btn-primary" style="width:auto" id="proSubmitBtn" onclick="savePro()">Ajouter le professionnel →</button>
+        </div>
+      </div>
+
+      <!-- HEADER annuaire -->
+      <div class="card" style="margin-bottom:16px">
+        <div style="display:flex;justify-content:space-between;align-items:flex-start;gap:12px;flex-wrap:wrap;">
+          <div>
+            <div class="card-title">Annuaire des professionnels</div>
+            <div class="card-sub" style="margin-bottom:12px">Contacts recommandés par le syndic pour les interventions</div>
+          </div>
+          <button id="btnAddPro" style="display:none" class="btn btn-primary" style="width:auto" onclick="toggleProForm()">+ Ajouter</button>
+        </div>
+        <input type="text" id="searchPro" oninput="filterPros()" placeholder="🔍 Rechercher un professionnel..." style="margin-bottom:0">
+      </div>
+
+      <div class="filters" id="catFilters">
+        <button class="filter-btn active" onclick="filterCat(this,'all')">Tous</button>
+        <button class="filter-btn" onclick="filterCat(this,'Plomberie')">🔧 Plomberie</button>
+        <button class="filter-btn" onclick="filterCat(this,'Électricité')">⚡ Électricité</button>
+        <button class="filter-btn" onclick="filterCat(this,'Serrurerie')">🔑 Serrurerie</button>
+        <button class="filter-btn" onclick="filterCat(this,'Peinture')">🎨 Peinture</button>
+        <button class="filter-btn" onclick="filterCat(this,'Climatisation')">❄️ Climatisation</button>
+        <button class="filter-btn" onclick="filterCat(this,'Jardinage')">🌿 Jardinage</button>
+        <button class="filter-btn" onclick="filterCat(this,'Nettoyage')">🧹 Nettoyage</button>
+      </div>
+      <div id="proList" style="display:grid;grid-template-columns:repeat(auto-fill,minmax(280px,1fr));gap:12px;"></div>
     </div>
 
     <!-- ADMIN -->
@@ -558,12 +643,14 @@ function showApp() {
   if (currentRole==='admin') {
     pill.textContent='Admin · Syndic'; pill.className='role-pill pill-admin';
     tabAdmin.style.display='block'; tabNouveau.style.display='none'; tabSuivi.style.display='none';
+    document.getElementById('tabServices').style.display='block';
     showTab('admin', tabAdmin);
   } else {
     pill.textContent='Résident · Apt '+(currentUserMeta.appartement||'');
     pill.className='role-pill pill-resident';
     tabAdmin.style.display='none';
     document.getElementById('fApt').value = currentUserMeta.appartement||'';
+    document.getElementById('tabServices').style.display='block';
     showTab('nouveau', tabNouveau);
   }
 }
@@ -575,6 +662,7 @@ function showTab(tab, el) {
   document.getElementById('sec-'+tab).classList.add('active');
   if(tab==='suivi') loadAndRenderSuivi();
   if(tab==='admin') loadAndRenderAdmin();
+  if(tab==='services') loadAndRenderPros();
 }
 
 async function loadTickets() {
@@ -860,7 +948,141 @@ function statClass(s){ return s==='Ouvert'?'b-ouvert':s==='En cours'?'b-encours'
 function fmtDate(d){ return new Date(d).toLocaleDateString('fr-FR',{day:'numeric',month:'short',year:'numeric'}); }
 function fmtDateShort(d){ return new Date(d).toLocaleDateString('fr-FR',{day:'numeric',month:'short'}); }
 
+// ========================
+// ANNUAIRE PROFESSIONNELS
+// ========================
+let pros = [];
+let currentCat = 'all';
+let currentSearch = '';
+let editingProId = null;
+
+const catIcons = {
+  'Plomberie':'🔧','Électricité':'⚡','Serrurerie':'🔑',
+  'Peinture':'🎨','Climatisation':'❄️','Jardinage':'🌿','Nettoyage':'🧹'
+};
+
+function catKey(cat) {
+  return cat.toLowerCase()
+    .replace(/é|è|ê/g,'e').replace(/â/g,'a').replace(/î/g,'i')
+    .replace(/[^a-z]/g,'');
+}
+
+async function loadPros() {
+  const { data, error } = await db.from('professionnels')
+    .select('*').eq('actif', true).order('categorie').order('nom');
+  if (!error && data) pros = data;
+}
+
+async function loadAndRenderPros() {
+  document.getElementById('proList').innerHTML = '<div class="pro-empty">Chargement...</div>';
+  await loadPros();
+  renderPros();
+  // Afficher bouton admin
+  if (currentRole === 'admin') {
+    document.getElementById('btnAddPro').style.display = 'inline-block';
+  }
+}
+
+function renderPros() {
+  const list = document.getElementById('proList');
+  if (!list) return;
+  const filtered = pros.filter(p => {
+    const matchCat = currentCat === 'all' || p.categorie === currentCat;
+    const matchSearch = !currentSearch ||
+      p.nom.toLowerCase().includes(currentSearch) ||
+      p.categorie.toLowerCase().includes(currentSearch) ||
+      (p.description||'').toLowerCase().includes(currentSearch);
+    return matchCat && matchSearch;
+  });
+  if (!filtered.length) {
+    list.innerHTML = '<div class="pro-empty">📭 Aucun professionnel trouvé</div>';
+    return;
+  }
+  list.innerHTML = filtered.map(p => {
+    const k = catKey(p.categorie);
+    const icon = catIcons[p.categorie] || '👤';
+    const telClean = p.telephone.replace(/\s/g,'');
+    const isAdmin = currentRole === 'admin';
+    return `
+    <div class="pro-card">
+      <div class="pro-header">
+        <div class="pro-avatar pro-av-${k}">${icon}</div>
+        <div style="flex:1">
+          <div class="pro-name">${p.nom}</div>
+          <span class="pro-cat-badge pro-cat-${k}">${p.categorie}</span>
+        </div>
+        ${isAdmin ? `<button onclick="deletePro('${p.id}','${p.nom}')" style="background:none;border:none;cursor:pointer;font-size:16px;color:var(--red-text);padding:4px;border-radius:4px;" title="Supprimer">🗑️</button>` : ''}
+      </div>
+      ${p.description ? `<p style="font-size:12px;color:var(--muted);line-height:1.55;margin:0">${p.description}</p>` : ''}
+      <div class="pro-divider"></div>
+      <div class="pro-tel">📞 <a href="tel:${telClean}">${p.telephone}</a></div>
+      <a href="tel:${telClean}" class="pro-call-btn">📲 Appeler</a>
+    </div>`;
+  }).join('');
+}
+
+function filterCat(btn, cat) {
+  currentCat = cat;
+  document.querySelectorAll('#catFilters .filter-btn').forEach(b => b.classList.remove('active'));
+  btn.classList.add('active');
+  renderPros();
+}
+
+function filterPros() {
+  currentSearch = document.getElementById('searchPro').value.toLowerCase();
+  renderPros();
+}
+
+function toggleProForm() {
+  const form = document.getElementById('adminProForm');
+  const isVisible = form.style.display !== 'none';
+  form.style.display = isVisible ? 'none' : 'block';
+  document.getElementById('btnAddPro').textContent = isVisible ? '+ Ajouter' : '✕ Fermer';
+  if (!isVisible) document.getElementById('proNom').focus();
+}
+
+function resetProForm() {
+  ['proNom','proTel','proDesc'].forEach(id => document.getElementById(id).value = '');
+  document.getElementById('proCat').value = '';
+  document.getElementById('proErr').style.display = 'none';
+  document.getElementById('proOk').style.display = 'none';
+  editingProId = null;
+  document.getElementById('proSubmitBtn').textContent = 'Ajouter le professionnel →';
+  document.getElementById('adminProForm').style.display = 'none';
+  document.getElementById('btnAddPro').textContent = '+ Ajouter';
+}
+
+async function savePro() {
+  const nom = document.getElementById('proNom').value.trim();
+  const tel = document.getElementById('proTel').value.trim();
+  const cat = document.getElementById('proCat').value;
+  const desc = document.getElementById('proDesc').value.trim();
+  const errEl = document.getElementById('proErr');
+  const okEl = document.getElementById('proOk');
+  errEl.style.display = 'none'; okEl.style.display = 'none';
+  if (!nom || !tel || !cat) { errEl.textContent = '⚠️ Remplissez les champs obligatoires (*)'; errEl.style.display = 'block'; return; }
+  const btn = document.getElementById('proSubmitBtn');
+  btn.disabled = true; btn.textContent = 'Enregistrement...';
+  const { error } = await db.from('professionnels').insert({
+    nom, telephone: tel, categorie: cat, description: desc, actif: true
+  });
+  btn.disabled = false; btn.textContent = 'Ajouter le professionnel →';
+  if (error) { errEl.textContent = '❌ Erreur : ' + error.message; errEl.style.display = 'block'; return; }
+  okEl.textContent = `✅ ${nom} ajouté avec succès !`;
+  okEl.style.display = 'block';
+  resetProForm();
+  await loadAndRenderPros();
+}
+
+async function deletePro(id, nom) {
+  if (!confirm(`Supprimer "${nom}" de l'annuaire ?`)) return;
+  const { error } = await db.from('professionnels').update({ actif: false }).eq('id', id);
+  if (error) { alert('Erreur : ' + error.message); return; }
+  await loadAndRenderPros();
+}
+
 init();
+
 </script>
 </body>
 </html>
