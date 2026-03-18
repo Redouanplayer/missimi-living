@@ -891,6 +891,10 @@ function showApp() {
     document.getElementById('fApt').value = currentUserMeta.appartement||'';
     document.getElementById('tabServices').style.display='block';
     document.getElementById('tabCompta').style.display='none';
+    // Afficher le nom de la résidence dans la navbar
+    if (currentUserMeta.residence_nom) {
+      document.getElementById('navResName').textContent = currentUserMeta.residence_nom;
+    }
     showTab('nouveau', tabNouveau);
   }
 }
