@@ -1567,9 +1567,35 @@ async function saveCompta() {
   }
   const btn = document.getElementById('comptaSubmitBtn');
   btn.disabled = true; btn.textContent = 'Enregistrement...';
+
+  // Upload pièce jointe si présente
+  let pieceJointeUrl = null;
+  let pieceJointeNom = null;
+  const comptaFile = document.getElementById('comptaFile');
+  if (comptaFile.files && comptaFile.files[0]) {
+    const file = comptaFile.files[0];
+    const ext = file.name.split('.').pop();
+    const path = `comptabilite/${currentUser.id}/${Date.now()}_${Math.random().toString(36).substr(2,6)}.${ext}`;
+    btn.textContent = 'Upload facture...';
+    const { data: upData, error: upErr } = await db.storage
+      .from('attachments')
+      .upload(path, file, { cacheControl: '3600', upsert: false });
+    if (!upErr && upData) {
+      const { data: urlData } = db.storage.from('attachments').getPublicUrl(path);
+      if (urlData?.publicUrl) {
+        pieceJointeUrl = urlData.publicUrl;
+        pieceJointeNom = file.name;
+      }
+    }
+  }
+
+  btn.textContent = 'Enregistrement...';
+  const resId = currentUserMeta.residence_id || null;
   const { error } = await db.from('comptabilite').insert({
     type, categorie: cat, libelle, montant, date_op: date,
-    created_by: currentUser.id
+    created_by: currentUser.id,
+    residence_id: resId,
+    piece_jointe: pieceJointeUrl ? JSON.stringify({ nom: pieceJointeNom, url: pieceJointeUrl }) : null
   });
   btn.disabled = false; btn.textContent = 'Enregistrer →';
   if (error) { errEl.textContent = '❌ ' + error.message; errEl.style.display = 'block'; return; }
@@ -1665,6 +1691,7 @@ function renderComptaTable() {
         <th style="padding:9px 12px;font-size:10px;text-transform:uppercase;letter-spacing:0.08em;color:var(--muted);border-bottom:1px solid var(--border);font-weight:500">Catégorie</th>
         <th style="padding:9px 12px;font-size:10px;text-transform:uppercase;letter-spacing:0.08em;color:var(--muted);border-bottom:1px solid var(--border);font-weight:500">Libellé</th>
         <th style="padding:9px 12px;font-size:10px;text-transform:uppercase;letter-spacing:0.08em;color:var(--muted);border-bottom:1px solid var(--border);font-weight:500;text-align:right">Montant (DH)</th>
+        <th style="padding:9px 12px;font-size:10px;text-transform:uppercase;letter-spacing:0.08em;color:var(--muted);border-bottom:1px solid var(--border);font-weight:500;text-align:center">Facture</th>
         <th style="padding:9px 12px;font-size:10px;text-transform:uppercase;letter-spacing:0.08em;color:var(--muted);border-bottom:1px solid var(--border);font-weight:500;text-align:center">Action</th>
       </tr>
     </thead>
@@ -1678,6 +1705,7 @@ function renderComptaTable() {
         <td style="padding:9px 12px;color:var(--muted)">${op.categorie}</td>
         <td style="padding:9px 12px;font-weight:500">${op.libelle}</td>
         <td style="padding:9px 12px;text-align:right;font-weight:600;${op.type==='recette'?'color:var(--green-text)':'color:var(--red-text)'}">${op.type==='recette'?'+':'−'}${parseFloat(op.montant).toLocaleString('fr-MA',{minimumFractionDigits:2,maximumFractionDigits:2})}</td>
+        <td style="padding:9px 12px;text-align:center">${(() => { try { const pj = op.piece_jointe ? JSON.parse(op.piece_jointe) : null; return pj ? `<a href="${pj.url}" target="_blank" style="display:inline-flex;align-items:center;gap:4px;font-size:11px;color:var(--blue-text);text-decoration:none;padding:3px 8px;background:var(--blue-bg);border-radius:6px;" title="${pj.nom}">📎 Voir</a>` : '<span style="color:var(--hint);font-size:11px">—</span>'; } catch(e) { return '<span style="color:var(--hint);font-size:11px">—</span>'; } })()}</td>
         <td style="padding:9px 12px;text-align:center"><button onclick="deleteCompta('${op.id}')" style="background:none;border:none;cursor:pointer;color:var(--red-text);font-size:14px" title="Supprimer">🗑️</button></td>
       </tr>`).join('')}
     </tbody>
