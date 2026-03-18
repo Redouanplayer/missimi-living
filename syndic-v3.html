@@ -657,6 +657,7 @@
         <label class="lbl">Description</label>
         <p style="font-size:13px;line-height:1.65;margin-top:6px" id="mDesc"></p>
       </div>
+      <div class="modal-section" id="mPiecesJointes" style="display:none"></div>
       <div class="modal-section" id="mStatusSection" style="display:none">
         <label class="lbl" style="margin-bottom:10px">Changer le statut</label>
         <div class="status-selector" id="mStatusBtns"></div>
@@ -1149,9 +1150,33 @@ async function submitTicket() {
   if (!titre||!cat||!urgence||!apt) { showErr(errEl,'⚠️ Remplissez tous les champs obligatoires (*)'); return; }
   const btn = document.getElementById('submitBtn');
   btn.disabled=true; btn.textContent='Envoi...';
+
+  // Upload files to Supabase Storage
+  const fileInput = document.getElementById('fileInput');
+  const files = fileInput.files;
+  const pieceUrls = [];
+  if (files && files.length > 0) {
+    btn.textContent = 'Upload fichiers...';
+    for (const file of files) {
+      const ext = file.name.split('.').pop();
+      const path = `tickets/${currentUser.id}/${Date.now()}_${Math.random().toString(36).substr(2,6)}.${ext}`;
+      const { data: upData, error: upErr } = await db.storage
+        .from('attachments')
+        .upload(path, file, { cacheControl: '3600', upsert: false });
+      if (!upErr && upData) {
+        const { data: urlData } = db.storage.from('attachments').getPublicUrl(path);
+        if (urlData?.publicUrl) pieceUrls.push({ nom: file.name, url: urlData.publicUrl });
+      }
+    }
+  }
+
+  btn.textContent = 'Enregistrement...';
+  const resId = currentUserMeta.residence_id || null;
   const { error } = await db.from('tickets').insert({
     user_id: currentUser.id, titre, description: desc,
-    categorie: cat, urgence, appartement: apt, type
+    categorie: cat, urgence, appartement: apt, type,
+    residence_id: resId,
+    pieces_jointes: pieceUrls.length > 0 ? JSON.stringify(pieceUrls) : null
   });
   btn.disabled=false; btn.textContent='Soumettre →';
   if (error) { showErr(errEl,'❌ Erreur : '+error.message); return; }
@@ -1210,6 +1235,26 @@ function openModal(id) {
     <div class="detail-item"><label>Ouvert le</label><div class="val">${fmtDate(t.created_at)}</div></div>
     <div class="detail-item"><label>Appartement</label><div class="val">${t.appartement}</div></div>`;
   document.getElementById('mDesc').textContent = t.description||'Aucune description.';
+
+  // Afficher les pièces jointes
+  const pjSection = document.getElementById('mPiecesJointes');
+  if (pjSection) {
+    let pj = [];
+    try { pj = t.pieces_jointes ? JSON.parse(t.pieces_jointes) : []; } catch(e) { pj = []; }
+    if (pj.length > 0) {
+      pjSection.style.display = 'block';
+      pjSection.innerHTML = `
+        <label class="lbl" style="margin-bottom:8px">Pièces jointes (${pj.length})</label>
+        <div style="display:flex;flex-wrap:wrap;gap:8px">
+          ${pj.map(p => `
+            <a href="${p.url}" target="_blank" style="display:flex;align-items:center;gap:6px;padding:7px 12px;background:var(--blue-bg);border:1px solid var(--blue-border);border-radius:var(--radius-sm);font-size:12px;color:var(--blue-text);text-decoration:none;font-weight:500;">
+              📎 ${p.nom}
+            </a>`).join('')}
+        </div>`;
+    } else {
+      pjSection.style.display = 'none';
+    }
+  }
 
   const statusSec = document.getElementById('mStatusSection');
   if (currentRole==='admin') {
