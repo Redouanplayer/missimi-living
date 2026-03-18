@@ -1607,8 +1607,10 @@ async function saveCompta() {
 }
 
 async function loadAndRenderCompta() {
-  const { data, error } = await db.from('comptabilite')
-    .select('*').order('date_op', { ascending: false });
+  const resId = currentUserMeta.residence_id || null;
+  let query = db.from('comptabilite').select('*').order('date_op', { ascending: false });
+  if (resId) query = query.eq('residence_id', resId);
+  const { data, error } = await query;
   if (!error && data) comptaData = data;
   comptaFiltered = [...comptaData];
   renderCompta();
