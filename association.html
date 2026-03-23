@@ -440,6 +440,7 @@ footer{background:var(--navy);padding:32px 60px;display:flex;align-items:center;
 <div class="divider"></div>
 <div style="text-align:center;padding:16px 0">
   <a href="reglement.html" class="btn-g">Voir le règlement intérieur →</a>
+  <a href="association-ar.html" class="btn-o" style="margin-left:12px">النسخة العربية 🇲🇦</a>
   <a href="syndic-v3.html" class="btn-o" style="margin-left:12px">Espace résident</a>
 </div></div>
 <footer>
@@ -464,5 +465,9 @@ document.querySelectorAll('#navLinks a').forEach(a=>a.addEventListener('click',(
   const b=document.getElementById('burger');b.classList.remove('open');b.textContent='☰';
 }));
 </script>
+<div style="position:fixed;bottom:28px;left:28px;z-index:200;display:flex;gap:8px">
+  <button style="padding:9px 18px;border-radius:20px;font-size:12px;font-weight:600;cursor:pointer;border:none;background:rgba(255,255,255,.15);color:white;backdrop-filter:blur(8px);font-family:'DM Sans',sans-serif" onclick="location.href='association.html'">Français ✓</button>
+  <button style="padding:9px 18px;border-radius:20px;font-size:12px;font-weight:600;cursor:pointer;border:none;background:var(--gold);color:var(--navy);font-family:'Noto Kufi Arabic',sans-serif" onclick="location.href='association-ar.html'">العربية 🇲🇦</button>
+</div>
 </body>
 </html>

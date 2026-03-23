@@ -1,0 +1,378 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>جمعية سكان ميسيمي ليفينج — النظام الأساسي</title>
+<link href="https://fonts.googleapis.com/css2?family=Noto+Kufi+Arabic:wght@300;400;500;600;700&family=Noto+Naskh+Arabic:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+:root{--gold:#b8975a;--gold-light:#d4b483;--navy:#0d1b2a;--cream:#faf8f4;--warm:#f5f0e8;--border:#e3ddd4;--text:#1a1208;--muted:#6b5f4e;--radius:4px;--radius-md:8px;--radius-lg:16px;}
+*,*::before,*::after{margin:0;padding:0;box-sizing:border-box;}html{scroll-behavior:smooth;}
+body{font-family:"Noto Naskh Arabic",serif;background:var(--cream);color:var(--text);direction:rtl;}
+::-webkit-scrollbar{width:3px;}::-webkit-scrollbar-thumb{background:var(--gold);}
+nav{position:fixed;top:0;left:0;right:0;z-index:100;padding:14px 60px;background:rgba(13,27,42,.97);backdrop-filter:blur(20px);box-shadow:0 1px 0 rgba(184,151,90,.2);display:flex;align-items:center;justify-content:space-between;direction:rtl;}
+.nav-logo{display:flex;flex-direction:column;line-height:1;text-decoration:none;}
+.nl-main{font-family:"Noto Kufi Arabic",sans-serif;font-size:18px;font-weight:600;color:white;}
+.nl-sub{font-size:9px;color:var(--gold);margin-top:2px;font-family:"Noto Kufi Arabic",sans-serif;}
+.nav-links{display:flex;gap:20px;align-items:center;flex-direction:row-reverse;}
+.nav-links a{font-size:12px;font-weight:500;color:rgba(255,255,255,.6);text-decoration:none;transition:color .2s;font-family:"Noto Kufi Arabic",sans-serif;}
+.nav-links a:hover,.nav-links a.active{color:var(--gold);}
+.nav-cta{background:var(--gold)!important;color:var(--navy)!important;padding:8px 14px;border-radius:var(--radius);}
+.burger{display:none;background:none;border:1px solid rgba(255,255,255,.3);color:white;font-size:16px;padding:5px 10px;border-radius:4px;cursor:pointer;}
+.page-hero{background:var(--navy);padding:120px 60px 64px;position:relative;overflow:hidden;}
+.ph-pattern{position:absolute;inset:0;background-image:repeating-linear-gradient(45deg,transparent,transparent 40px,rgba(184,151,90,.03) 40px,rgba(184,151,90,.03) 80px);}
+.ph-glow{position:absolute;top:0;left:0;width:400px;height:300px;background:radial-gradient(ellipse,rgba(184,151,90,.1),transparent 70%);}
+.ph-content{position:relative;z-index:2;}
+.ph-eyebrow{display:flex;align-items:center;gap:14px;margin-bottom:16px;flex-direction:row-reverse;justify-content:flex-end;}
+.pe-line{width:28px;height:1px;background:var(--gold);}
+.pe-text{font-size:11px;color:var(--gold);font-weight:500;font-family:"Noto Kufi Arabic",sans-serif;}
+.ph-title{font-family:"Noto Kufi Arabic",sans-serif;font-size:clamp(34px,5vw,58px);font-weight:300;color:white;line-height:1.35;margin-bottom:8px;}
+.ph-title em{font-style:normal;color:var(--gold);}
+.ph-sub{font-size:15px;color:rgba(255,255,255,.55);max-width:640px;line-height:2;}
+.ph-sub-fr{font-size:13px;color:rgba(255,255,255,.3);direction:ltr;text-align:right;margin:8px 0;font-family:sans-serif;}
+.main{padding:60px 60px;max-width:1000px;margin:0 auto;}
+.tag{display:inline-flex;align-items:center;gap:6px;background:rgba(184,151,90,.1);border:1px solid rgba(184,151,90,.3);color:var(--gold);font-size:12px;font-weight:500;padding:5px 14px;border-radius:20px;margin-bottom:20px;font-family:"Noto Kufi Arabic",sans-serif;}
+.btn-g{background:var(--gold);color:var(--navy);padding:12px 24px;border-radius:var(--radius);font-size:13px;font-weight:600;text-decoration:none;display:inline-flex;align-items:center;gap:8px;transition:all .2s;font-family:"Noto Kufi Arabic",sans-serif;}
+.btn-g:hover{background:var(--gold-light);transform:translateY(-1px);}
+.btn-o{border:1px solid var(--border);color:var(--text);padding:12px 24px;border-radius:var(--radius);font-size:13px;font-weight:500;text-decoration:none;display:inline-flex;align-items:center;gap:8px;transition:all .2s;font-family:"Noto Kufi Arabic",sans-serif;}
+.btn-o:hover{border-color:var(--gold);color:var(--gold);}
+.divider{height:1px;background:var(--border);margin:40px 0;}
+footer{background:var(--navy);padding:32px 60px;display:flex;align-items:center;justify-content:space-between;margin-top:80px;direction:rtl;}
+.ftl{font-family:"Noto Kufi Arabic",sans-serif;font-size:17px;color:white;font-weight:500;}
+.ftl span{color:var(--gold);}
+.ftc{font-size:11px;color:rgba(255,255,255,.25);font-family:"Noto Kufi Arabic",sans-serif;}
+.ftlinks{display:flex;gap:16px;flex-direction:row-reverse;}
+.ftlinks a{font-size:12px;color:rgba(255,255,255,.35);text-decoration:none;transition:color .2s;font-family:"Noto Kufi Arabic",sans-serif;}
+.ftlinks a:hover{color:var(--gold);}
+.art-num{font-size:11px;color:var(--gold);margin-bottom:10px;font-family:"Noto Kufi Arabic",sans-serif;font-weight:600;display:flex;align-items:center;gap:8px;}
+.tag-fond{background:rgba(184,151,90,.15);border:1px solid rgba(184,151,90,.3);border-radius:10px;padding:2px 10px;font-size:10px;}
+.art-body{font-size:15px;color:rgba(255,255,255,.75);line-height:2.1;margin-bottom:12px;}
+.art-body strong{color:white;}
+.art-list{list-style:none;display:flex;flex-direction:column;gap:8px;}
+.art-list li{font-size:14px;color:rgba(255,255,255,.65);padding-right:20px;position:relative;line-height:1.9;}
+.art-list li::before{content:"—";position:absolute;right:0;color:var(--gold);}
+.hl-box{padding:14px 20px;background:rgba(184,151,90,.1);border-right:3px solid var(--gold);border-radius:var(--radius-md) 0 0 var(--radius-md);margin:12px 0;}
+.sub-s{background:rgba(184,151,90,.08);border:1px solid rgba(184,151,90,.25);border-radius:var(--radius-md);padding:20px 22px;margin-bottom:12px;}
+.sub-t{font-size:14px;font-weight:600;color:var(--gold);margin-bottom:12px;font-family:"Noto Kufi Arabic",sans-serif;display:flex;align-items:center;gap:8px;}
+.g2{display:grid;grid-template-columns:1fr 1fr;gap:10px;}
+.mc{padding:12px 14px;background:rgba(255,255,255,.04);border-radius:var(--radius-md);border:1px solid rgba(255,255,255,.06);}
+.mc-t{font-size:13px;font-weight:600;color:white;margin-bottom:5px;font-family:"Noto Kufi Arabic",sans-serif;}
+.mc-d{font-size:12px;color:rgba(255,255,255,.5);line-height:1.7;}
+.step{display:flex;gap:12px;align-items:flex-start;padding:12px 14px;background:rgba(255,255,255,.04);border-radius:var(--radius-md);margin-bottom:8px;}
+.step-n{width:28px;height:28px;background:rgba(184,151,90,.2);border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:700;color:var(--gold);flex-shrink:0;font-family:"Noto Kufi Arabic",sans-serif;}
+.warn{margin-top:12px;padding:10px 14px;background:rgba(184,151,90,.1);border-radius:var(--radius-md);font-size:13px;color:rgba(255,255,255,.6);line-height:1.8;}
+.warn strong{color:white;}
+.lang-switch{position:fixed;bottom:28px;right:28px;z-index:200;display:flex;gap:8px;}
+.ls-btn{padding:9px 18px;border-radius:20px;font-size:12px;font-weight:600;cursor:pointer;border:none;transition:all .2s;font-family:"Noto Kufi Arabic",sans-serif;}
+.ls-ar{background:var(--gold);color:var(--navy);}
+.ls-fr{background:rgba(255,255,255,.15);color:white;backdrop-filter:blur(8px);}
+.ls-fr:hover{background:rgba(255,255,255,.25);}
+@keyframes blink{0%,100%{opacity:1;}50%{opacity:.2;}}
+@media(max-width:900px){
+  nav{padding:12px 16px;}
+  .nav-links{display:none;flex-direction:column;position:fixed;top:0;left:0;right:0;bottom:0;background:rgba(13,27,42,.98);z-index:200;justify-content:center;align-items:center;gap:24px;}
+  .nav-links.open{display:flex;}
+  .burger{display:block;position:relative;z-index:300;}
+  .burger.open{position:fixed;top:12px;left:16px;}
+  .page-hero{padding:100px 20px 48px;}
+  .main{padding:40px 20px;}
+  .g2{grid-template-columns:1fr;}
+  footer{flex-direction:column;gap:12px;text-align:center;padding:24px 16px;}
+  .ftlinks{flex-wrap:wrap;justify-content:center;}
+  .lang-switch{bottom:16px;right:16px;}
+}
+</style>
+</head>
+<body>
+
+<nav>
+  <a href="index.html" class="nav-logo">
+    <span class="nl-main">ميسيمي ليفينج</span>
+    <span class="nl-sub">Missimi Living · Casablanca</span>
+  </a>
+  <div class="nav-links" id="navLinks">
+    <a href="index.html">الرئيسية</a>
+    <a href="projet.html">المشروع</a>
+    <a href="association.html">الجمعية</a>
+    <a href="association-ar.html" class="active">النظام الأساسي</a>
+    <a href="reglement.html">النظام الداخلي</a>
+    <a href="contact.html">اتصل بنا</a>
+    <a href="syndic-v3.html" class="nav-cta">فضاء السكان</a>
+  </div>
+  <button class="burger" id="burger" onclick="toggleMenu()">&#9776;</button>
+</nav>
+
+<div class="page-hero">
+  <div class="ph-pattern"></div>
+  <div class="ph-glow"></div>
+  <div class="ph-content">
+    <div class="ph-eyebrow"><div class="pe-line"></div><span class="pe-text">وثيقة رسمية · مشروع للمصادقة · 2026</span></div>
+    <h1 class="ph-title">النظام الأساسي<br><em>لجمعية سكان ميسيمي ليفينج</em></h1>
+    <div class="ph-sub-fr">Projet de Statuts — Association des Résidents Missimi Living</div>
+    <p class="ph-sub">النظام الأساسي المؤسِّس لجمعية سكان ميسيمي ليفينج بالدار البيضاء، المنظِّم لهياكلها وأهدافها ومبادئها الديمقراطية والمالية.</p>
+  </div>
+</div>
+
+<div class="main">
+  <div class="tag" style="animation:blink 3s infinite">⏳ مشروع قيد المصادقة</div>
+
+  <div style="background:var(--navy);border-radius:var(--radius-lg);overflow:hidden">
+
+    <!-- HEADER -->
+    <div style="padding:36px 40px;border-bottom:1px solid rgba(184,151,90,.15);display:flex;align-items:flex-start;justify-content:space-between;flex-wrap:wrap;gap:16px">
+      <div>
+        <div style="font-family:'Noto Kufi Arabic',sans-serif;font-size:clamp(20px,3vw,34px);font-weight:400;color:white;line-height:1.4">النظام الأساسي لـ <em style="color:var(--gold)">جمعية سكان ميسيمي ليفينج</em></div>
+        <div style="font-size:12px;color:rgba(255,255,255,.3);direction:ltr;text-align:right;margin-top:6px;font-family:sans-serif">Association des Résidents de Missimi Living — Casablanca</div>
+      </div>
+      <div style="text-align:left">
+        <div style="background:rgba(184,151,90,.12);border:1px solid rgba(184,151,90,.3);border-radius:20px;padding:5px 14px;font-size:12px;color:var(--gold);font-weight:500;display:inline-flex;align-items:center;gap:6px;font-family:'Noto Kufi Arabic',sans-serif"><span style="width:5px;height:5px;background:var(--gold);border-radius:50%;animation:blink 2s infinite"></span>مشروع · قيد التحقق</div>
+        <div style="font-size:11px;color:rgba(255,255,255,.3);margin-top:6px;font-family:'Noto Kufi Arabic',sans-serif">الدار البيضاء، 2026</div>
+      </div>
+    </div>
+
+    <!-- CORPS -->
+    <div style="padding:36px 40px;display:flex;flex-direction:column;gap:0">
+
+      <!-- م 1 -->
+      <div style="padding:24px 0;border-bottom:1px solid rgba(255,255,255,.06)">
+        <div class="art-num">المادة الأولى — التسمية</div>
+        <p class="art-body">تأسست بموجب أحكام <strong>الظهير الشريف رقم 1-58-376 الصادر بتاريخ 15 نوفمبر 1958</strong> المتعلق بحق تأسيس الجمعيات وما طرأ عليه من تعديلات، جمعية تحمل التسمية التالية :</p>
+        <div class="hl-box">
+          <div style="font-family:'Noto Kufi Arabic',sans-serif;font-size:20px;font-weight:500;color:white;line-height:1.5">جمعية سكان ميسيمي ليفينج</div>
+          <div style="font-size:13px;color:rgba(255,255,255,.4);direction:ltr;margin-top:4px;font-family:sans-serif">Association des Résidents de Missimi Living</div>
+        </div>
+      </div>
+
+      <!-- م 2 -->
+      <div style="padding:24px 0;border-bottom:1px solid rgba(255,255,255,.06)">
+        <div class="art-num">المادة الثانية — الأهداف</div>
+        <p class="art-body" style="margin-bottom:14px">تهدف الجمعية إلى :</p>
+        <ul class="art-list">
+          <li>الدفاع عن الحقوق الجماعية والفردية لسكان مجمع ميسيمي ليفينج</li>
+          <li>ضمان التنسيق والتعاون مع مجلس اتحاد الملاك والسنديك</li>
+          <li>السهر على حسن تدبير الأجزاء المشتركة وصيانتها</li>
+          <li>تعزيز قيم التعايش والتضامن والتماسك الاجتماعي بين الساكنة</li>
+          <li>مراقبة الشفافية المالية في تدبير أعباء المشتركة</li>
+          <li>تنظيم كل نشاط من شأنه تحسين إطار العيش داخل المجمع</li>
+        </ul>
+      </div>
+
+      <!-- م 3 -->
+      <div style="padding:24px 0;border-bottom:1px solid rgba(255,255,255,.06)">
+        <div class="art-num">المادة الثالثة — المقر الاجتماعي</div>
+        <p class="art-body">يوجد المقر الاجتماعي للجمعية بـ <strong>مجمع ميسيمي ليفينج، الدار البيضاء</strong>. ويمكن نقله إلى أي مكان آخر بقرار من المكتب يُعرض على المصادقة في الجمع العام.</p>
+      </div>
+
+      <!-- م 4 -->
+      <div style="padding:24px 0;border-bottom:1px solid rgba(255,255,255,.06)">
+        <div class="art-num">المادة الرابعة — الأعضاء والانخراط</div>
+        <p class="art-body" style="margin-bottom:14px">تتألف الجمعية من الفئات التالية :</p>
+        <div class="g2" style="margin-bottom:14px">
+          <div class="mc"><div class="mc-t">الأعضاء المؤسسون</div><div class="mc-d">السكان الذين أسهموا في تأسيس الجمعية</div></div>
+          <div class="mc"><div class="mc-t">الأعضاء الناشطون</div><div class="mc-d">كل ساكن منخرط ومنتظم في أداء الاشتراك السنوي</div></div>
+          <div class="mc"><div class="mc-t">الأعضاء الشرفيون</div><div class="mc-d">الأشخاص الذين قدموا خدمات جليلة للجمعية</div></div>
+          <div class="mc"><div class="mc-t">الأعضاء المحسنون</div><div class="mc-d">الأشخاص الذين يقدمون دعمًا ماليًا أو عينيًا</div></div>
+        </div>
+        <p class="art-body">الانخراط مفتوح لكل <strong>مالك أو مستأجر</strong> مقيم بمجمع ميسيمي ليفينج. يُودَع طلب الانخراط لدى المكتب الذي يبت فيه في أول اجتماع له.</p>
+      </div>
+
+      <!-- م 5 -->
+      <div style="padding:24px 0;border-bottom:1px solid rgba(255,255,255,.06)">
+        <div class="art-num">المادة الخامسة — الاشتراكات</div>
+        <p class="art-body">يُحدد مبلغ الاشتراك السنوي في كل مرة من قبل <strong>الجمع العام العادي</strong>. يجب أداؤه قبل 31 يناير من كل سنة مالية. كل عضو متأخر في أداء اشتراكه لأكثر من ثلاثة أشهر يفقد صفة العضو الناشط وحق التصويت.</p>
+      </div>
+
+      <!-- م 6 -->
+      <div style="padding:24px 0;border-bottom:1px solid rgba(255,255,255,.06)">
+        <div class="art-num">المادة السادسة — فقدان صفة العضو</div>
+        <p class="art-body" style="margin-bottom:12px">تُفقد صفة العضو في الحالات التالية :</p>
+        <ul class="art-list">
+          <li>الاستقالة المقدَّمة كتابةً إلى الرئيس(ة)</li>
+          <li>المغادرة النهائية للمجمع السكني</li>
+          <li>عدم أداء الاشتراك رغم الإشعار بالأداء</li>
+          <li>الفصل الذي يقرره المكتب بسبب مخالفة جسيمة بعد الاستماع إلى المعني بالأمر</li>
+        </ul>
+      </div>
+
+      <!-- م 7 — DÉMOCRATIE -->
+      <div style="padding:28px 0;border-bottom:1px solid rgba(255,255,255,.06)">
+        <div class="art-num">المادة السابعة — الديمقراطية الداخلية والحوكمة <span class="tag-fond">أساسية</span></div>
+        <p class="art-body">تُبنى الجمعية على مبدأ <strong>الديمقراطية التشاركية</strong>. لكل عضو ناشط صوت واحد مساوٍ لصوت غيره. لا يمكن اتخاذ أي قرار مهم دون استشارة الأعضاء. تُدار الجمعية بثلاثة أجهزة :</p>
+
+        <div class="sub-s">
+          <div class="sub-t">🏛️ 1. الجمع العام — الجهاز السيادي</div>
+          <p style="font-size:13px;color:rgba(255,255,255,.65);line-height:2;margin-bottom:14px">الجمع العام هو الجهاز الأعلى للجمعية. يضم جميع الأعضاء الناشطين المنتظمين في أداء اشتراكاتهم. <strong style="color:white">لكل عضو صوت واحد بصرف النظر عن وضعه أو أقدميته.</strong></p>
+          <div class="g2">
+            <div class="mc">
+              <div class="mc-t">الجمع العام العادي (سنوي)</div>
+              <ul class="art-list" style="margin-top:8px">
+                <li>الاستدعاء قبل 15 يومًا</li>
+                <li>المصادقة على التقرير المعنوي</li>
+                <li>المصادقة على الميزانية</li>
+                <li>انتخاب المكتب كل سنتين</li>
+                <li>التصويت على الميزانية التوقعية</li>
+              </ul>
+            </div>
+            <div class="mc">
+              <div class="mc-t">الجمع العام الاستثنائي</div>
+              <ul class="art-list" style="margin-top:8px">
+                <li>بطلب من المكتب أو ثلث الأعضاء</li>
+                <li>تعديل النظام الأساسي</li>
+                <li>حل الجمعية</li>
+                <li>يشترط أغلبية الثلثين</li>
+              </ul>
+            </div>
+          </div>
+          <div class="warn">📋 <strong>محضر إلزامي</strong> لكل جمع عام. يوقعه الرئيس(ة) والكاتب العام. يُوزَّع على الأعضاء في غضون 15 يومًا.</div>
+        </div>
+
+        <div class="sub-s">
+          <div class="sub-t">⚙️ 2. المكتب التنفيذي — جهاز التسيير</div>
+          <p style="font-size:13px;color:rgba(255,255,255,.65);line-height:2;margin-bottom:14px">يُنتخب المكتب بـ <strong style="color:white">الاقتراع العام المباشر السري</strong> لمدة <strong style="color:white">سنتين قابلة للتجديد مرة واحدة فقط</strong>. لا يجوز لأي عضو ترأس نفس المنصب أكثر من ولايتين متتاليتين.</p>
+          <div class="g2">
+            <div class="mc" style="border:1px solid rgba(184,151,90,.15)"><div class="mc-t">الرئيس(ة)</div><div class="mc-d">التمثيل القانوني · الدعوة للاجتماعات · التوقيع على الوثائق · التنسيق مع السنديك</div></div>
+            <div class="mc" style="border:1px solid rgba(184,151,90,.15)"><div class="mc-t">نائب(ة) الرئيس</div><div class="mc-d">نيابة الرئيس(ة) · تنسيق اللجان · متابعة الشكايات</div></div>
+            <div class="mc" style="border:1px solid rgba(184,151,90,.15)"><div class="mc-t">الكاتب العام</div><div class="mc-d">تحرير المحاضر · إدارة الأرشيف · التواصل مع الأعضاء · سجل الانخراطات</div></div>
+            <div class="mc" style="border:1px solid rgba(184,151,90,.15)"><div class="mc-t">أمين(ة) المال</div><div class="mc-d">تدبير الأموال · مسك المحاسبة · التقرير المالي السنوي · مراقبة النفقات</div></div>
+          </div>
+          <div class="warn">🗳️ <strong>الانتخابات بالاقتراع السري.</strong> يحق لكل عضو ناشط الترشح. تُودَع الترشيحات 7 أيام قبل الجمع الانتخابي. عند تعادل الأصوات يُعلن فوز الأقدم انخراطًا.</div>
+        </div>
+
+        <div class="sub-s">
+          <div class="sub-t">🔧 3. اللجان — أجهزة استشارية</div>
+          <p style="font-size:13px;color:rgba(255,255,255,.65);line-height:2;margin-bottom:12px">اللجان مجموعات عمل موضوعاتية مفتوحة لـ <strong style="color:white">كل عضو متطوع</strong>. تُصدر توصيات للمكتب. أشغالها علنية ومتاحة لجميع الأعضاء.</p>
+          <div class="g2">
+            <div class="mc"><div class="mc-t" style="color:var(--gold)">لجنة الأشغال والصيانة</div><div class="mc-d">متابعة الإصلاحات والعروض والمزودين</div></div>
+            <div class="mc"><div class="mc-t" style="color:var(--gold)">لجنة الأمن والنظافة</div><div class="mc-d">الحراسة والتنظيف وتنظيم الولوج</div></div>
+            <div class="mc"><div class="mc-t" style="color:var(--gold)">لجنة الشأن الاجتماعي</div><div class="mc-d">الحياة المجتمعية والتضامن والأنشطة</div></div>
+            <div class="mc"><div class="mc-t" style="color:var(--gold)">لجنة الرقمنة والتواصل</div><div class="mc-d">منصة ريدتك والإعلام والتواصل</div></div>
+          </div>
+        </div>
+      </div>
+
+      <!-- م 8 -->
+      <div style="padding:28px 0;border-bottom:1px solid rgba(255,255,255,.06)">
+        <div class="art-num">المادة الثامنة — الموارد المالية</div>
+        <p class="art-body" style="margin-bottom:12px">تتكون موارد الجمعية من :</p>
+        <ul class="art-list">
+          <li>الاشتراكات السنوية للأعضاء الناشطين</li>
+          <li>التبرعات والإعانات المحتملة من الهيئات العمومية أو الخاصة</li>
+          <li>مداخيل الأنشطة والفعاليات التي تنظمها الجمعية</li>
+          <li>كل مورد آخر تجيزه التشريعات المغربية المعمول بها</li>
+        </ul>
+        <p class="art-body" style="margin-top:12px">تودَع أموال الجمعية في <strong>حساب بنكي مفتوح باسم الجمعية</strong> تحت إشراف مشترك للرئيس(ة) وأمين(ة) المال. كل نفقة تفوق <strong>500 درهم</strong> تستلزم توقيع الاثنين معًا.</p>
+      </div>
+
+      <!-- م 9 — TRANSPARENCE -->
+      <div style="padding:28px 0;border-bottom:1px solid rgba(255,255,255,.06)">
+        <div class="art-num">المادة التاسعة — الشفافية المالية <span class="tag-fond">أساسية</span></div>
+        <p class="art-body">الشفافية المالية <strong>مبدأ تأسيسي</strong> للجمعية. كل درهم يُجمَع أو يُنفَق يجب أن يكون مبررًا وموثقًا ومتاحًا لجميع الأعضاء.</p>
+
+        <div class="sub-s">
+          <div class="sub-t">📋 9.1 — مبادئ التسيير المالي</div>
+          <div class="g2">
+            <div class="mc"><div class="mc-t">قابلية التتبع الكاملة</div><div class="mc-d">كل عملية مالية ترفق بمستند إثبات. لا نفقة بدون مبرر.</div></div>
+            <div class="mc"><div class="mc-t">التوقيع المزدوج</div><div class="mc-d">كل نفقة فوق 500 درهم تستلزم موافقة الرئيس(ة) وأمين(ة) المال كتابةً.</div></div>
+            <div class="mc"><div class="mc-t">ميزانية مصوَّت عليها</div><div class="mc-d">كل تجاوز بنسبة 20% لأي بند يستلزم جمعًا عامًا استثنائيًا.</div></div>
+            <div class="mc"><div class="mc-t">طلبات العروض</div><div class="mc-d">لكل خدمة فوق 2000 درهم، 3 عروض مقارنة إلزامية.</div></div>
+          </div>
+        </div>
+
+        <div class="sub-s">
+          <div class="sub-t">🔍 9.2 — الرقابة والتدقيق</div>
+          <p style="font-size:13px;color:rgba(255,255,255,.65);line-height:2;margin-bottom:12px">تُرسي الجمعية آلية رقابة داخلية على ثلاثة مستويات :</p>
+          <div class="step"><div class="step-n">1</div><div><div class="mc-t">مراقبو الحسابات الداخليون</div><div class="mc-d">عضوان ناشطان غير أعضاء المكتب، يراجعان الحسابات كل ثلاثة أشهر ويُعدان تقريرًا.</div></div></div>
+          <div class="step"><div class="step-n">2</div><div><div class="mc-t">التقرير المالي السنوي</div><div class="mc-d">يقدم أمين(ة) المال للجمع العام بيانًا شاملًا بالمداخيل والنفقات مع جميع المستندات المثبتة.</div></div></div>
+          <div class="step"><div class="step-n">3</div><div><div class="mc-t">حق الاطلاع للأعضاء</div><div class="mc-d">لكل عضو ناشط الحق في الاطلاع على الحسابات والكشوف البنكية. الرد واجب في 15 يوم عمل.</div></div></div>
+        </div>
+
+        <div class="sub-s">
+          <div class="sub-t">🤝 9.3 — مراقبة تسيير السنديك</div>
+          <ul class="art-list">
+            <li><strong style="color:white">اجتماع ربعي إلزامي</strong> بين المكتب والسنديك لفحص حسابات المشتركة</li>
+            <li>حق الاطلاع على <strong style="color:white">كشوف أعباء الاشتراك</strong> والصندوق الاحتياطي</li>
+            <li>المصادقة الجماعية على <strong style="color:white">الأشغال التي تتجاوز 10.000 درهم</strong> قبل التزام السنديك</li>
+            <li>تقديم السنديك لتقرير مالي في كل <strong style="color:white">جمع عام سنوي</strong></li>
+            <li>في حال ثبوت مخالفة، يحق للجمعية <strong style="color:white">رفع الأمر للجهات المختصة</strong> بعد تصويت المكتب</li>
+          </ul>
+        </div>
+
+        <div class="sub-s">
+          <div class="sub-t">📢 9.4 — النشر وإتاحة المعلومات</div>
+          <div class="g2">
+            <div class="mc" style="display:flex;gap:10px"><span style="font-size:16px;flex-shrink:0">📊</span><div><div class="mc-t">لوحة الداشبورد الشهرية</div><div class="mc-d">عرض المداخيل والنفقات شهريًا في الأجزاء المشتركة</div></div></div>
+            <div class="mc" style="display:flex;gap:10px"><span style="font-size:16px;flex-shrink:0">📱</span><div><div class="mc-t">منصة ريدتك الرقمية</div><div class="mc-d">إمكانية الاطلاع على البيانات المالية عبر الإنترنت</div></div></div>
+            <div class="mc" style="display:flex;gap:10px"><span style="font-size:16px;flex-shrink:0">📧</span><div><div class="mc-t">التقرير نصف السنوي</div><div class="mc-d">يُرسَل بالبريد الإلكتروني لجميع الأعضاء الناشطين</div></div></div>
+            <div class="mc" style="display:flex;gap:10px"><span style="font-size:16px;flex-shrink:0">🗂️</span><div><div class="mc-t">الأرشيف متاح</div><div class="mc-d">5 سنوات من السجل المالي قابلة للاستشارة</div></div></div>
+          </div>
+          <div class="warn">⚠️ <strong>العقوبة :</strong> كل مكتب يُخِل بالتزاماته في الشفافية المالية يمكن عزله بتصويت عدم الثقة بالأغلبية المطلقة للأعضاء الناشطين في جمع عام استثنائي.</div>
+        </div>
+      </div>
+
+      <!-- م 10 -->
+      <div style="padding:24px 0;border-bottom:1px solid rgba(255,255,255,.06)">
+        <div class="art-num">المادة العاشرة — الحل</div>
+        <p class="art-body">لا يمكن حل الجمعية إلا بقرار من <strong>جمع عام استثنائي</strong> مدعو خصيصًا لهذا الغرض، يضم ما لا يقل عن ثلثَي الأعضاء الناشطين. في حال الحل، يُعيَّن مصفٍّ ويُوزَّع الصافي وفق قرارات الجمع العام.</p>
+      </div>
+
+      <!-- م 11 -->
+      <div style="padding:24px 0">
+        <div class="art-num">المادة الحادية عشرة — تعديل النظام الأساسي</div>
+        <p class="art-body">لا يمكن تعديل هذا النظام الأساسي إلا بواسطة <strong>جمع عام استثنائي</strong>، بناءً على اقتراح من المكتب أو من ثلث الأعضاء الناشطين على الأقل، بأغلبية الثلثين من الأعضاء الحاضرين أو الممثَّلين.</p>
+      </div>
+
+    </div>
+
+    <!-- SIGNATURE -->
+    <div style="padding:28px 40px;background:rgba(184,151,90,.08);border-top:1px solid rgba(184,151,90,.15);display:flex;justify-content:space-between;align-items:flex-start;flex-wrap:wrap;gap:20px">
+      <div>
+        <div style="font-size:12px;color:rgba(255,255,255,.4);margin-bottom:4px;font-family:'Noto Kufi Arabic',sans-serif">حُرِّر بالدار البيضاء في : ___/___/2026</div>
+        <div style="font-size:13px;color:rgba(255,255,255,.55);font-family:'Noto Kufi Arabic',sans-serif">في نسخ بعدد الأطراف المعنية</div>
+      </div>
+      <div style="display:flex;gap:32px;flex-wrap:wrap">
+        <div style="text-align:center"><div style="font-size:11px;color:var(--gold);margin-bottom:20px;font-family:'Noto Kufi Arabic',sans-serif">الرئيس(ة)</div><div style="width:110px;height:1px;background:rgba(255,255,255,.2)"></div></div>
+        <div style="text-align:center"><div style="font-size:11px;color:var(--gold);margin-bottom:20px;font-family:'Noto Kufi Arabic',sans-serif">الكاتب العام</div><div style="width:110px;height:1px;background:rgba(255,255,255,.2)"></div></div>
+        <div style="text-align:center"><div style="font-size:11px;color:var(--gold);margin-bottom:20px;font-family:'Noto Kufi Arabic',sans-serif">أمين(ة) المال</div><div style="width:110px;height:1px;background:rgba(255,255,255,.2)"></div></div>
+      </div>
+    </div>
+
+  </div>
+
+  <div class="divider"></div>
+  <div style="text-align:center;padding:16px 0;display:flex;gap:12px;justify-content:center;flex-wrap:wrap">
+    <a href="association.html" class="btn-g">← النسخة الفرنسية</a>
+    <a href="reglement.html" class="btn-o">النظام الداخلي</a>
+    <a href="syndic-v3.html" class="btn-o">فضاء السكان</a>
+  </div>
+</div>
+
+<!-- LANG SWITCH -->
+<div class="lang-switch">
+  <button class="ls-btn ls-ar">العربية ✓</button>
+  <button class="ls-btn ls-fr" onclick="location.href='association.html'">Français</button>
+</div>
+
+<footer>
+  <div class="ftl">ميسيمي <span>ليفينج</span></div>
+  <div class="ftc">© 2026 Missimi Living · الدار البيضاء</div>
+  <div class="ftlinks">
+    <a href="index.html">الرئيسية</a>
+    <a href="projet.html">المشروع</a>
+    <a href="association.html">الجمعية</a>
+    <a href="syndic-v3.html">فضاء السكان</a>
+  </div>
+</footer>
+
+<script>
+function toggleMenu(){
+  const l=document.getElementById('navLinks'),b=document.getElementById('burger');
+  l.classList.toggle('open');b.classList.toggle('open');
+  b.textContent=l.classList.contains('open')?'✕':'☰';
+}
+document.querySelectorAll('#navLinks a').forEach(a=>a.addEventListener('click',()=>{
+  document.getElementById('navLinks').classList.remove('open');
+  const b=document.getElementById('burger');b.classList.remove('open');b.textContent='☰';
+}));
+</script>
+</body>
+</html>
