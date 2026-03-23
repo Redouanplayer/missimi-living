@@ -1,0 +1,313 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>RedTech — Essai gratuit 24h</title>
+<link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<style>
+:root{
+  --red:#e63946;--red-dark:#c1121f;--blue:#1d3557;
+  --bg:#f8f9fc;--surface:#fff;--border:#e8eaf0;
+  --text:#0d1b2a;--muted:#64748b;--hint:#94a3b8;
+  --green-bg:#dcfce7;--green-text:#15803d;--green-border:#bbf7d0;
+  --orange-bg:#fff7ed;--orange-text:#c2410c;--orange-border:#fed7aa;
+  --radius:12px;--radius-sm:8px;
+}
+*{margin:0;padding:0;box-sizing:border-box;}
+body{font-family:"Plus Jakarta Sans",sans-serif;background:var(--bg);color:var(--text);min-height:100vh;display:flex;align-items:center;justify-content:center;padding:20px;}
+.card{background:var(--surface);border:1px solid var(--border);border-radius:20px;padding:48px 40px;max-width:520px;width:100%;box-shadow:0 20px 60px rgba(0,0,0,.1);}
+.logo{display:flex;align-items:center;gap:10px;justify-content:center;margin-bottom:28px;}
+.logo-icon{width:42px;height:42px;background:var(--red);border-radius:10px;display:flex;align-items:center;justify-content:center;color:white;font-weight:800;font-size:19px;}
+.logo-text{font-size:22px;font-weight:800;letter-spacing:-.03em;}
+.logo-text span{color:var(--red);}
+h1{font-size:22px;font-weight:800;text-align:center;letter-spacing:-.02em;margin-bottom:6px;}
+.sub{font-size:13px;color:var(--muted);text-align:center;margin-bottom:32px;line-height:1.6;}
+.badge-24{display:inline-flex;align-items:center;gap:6px;background:var(--orange-bg);border:1px solid var(--orange-border);color:var(--orange-text);font-size:11px;font-weight:600;padding:4px 12px;border-radius:20px;margin:0 auto 20px;display:flex;justify-content:center;width:fit-content;margin:0 auto 20px;}
+
+/* SECTOR GRID */
+.sector-title{font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.08em;color:var(--muted);margin-bottom:10px;text-align:center;}
+.sectors{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-bottom:24px;}
+.sc{border:1.5px solid var(--border);border-radius:var(--radius-sm);padding:12px 8px;text-align:center;cursor:pointer;transition:all .15s;font-size:11px;font-weight:600;color:var(--muted);}
+.sc:hover{border-color:var(--red);color:var(--red);}
+.sc.active{background:rgba(230,57,70,.06);border-color:var(--red);color:var(--red);}
+.sc-icon{font-size:22px;display:block;margin-bottom:5px;}
+
+/* FORM */
+.fg{margin-bottom:16px;}
+.lbl{font-size:11px;font-weight:600;text-transform:uppercase;letter-spacing:.08em;color:var(--muted);display:block;margin-bottom:6px;}
+input[type=text],input[type=email]{width:100%;padding:11px 14px;border:1px solid var(--border);border-radius:var(--radius-sm);font-size:14px;font-family:"Plus Jakarta Sans",sans-serif;color:var(--text);outline:none;transition:border .15s;}
+input:focus{border-color:var(--red);}
+.btn{width:100%;background:var(--red);color:white;border:none;padding:14px;border-radius:var(--radius-sm);font-size:14px;font-weight:700;cursor:pointer;font-family:"Plus Jakarta Sans",sans-serif;transition:all .2s;margin-top:8px;}
+.btn:hover:not(:disabled){background:var(--red-dark);}
+.btn:disabled{opacity:.6;cursor:not-allowed;}
+.alert{border-radius:var(--radius-sm);padding:12px 14px;font-size:13px;margin:12px 0;line-height:1.55;}
+.aok{background:var(--green-bg);border:1px solid var(--green-border);color:var(--green-text);}
+.aerr{background:#fee2e2;border:1px solid #fecaca;color:#b91c1c;}
+.ainfo{background:#dbeafe;border:1px solid #bfdbfe;color:#1d4ed8;}
+
+/* SUCCESS */
+.success-screen{display:none;text-align:center;}
+.success-icon{font-size:56px;margin-bottom:16px;}
+.success-title{font-size:22px;font-weight:800;margin-bottom:10px;}
+.success-sub{font-size:14px;color:var(--muted);line-height:1.7;margin-bottom:28px;}
+.creds{background:var(--bg);border:1px solid var(--border);border-radius:var(--radius-sm);padding:16px 20px;text-align:left;margin-bottom:24px;}
+.cred-row{display:flex;justify-content:space-between;align-items:center;padding:6px 0;border-bottom:.5px solid var(--border);font-size:13px;}
+.cred-row:last-child{border-bottom:none;}
+.cred-label{color:var(--muted);}
+.cred-val{font-weight:600;font-family:monospace;font-size:13px;}
+.timer{background:var(--orange-bg);border:1px solid var(--orange-border);border-radius:var(--radius-sm);padding:10px 14px;font-size:12px;color:var(--orange-text);margin-bottom:20px;}
+.btn-access{width:100%;background:var(--blue);color:white;border:none;padding:14px;border-radius:var(--radius-sm);font-size:14px;font-weight:700;cursor:pointer;font-family:"Plus Jakarta Sans",sans-serif;transition:all .2s;text-decoration:none;display:block;text-align:center;}
+.btn-access:hover{background:#162944;}
+.progress{margin:20px 0;}
+.progress-label{font-size:12px;color:var(--muted);margin-bottom:8px;text-align:left;}
+.progress-bar{height:6px;background:var(--border);border-radius:3px;overflow:hidden;}
+.progress-fill{height:100%;background:var(--red);border-radius:3px;transition:width .5s ease;width:0%;}
+.progress-step{font-size:11px;color:var(--muted);margin-top:6px;text-align:center;}
+</style>
+</head>
+<body>
+
+<div class="card">
+  <!-- FORM SCREEN -->
+  <div id="formScreen">
+    <div class="logo">
+      <div class="logo-icon">R</div>
+      <span class="logo-text">Red<span>Tech</span></span>
+    </div>
+    <div class="badge-24">⏱ Démo gratuite — 24 heures</div>
+    <h1>Essayez RedTech gratuitement</h1>
+    <p class="sub">Votre espace de démonstration sera créé en quelques secondes avec des données réalistes prêtes à explorer.</p>
+
+    <div class="sector-title">Votre secteur d'activité</div>
+    <div class="sectors">
+      <div class="sc active" onclick="setSector('residence',this)" data-sector="residence"><span class="sc-icon">🏢</span>Résidence</div>
+      <div class="sc" onclick="setSector('hotel',this)" data-sector="hotel"><span class="sc-icon">🏨</span>Hôtel</div>
+      <div class="sc" onclick="setSector('campus',this)" data-sector="campus"><span class="sc-icon">🎓</span>Campus</div>
+      <div class="sc" onclick="setSector('industrie',this)" data-sector="industrie"><span class="sc-icon">🏭</span>Industrie</div>
+      <div class="sc" onclick="setSector('mall',this)" data-sector="mall"><span class="sc-icon">🏬</span>Mall</div>
+      <div class="sc" onclick="setSector('collectivite',this)" data-sector="collectivite"><span class="sc-icon">🏛️</span>Collectivité</div>
+    </div>
+
+    <div class="fg"><label class="lbl">Votre nom *</label><input type="text" id="demoNom" placeholder="Mohammed Alami"></div>
+    <div class="fg"><label class="lbl">Votre email *</label><input type="email" id="demoEmail" placeholder="votre@email.com"></div>
+    <div class="fg"><label class="lbl">Nom de votre espace *</label><input type="text" id="demoEspace" placeholder="Résidence Al Andalous" id="demoEspace"></div>
+
+    <div class="alert ainfo" id="demoInfo">✅ Vous recevrez vos identifiants par email + accès direct après création.</div>
+    <div class="alert aerr" id="demoErr" style="display:none"></div>
+
+    <div class="progress" id="demoProgress" style="display:none">
+      <div class="progress-label">Création de votre espace en cours...</div>
+      <div class="progress-bar"><div class="progress-fill" id="progressFill"></div></div>
+      <div class="progress-step" id="progressStep">Initialisation...</div>
+    </div>
+
+    <button class="btn" id="demoBtn" onclick="createDemo()">Créer mon espace démo →</button>
+
+    <p style="font-size:11px;color:var(--hint);text-align:center;margin-top:14px">Aucune carte bancaire requise · Accès immédiat · Supprimé après 24h</p>
+  </div>
+
+  <!-- SUCCESS SCREEN -->
+  <div class="success-screen" id="successScreen">
+    <div class="success-icon">🎉</div>
+    <div class="success-title">Votre espace est prêt !</div>
+    <div class="success-sub">Connectez-vous avec ces identifiants pour explorer RedTech. Votre démo expire dans 24 heures.</div>
+    <div class="creds">
+      <div class="cred-row"><span class="cred-label">Email</span><span class="cred-val" id="credEmail">—</span></div>
+      <div class="cred-row"><span class="cred-label">Mot de passe</span><span class="cred-val" id="credPwd">—</span></div>
+      <div class="cred-row"><span class="cred-label">Espace</span><span class="cred-val" id="credEspace">—</span></div>
+      <div class="cred-row"><span class="cred-label">Expire dans</span><span class="cred-val" style="color:var(--orange-text)">24 heures</span></div>
+    </div>
+    <div class="timer">⏰ Ces identifiants ont été envoyés à votre email. Votre espace sera supprimé automatiquement après 24h.</div>
+    <a href="syndic-v3.html" class="btn-access" id="accessBtn">Accéder à mon espace →</a>
+  </div>
+</div>
+
+<script>
+const SUPABASE_URL = 'https://nwusjraxjfirsonbndfy.supabase.co';
+const SUPABASE_KEY = 'sb_publishable_A8Re17ZjBi7-b8iZgnUceg_wGoeQJ77';
+const { createClient } = supabase;
+const db = createClient(SUPABASE_URL, SUPABASE_KEY);
+
+let selectedSector = 'residence';
+
+const SECTEURS_LABELS = {
+  residence:'Résidence', hotel:'Hôtel', campus:'Campus',
+  industrie:'Zone industrielle', mall:'Centre commercial', collectivite:'Commune'
+};
+
+function setSector(sector, btn) {
+  selectedSector = sector;
+  document.querySelectorAll('.sc').forEach(b => b.classList.remove('active'));
+  btn.classList.add('active');
+  const labels = {
+    residence: 'Résidence Al Andalous', hotel: 'Hôtel Atlas', campus: 'Campus Mohammed V',
+    industrie: 'Parc Industriel Nord', mall: 'Mall Casablanca', collectivite: 'Commune Anfa'
+  };
+  document.getElementById('demoEspace').placeholder = labels[sector] || 'Nom de votre espace';
+}
+
+function setProgress(pct, step) {
+  document.getElementById('progressFill').style.width = pct + '%';
+  document.getElementById('progressStep').textContent = step;
+}
+
+function generatePassword() {
+  const chars = 'ABCDEFGHJKLMNPQRSTUVWXYZabcdefghjkmnpqrstuvwxyz23456789';
+  let pwd = '';
+  for (let i = 0; i < 10; i++) pwd += chars[Math.floor(Math.random() * chars.length)];
+  return 'Demo@' + pwd;
+}
+
+async function injectDemoData(resId, userId, sector) {
+  const tickets = getDemoTickets(sector);
+  const compta = getDemoCompta();
+  const pros = getDemoPros();
+
+  // Insert tickets
+  for (const t of tickets) {
+    await db.from('tickets').insert({ ...t, user_id: userId, residence_id: resId, statut: t.statut || 'Ouvert' });
+  }
+
+  // Insert comptabilite
+  for (const c of compta) {
+    await db.from('comptabilite').insert({ ...c, created_by: userId, residence_id: resId });
+  }
+
+  // Insert professionnels
+  for (const p of pros) {
+    await db.from('professionnels').insert({ ...p, actif: true, residence_id: resId });
+  }
+}
+
+function getDemoTickets(sector) {
+  const base = [
+    { titre: 'Panne électrique niveau 2', categorie: 'Électricité', urgence: 'Haute', appartement: '2A', statut: 'Ouvert', type: 'Réclamation', description: 'Coupure totale de courant au 2ème niveau depuis ce matin. Problème urgent.' },
+    { titre: 'Fuite d\'eau escalier principal', categorie: 'Plomberie', urgence: 'Haute', appartement: '4B', statut: 'En cours', type: 'Réclamation', description: 'Fuite importante au plafond de l\'escalier principal, eau qui coule sur les marches.' },
+    { titre: 'Ascenseur bloqué', categorie: 'Ascenseur', urgence: 'Haute', appartement: '7C', statut: 'En cours', type: 'Signalement', description: 'L\'ascenseur est bloqué entre 2 étages depuis hier soir.' },
+    { titre: 'Éclairage parking défaillant', categorie: 'Électricité', urgence: 'Moyenne', appartement: '1D', statut: 'Ouvert', type: 'Signalement', description: 'La moitié des spots du parking sont éteints, sécurité insuffisante la nuit.' },
+    { titre: 'Nettoyage parties communes', categorie: 'Parties communes', urgence: 'Basse', appartement: '3A', statut: 'Résolu', type: 'Proposition', description: 'Proposition de planifier un grand nettoyage mensuel des couloirs et halls.' },
+  ];
+  return base;
+}
+
+function getDemoCompta() {
+  return [
+    { type: 'recette', categorie: 'Charges copropriété', libelle: 'Charges Janvier 2026', montant: 27000, date_op: '2026-01-05' },
+    { type: 'depense', categorie: 'Entretien', libelle: 'Contrat nettoyage — Janvier', montant: 3200, date_op: '2026-01-15' },
+    { type: 'depense', categorie: 'Réparation', libelle: 'Réparation ascenseur', montant: 4800, date_op: '2026-01-22' },
+    { type: 'depense', categorie: 'Eau & électricité', libelle: 'Facture eau — Janvier', montant: 1850, date_op: '2026-01-28' },
+    { type: 'recette', categorie: 'Charges copropriété', libelle: 'Charges Février 2026', montant: 27000, date_op: '2026-02-05' },
+    { type: 'depense', categorie: 'Salaires gardiennage', libelle: 'Salaire gardien — Février', montant: 4200, date_op: '2026-02-10' },
+    { type: 'depense', categorie: 'Jardinage', libelle: 'Entretien espaces verts', montant: 1200, date_op: '2026-02-20' },
+    { type: 'recette', categorie: 'Charges copropriété', libelle: 'Charges Mars 2026', montant: 27000, date_op: '2026-03-05' },
+    { type: 'depense', categorie: 'Assurance', libelle: 'Prime assurance immeuble', montant: 6500, date_op: '2026-03-08' },
+    { type: 'depense', categorie: 'Réparation', libelle: 'Remplacement pompe eau', montant: 2800, date_op: '2026-03-15' },
+  ];
+}
+
+function getDemoPros() {
+  return [
+    { nom: 'Hassan Benmoussa', telephone: '06 61 23 45 67', categorie: 'Plomberie', description: 'Spécialiste fuites. Intervention rapide 24h/24.' },
+    { nom: 'Omar El Fassi', telephone: '06 63 45 67 89', categorie: 'Électricité', description: 'Électricien certifié. Urgences acceptées.' },
+    { nom: 'Rachid Bennani', telephone: '06 65 67 89 01', categorie: 'Serrurerie', description: 'Ouverture portes et changement serrures.' },
+    { nom: 'Karim Alaoui', telephone: '06 68 90 12 34', categorie: 'Climatisation', description: 'Installation et entretien toutes marques.' },
+    { nom: 'Driss Sebti', telephone: '06 70 12 34 56', categorie: 'Jardinage', description: 'Entretien espaces verts et aménagement.' },
+    { nom: 'Nadia Filali', telephone: '06 71 23 45 67', categorie: 'Nettoyage', description: 'Nettoyage parties communes. Devis gratuit.' },
+  ];
+}
+
+async function createDemo() {
+  const nom = document.getElementById('demoNom').value.trim();
+  const email = document.getElementById('demoEmail').value.trim();
+  const espace = document.getElementById('demoEspace').value.trim();
+  const errEl = document.getElementById('demoErr');
+  errEl.style.display = 'none';
+
+  if (!nom || !email || !espace) {
+    errEl.textContent = '⚠️ Remplissez tous les champs.';
+    errEl.style.display = 'block'; return;
+  }
+  if (!email.includes('@')) {
+    errEl.textContent = '⚠️ Email invalide.';
+    errEl.style.display = 'block'; return;
+  }
+
+  const btn = document.getElementById('demoBtn');
+  btn.disabled = true;
+  document.getElementById('demoProgress').style.display = 'block';
+  document.getElementById('demoInfo').style.display = 'none';
+
+  const password = generatePassword();
+  const demoEmail = `demo_${Date.now()}@redtech-demo.ma`;
+  const expireAt = new Date(Date.now() + 24 * 60 * 60 * 1000).toISOString();
+
+  try {
+    // Étape 1 — Créer la résidence
+    setProgress(15, '🏢 Création de votre espace...');
+    const { data: resData, error: resErr } = await db.from('residences').insert({
+      nom: espace + ' (Démo)',
+      adresse: 'Casablanca, Maroc',
+      ville: 'Casablanca',
+      nb_apparts: 50,
+      secteur: selectedSector,
+      actif: true,
+      demo: true,
+      demo_expire_at: expireAt
+    }).select().single();
+
+    if (resErr) throw new Error('Erreur création résidence : ' + resErr.message);
+
+    // Étape 2 — Créer le compte admin démo
+    setProgress(35, '👤 Création de votre compte...');
+    const { data: authData, error: authErr } = await db.auth.signUp({
+      email: demoEmail,
+      password: password,
+      options: {
+        data: {
+          nom: nom,
+          role: 'admin',
+          residence_nom: espace + ' (Démo)',
+          residence_id: resData.id,
+          secteur: selectedSector,
+          demo: true,
+          demo_expire_at: expireAt
+        }
+      }
+    });
+
+    if (authErr) throw new Error('Erreur création compte : ' + authErr.message);
+
+    // Étape 3 — Lier admin à résidence
+    setProgress(50, '🔗 Configuration de votre espace...');
+    await db.from('residences').update({ admin_id: authData.user.id }).eq('id', resData.id);
+
+    // Étape 4 — Injecter données démo
+    setProgress(65, '🎫 Injection des tickets exemples...');
+    await new Promise(r => setTimeout(r, 500));
+    setProgress(75, '💰 Création de la comptabilité...');
+    await injectDemoData(resData.id, authData.user.id, selectedSector);
+    setProgress(90, '📋 Finalisation...');
+    await new Promise(r => setTimeout(r, 600));
+    setProgress(100, '✅ Votre espace est prêt !');
+    await new Promise(r => setTimeout(r, 400));
+
+    // Afficher le succès
+    document.getElementById('formScreen').style.display = 'none';
+    document.getElementById('successScreen').style.display = 'block';
+    document.getElementById('credEmail').textContent = demoEmail;
+    document.getElementById('credPwd').textContent = password;
+    document.getElementById('credEspace').textContent = espace + ' (Démo)';
+
+  } catch(err) {
+    btn.disabled = false;
+    document.getElementById('demoProgress').style.display = 'none';
+    document.getElementById('demoInfo').style.display = 'block';
+    errEl.textContent = '❌ ' + err.message;
+    errEl.style.display = 'block';
+  }
+}
+</script>
+</body>
+</html>
