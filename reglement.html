@@ -1,0 +1,127 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Règlement Intérieur — Missimi Living</title>
+<style>
+:root{--gold:#b8975a;--gold-light:#d4b483;--navy:#0d1b2a;--cream:#faf8f4;--warm:#f5f0e8;--border:#e3ddd4;--text:#1a1208;--muted:#6b5f4e;--radius:4px;--radius-md:8px;--radius-lg:16px;}
+*,*::before,*::after{margin:0;padding:0;box-sizing:border-box;}html{scroll-behavior:smooth;}
+body{font-family:"DM Sans",sans-serif;background:var(--cream);color:var(--text);}
+nav{position:fixed;top:0;left:0;right:0;z-index:100;padding:14px 60px;background:rgba(13,27,42,.97);backdrop-filter:blur(20px);box-shadow:0 1px 0 rgba(184,151,90,.2);display:flex;align-items:center;justify-content:space-between;}
+.nav-logo{display:flex;flex-direction:column;line-height:1;text-decoration:none;}
+.nl-main{font-family:"Cormorant Garamond",serif;font-size:20px;font-weight:500;color:white;letter-spacing:.12em;}
+.nl-sub{font-size:9px;letter-spacing:.25em;color:var(--gold);text-transform:uppercase;margin-top:2px;}
+.nav-links{display:flex;gap:22px;align-items:center;}
+.nav-links a{font-size:11px;font-weight:500;letter-spacing:.08em;text-transform:uppercase;color:rgba(255,255,255,.6);text-decoration:none;transition:color .2s;}
+.nav-links a:hover,.nav-links a.active{color:var(--gold);}
+.nav-cta{background:var(--gold)!important;color:var(--navy)!important;padding:8px 16px;border-radius:var(--radius);}
+.burger{display:none;background:none;border:1px solid rgba(255,255,255,.3);color:white;font-size:16px;padding:5px 10px;border-radius:4px;cursor:pointer;}
+.page-hero{background:var(--navy);padding:120px 60px 64px;position:relative;overflow:hidden;}
+.ph-pattern{position:absolute;inset:0;background-image:repeating-linear-gradient(45deg,transparent,transparent 40px,rgba(184,151,90,.03) 40px,rgba(184,151,90,.03) 80px);}
+.ph-glow{position:absolute;top:0;right:0;width:400px;height:300px;background:radial-gradient(ellipse,rgba(184,151,90,.1),transparent 70%);}
+.ph-content{position:relative;z-index:2;}
+.ph-eyebrow{display:flex;align-items:center;gap:14px;margin-bottom:16px;}
+.pe-line{width:28px;height:1px;background:var(--gold);}
+.pe-text{font-size:10px;letter-spacing:.25em;text-transform:uppercase;color:var(--gold);font-weight:500;}
+.ph-title{font-family:"Cormorant Garamond",serif;font-size:clamp(36px,5vw,60px);font-weight:300;color:white;line-height:1.1;margin-bottom:8px;}
+.ph-title em{font-style:italic;color:var(--gold);}
+.ph-sub{font-size:14px;color:rgba(255,255,255,.5);max-width:580px;line-height:1.75;font-weight:300;}
+.main{padding:60px 60px;max-width:1100px;margin:0 auto;}
+.se{display:flex;align-items:center;gap:12px;margin-bottom:12px;}
+.se-line{width:24px;height:1px;background:var(--gold);}
+.se-text{font-size:10px;letter-spacing:.25em;text-transform:uppercase;color:var(--gold);}
+.section-title{font-family:"Cormorant Garamond",serif;font-size:clamp(28px,4vw,44px);font-weight:300;line-height:1.1;margin-bottom:8px;}
+.section-title em{font-style:italic;color:var(--gold);}
+.section-ar{font-family:"Noto Kufi Arabic",sans-serif;font-size:16px;color:var(--muted);direction:rtl;margin-bottom:28px;font-weight:300;}
+.card{background:white;border:1px solid var(--border);border-radius:var(--radius-lg);padding:24px;transition:all .2s;}
+.card:hover{border-color:var(--gold);box-shadow:0 4px 20px rgba(184,151,90,.08);}
+.card-dark{background:var(--navy);border:1px solid rgba(184,151,90,.3);border-radius:var(--radius-lg);padding:24px;}
+.grid2{display:grid;grid-template-columns:1fr 1fr;gap:16px;}
+.grid3{display:grid;grid-template-columns:repeat(3,1fr);gap:16px;}
+.divider{height:1px;background:var(--border);margin:40px 0;}
+.tag{display:inline-flex;align-items:center;gap:6px;background:rgba(184,151,90,.1);border:1px solid rgba(184,151,90,.3);color:var(--gold);font-size:11px;font-weight:500;padding:4px 12px;border-radius:20px;margin-bottom:20px;}
+.btn-g{background:var(--gold);color:var(--navy);padding:12px 26px;border-radius:var(--radius);font-size:11px;font-weight:600;letter-spacing:.08em;text-transform:uppercase;text-decoration:none;display:inline-flex;align-items:center;gap:8px;transition:all .2s;}
+.btn-g:hover{background:var(--gold-light);transform:translateY(-1px);}
+.btn-o{border:1px solid var(--border);color:var(--text);padding:12px 26px;border-radius:var(--radius);font-size:11px;font-weight:500;letter-spacing:.08em;text-transform:uppercase;text-decoration:none;display:inline-flex;align-items:center;gap:8px;transition:all .2s;}
+.btn-o:hover{border-color:var(--gold);color:var(--gold);}
+.gl{font-size:10px;letter-spacing:.18em;text-transform:uppercase;color:var(--gold);margin-bottom:6px;}
+footer{background:var(--navy);padding:32px 60px;display:flex;align-items:center;justify-content:space-between;margin-top:80px;}
+.ftl{font-family:"Cormorant Garamond",serif;font-size:17px;color:white;letter-spacing:.1em;}
+.ftl span{color:var(--gold);}
+.ftc{font-size:11px;color:rgba(255,255,255,.25);}
+.ftlinks{display:flex;gap:18px;}
+.ftlinks a{font-size:11px;color:rgba(255,255,255,.35);text-decoration:none;letter-spacing:.06em;text-transform:uppercase;transition:color .2s;}
+.ftlinks a:hover{color:var(--gold);}
+@media(max-width:900px){
+  nav{padding:12px 16px;}
+  .nav-links{display:none;flex-direction:column;position:fixed;top:0;left:0;right:0;bottom:0;background:rgba(13,27,42,.98);z-index:200;justify-content:center;align-items:center;gap:24px;}
+  .nav-links.open{display:flex;}
+  .nav-links a{font-size:15px;}
+  .burger{display:block;position:relative;z-index:300;}
+  .burger.open{position:fixed;top:12px;right:16px;}
+  .page-hero{padding:100px 20px 48px;}
+  .main{padding:40px 20px;}
+  .grid2,.grid3{grid-template-columns:1fr;}
+  footer{flex-direction:column;gap:12px;text-align:center;padding:24px 16px;}
+  .ftlinks{flex-wrap:wrap;justify-content:center;}
+}
+</style>
+<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,500;0,600;1,300;1,400&family=DM+Sans:wght@300;400;500;600&family=Noto+Kufi+Arabic:wght@300;400;500&display=swap" rel="stylesheet">
+</head>
+<body>
+<nav>
+  <a href="index.html" class="nav-logo"><span class="nl-main">MISSIMI</span><span class="nl-sub">Living · Casablanca</span></a>
+  <div class="nav-links" id="navLinks">
+    <a href="index.html">Accueil</a>
+    <a href="projet.html">Le Projet</a>
+    <a href="association.html">Association</a>
+    <a href="reglement.html" class="active">Règlement</a>
+    <a href="contact.html">Contact</a>
+    <a href="syndic-v3.html" class="nav-cta">Espace Résident</a>
+  </div>
+  <button class="burger" id="burger" onclick="toggleMenu()">&#9776;</button>
+</nav>
+<div class="page-hero">
+  <div class="ph-pattern"></div><div class="ph-glow"></div>
+  <div class="ph-content">
+    <div class="ph-eyebrow"><div class="pe-line"></div><span class="pe-text">Association des Résidents Missimi</span></div>
+    <h1 class="ph-title">Règlement <em>Intérieur</em></h1>
+    <p class="ph-sub">Les règles du bon voisinage et du vivre-ensemble au sein de la Résidence Missimi Living.</p>
+  </div>
+</div>
+<div class="main">
+<div class="card-dark" style="margin-bottom:32px">
+  <div class="gl">Préambule</div>
+  <p style="font-size:14px;color:rgba(255,255,255,.7);line-height:1.85;margin-top:8px">Le présent règlement intérieur s'applique à <strong style="color:white">tous les résidents, propriétaires, locataires et leurs visiteurs</strong> de la Résidence Missimi Living. Il vise à garantir le bien-être, la sécurité et la bonne entente entre tous les occupants.</p>
+</div>
+<div class="grid2" style="margin-bottom:36px"><div class="card"><div class="gl">Article 1</div><div style="font-size:15px;font-weight:600;margin-bottom:10px;">Adhésion & Cotisations</div><ul style="list-style:none;display:flex;flex-direction:column;gap:6px"><li style="font-size:13px;color:var(--muted);padding-left:16px;position:relative;line-height:1.6"><span style="position:absolute;left:0;color:var(--gold)">—</span>Tout résident peut adhérer librement à l'association</li><li style="font-size:13px;color:var(--muted);padding-left:16px;position:relative;line-height:1.6"><span style="position:absolute;left:0;color:var(--gold)">—</span>Une cotisation annuelle symbolique est fixée par l'AG</li><li style="font-size:13px;color:var(--muted);padding-left:16px;position:relative;line-height:1.6"><span style="position:absolute;left:0;color:var(--gold)">—</span>Les membres à jour participent aux votes et décisions</li><li style="font-size:13px;color:var(--muted);padding-left:16px;position:relative;line-height:1.6"><span style="position:absolute;left:0;color:var(--gold)">—</span>L'adhésion est ouverte aux propriétaires et locataires</li></ul></div><div class="card"><div class="gl">Article 2</div><div style="font-size:15px;font-weight:600;margin-bottom:10px;">Parties Communes</div><ul style="list-style:none;display:flex;flex-direction:column;gap:6px"><li style="font-size:13px;color:var(--muted);padding-left:16px;position:relative;line-height:1.6"><span style="position:absolute;left:0;color:var(--gold)">—</span>Maintenir la propreté dans tous les espaces communs</li><li style="font-size:13px;color:var(--muted);padding-left:16px;position:relative;line-height:1.6"><span style="position:absolute;left:0;color:var(--gold)">—</span>Ne pas stocker d'objets dans les couloirs et halls</li><li style="font-size:13px;color:var(--muted);padding-left:16px;position:relative;line-height:1.6"><span style="position:absolute;left:0;color:var(--gold)">—</span>Respecter les horaires d'utilisation des équipements</li><li style="font-size:13px;color:var(--muted);padding-left:16px;position:relative;line-height:1.6"><span style="position:absolute;left:0;color:var(--gold)">—</span>Signaler tout dégât via la plateforme RedTech</li></ul></div><div class="card"><div class="gl">Article 3</div><div style="font-size:15px;font-weight:600;margin-bottom:10px;">Tranquillité & Nuisances</div><ul style="list-style:none;display:flex;flex-direction:column;gap:6px"><li style="font-size:13px;color:var(--muted);padding-left:16px;position:relative;line-height:1.6"><span style="position:absolute;left:0;color:var(--gold)">—</span>Silence obligatoire de 22h00 à 8h00 en semaine</li><li style="font-size:13px;color:var(--muted);padding-left:16px;position:relative;line-height:1.6"><span style="position:absolute;left:0;color:var(--gold)">—</span>Silence de 23h00 à 9h00 le week-end</li><li style="font-size:13px;color:var(--muted);padding-left:16px;position:relative;line-height:1.6"><span style="position:absolute;left:0;color:var(--gold)">—</span>Éviter les bruits excessifs à toute heure</li><li style="font-size:13px;color:var(--muted);padding-left:16px;position:relative;line-height:1.6"><span style="position:absolute;left:0;color:var(--gold)">—</span>Travaux autorisés 9h-12h et 15h-18h en semaine</li></ul></div><div class="card"><div class="gl">Article 4</div><div style="font-size:15px;font-weight:600;margin-bottom:10px;">Sécurité & Accès</div><ul style="list-style:none;display:flex;flex-direction:column;gap:6px"><li style="font-size:13px;color:var(--muted);padding-left:16px;position:relative;line-height:1.6"><span style="position:absolute;left:0;color:var(--gold)">—</span>Ne pas laisser entrer des inconnus sans identification</li><li style="font-size:13px;color:var(--muted);padding-left:16px;position:relative;line-height:1.6"><span style="position:absolute;left:0;color:var(--gold)">—</span>Fermer systématiquement les portes d'accès</li><li style="font-size:13px;color:var(--muted);padding-left:16px;position:relative;line-height:1.6"><span style="position:absolute;left:0;color:var(--gold)">—</span>Signaler toute activité suspecte à la sécurité</li><li style="font-size:13px;color:var(--muted);padding-left:16px;position:relative;line-height:1.6"><span style="position:absolute;left:0;color:var(--gold)">—</span>Respecter les consignes d'évacuation d'urgence</li></ul></div><div class="card"><div class="gl">Article 5</div><div style="font-size:15px;font-weight:600;margin-bottom:10px;">Parking Souterrain</div><ul style="list-style:none;display:flex;flex-direction:column;gap:6px"><li style="font-size:13px;color:var(--muted);padding-left:16px;position:relative;line-height:1.6"><span style="position:absolute;left:0;color:var(--gold)">—</span>Se garer uniquement à sa place assignée</li><li style="font-size:13px;color:var(--muted);padding-left:16px;position:relative;line-height:1.6"><span style="position:absolute;left:0;color:var(--gold)">—</span>Vitesse limitée à 10 km/h dans le parking</li><li style="font-size:13px;color:var(--muted);padding-left:16px;position:relative;line-height:1.6"><span style="position:absolute;left:0;color:var(--gold)">—</span>Ne pas stocker de matières inflammables</li><li style="font-size:13px;color:var(--muted);padding-left:16px;position:relative;line-height:1.6"><span style="position:absolute;left:0;color:var(--gold)">—</span>Fermer la barrière d'accès derrière soi</li></ul></div><div class="card"><div class="gl">Article 6</div><div style="font-size:15px;font-weight:600;margin-bottom:10px;">Déchets & Environnement</div><ul style="list-style:none;display:flex;flex-direction:column;gap:6px"><li style="font-size:13px;color:var(--muted);padding-left:16px;position:relative;line-height:1.6"><span style="position:absolute;left:0;color:var(--gold)">—</span>Utiliser les bacs de tri appropriés</li><li style="font-size:13px;color:var(--muted);padding-left:16px;position:relative;line-height:1.6"><span style="position:absolute;left:0;color:var(--gold)">—</span>Ne pas déposer d'encombrants hors zones prévues</li><li style="font-size:13px;color:var(--muted);padding-left:16px;position:relative;line-height:1.6"><span style="position:absolute;left:0;color:var(--gold)">—</span>Respecter les horaires de collecte</li><li style="font-size:13px;color:var(--muted);padding-left:16px;position:relative;line-height:1.6"><span style="position:absolute;left:0;color:var(--gold)">—</span>Préserver les espaces verts et le jardin central</li></ul></div><div class="card"><div class="gl">Article 7</div><div style="font-size:15px;font-weight:600;margin-bottom:10px;">Relations avec le Syndic</div><ul style="list-style:none;display:flex;flex-direction:column;gap:6px"><li style="font-size:13px;color:var(--muted);padding-left:16px;position:relative;line-height:1.6"><span style="position:absolute;left:0;color:var(--gold)">—</span>Toute réclamation passe par la plateforme RedTech</li><li style="font-size:13px;color:var(--muted);padding-left:16px;position:relative;line-height:1.6"><span style="position:absolute;left:0;color:var(--gold)">—</span>L'association assure le suivi collectif des demandes</li><li style="font-size:13px;color:var(--muted);padding-left:16px;position:relative;line-height:1.6"><span style="position:absolute;left:0;color:var(--gold)">—</span>Réunions trimestrielles syndic-association obligatoires</li><li style="font-size:13px;color:var(--muted);padding-left:16px;position:relative;line-height:1.6"><span style="position:absolute;left:0;color:var(--gold)">—</span>Comptes présentés à l'Assemblée Générale annuelle</li></ul></div><div class="card-dark"><div class="gl">Article 8</div><div style="font-size:15px;font-weight:600;margin-bottom:10px;color:var(--gold)">Sanctions & Médiation</div><ul style="list-style:none;display:flex;flex-direction:column;gap:6px"><li style="font-size:13px;color:rgba(255,255,255,.6);padding-left:16px;position:relative;line-height:1.6"><span style="position:absolute;left:0;color:var(--gold)">—</span>Avertissement amiable pour tout premier manquement</li><li style="font-size:13px;color:rgba(255,255,255,.6);padding-left:16px;position:relative;line-height:1.6"><span style="position:absolute;left:0;color:var(--gold)">—</span>En cas de récidive, saisine du syndic par l'association</li><li style="font-size:13px;color:rgba(255,255,255,.6);padding-left:16px;position:relative;line-height:1.6"><span style="position:absolute;left:0;color:var(--gold)">—</span>La médiation est toujours privilégiée avant tout recours</li><li style="font-size:13px;color:rgba(255,255,255,.6);padding-left:16px;position:relative;line-height:1.6"><span style="position:absolute;left:0;color:var(--gold)">—</span>Le dialogue et le respect mutuel sont nos piliers</li></ul></div></div>
+<div class="divider"></div>
+<div style="text-align:center;padding:16px 0">
+  <a href="syndic-v3.html" class="btn-g">Soumettre une réclamation →</a>
+  <a href="association.html" class="btn-o" style="margin-left:12px">L'Association</a>
+</div></div>
+<footer>
+  <div class="ftl">MISSIMI <span>LIVING</span></div>
+  <div class="ftc">© 2026 Missimi Living · Casablanca</div>
+  <div class="ftlinks">
+    <a href="index.html">Accueil</a>
+    <a href="projet.html">Projet</a>
+    <a href="association.html">Association</a>
+    <a href="reglement.html">Règlement</a>
+    <a href="syndic-v3.html">Espace Résident</a>
+  </div>
+</footer>
+<script>
+function toggleMenu(){
+  const l=document.getElementById('navLinks'),b=document.getElementById('burger');
+  l.classList.toggle('open');b.classList.toggle('open');
+  b.textContent=l.classList.contains('open')?'✕':'☰';
+}
+document.querySelectorAll('#navLinks a').forEach(a=>a.addEventListener('click',()=>{
+  document.getElementById('navLinks').classList.remove('open');
+  const b=document.getElementById('burger');b.classList.remove('open');b.textContent='☰';
+}));
+</script>
+</body>
+</html>
