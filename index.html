@@ -468,78 +468,110 @@ if (canvas) {
 }
 
 // ── PIANO CLASSIQUE — Chopin Nocturne Op.9 No.2 ─────
-// Source : Musopen.org — Domaine public (CC PDM 1.0)
+// Source : Musopen / Internet Archive — CC0 Domaine public
 const muteBtn = document.getElementById('muteBtn');
 let musicPlaying = false;
+let audioReady = false;
 
-// Créer l'élément audio
 const piano = new Audio();
-piano.src = 'https://upload.wikimedia.org/wikipedia/commons/transcoded/2/24/Chopin_nocturne_op9_no2.ogg/Chopin_nocturne_op9_no2.ogg.mp3';
+const sources = [
+  'https://archive.org/download/musopen-chopin/Nocturne%20Op.%209%20no.%202%20in%20E%20flat%20major.mp3',
+  'https://archive.org/download/musopen-chopin/NocturneOp9No2.mp3',
+];
+let srcIndex = 0;
+piano.src = sources[srcIndex];
 piano.loop = true;
 piano.volume = 0;
 piano.preload = 'none';
 
-// Fade in/out progressif
-function fadeIn(audio, target, duration) {
-  audio.volume = 0;
-  const steps = 40;
-  const step = target / steps;
-  let current = 0;
-  const t = setInterval(() => {
-    current += step;
-    audio.volume = Math.min(current, target);
-    if (current >= target) clearInterval(t);
-  }, duration / steps);
-}
+piano.addEventListener('error', () => {
+  srcIndex++;
+  if (srcIndex < sources.length) {
+    piano.src = sources[srcIndex];
+    if (musicPlaying) piano.play().catch(() => {});
+  }
+});
 
-function fadeOut(audio, duration) {
-  const start = audio.volume;
-  const steps = 40;
-  const step = start / steps;
-  let current = start;
-  const t = setInterval(() => {
-    current -= step;
-    audio.volume = Math.max(current, 0);
-    if (current <= 0) { clearInterval(t); audio.pause(); }
-  }, duration / steps);
-}
-
-function toggleMusic() {
+// Mise à jour visuelle du bouton
+function setBtnState(playing) {
+  if (!muteBtn) return;
   const icon = muteBtn.querySelector('.music-icon');
-  if (!musicPlaying) {
-    piano.play().then(() => {
-      fadeIn(piano, 0.35, 2500);
-      musicPlaying = true;
-      if (icon) icon.textContent = '🔊';
-      muteBtn.classList.add('playing');
-      muteBtn.title = 'Couper la musique';
-    }).catch(() => {});
+  if (playing) {
+    if (icon) icon.textContent = '🔊';
+    muteBtn.classList.add('playing');
+    muteBtn.title = 'Couper la musique';
   } else {
-    fadeOut(piano, 2000);
-    musicPlaying = false;
     if (icon) icon.textContent = '🔇';
     muteBtn.classList.remove('playing');
-    muteBtn.title = 'Activer la musique — Chopin Nocturne Op.9 No.2';
+    muteBtn.title = 'Chopin Op.9 — Cliquez pour écouter';
   }
 }
 
-// Démarrage au premier clic utilisateur
-let audioStarted = false;
-document.addEventListener('click', () => {
-  if (!audioStarted) {
-    audioStarted = true;
+// Fade in
+function fadeIn(audio, target, duration) {
+  audio.volume = 0;
+  const steps = 50;
+  let step = 0;
+  const inc = target / steps;
+  const t = setInterval(() => {
+    step++;
+    audio.volume = Math.min(step * inc, target);
+    if (step >= steps) { audio.volume = target; clearInterval(t); }
+  }, duration / steps);
+}
+
+// Fade out
+function fadeOut(audio, duration, cb) {
+  const start = audio.volume;
+  const steps = 50;
+  let step = 0;
+  const dec = start / steps;
+  const t = setInterval(() => {
+    step++;
+    audio.volume = Math.max(start - step * dec, 0);
+    if (step >= steps) { audio.volume = 0; audio.pause(); clearInterval(t); if (cb) cb(); }
+  }, duration / steps);
+}
+
+// Démarrer la musique
+function startMusic() {
+  piano.play().then(() => {
+    audioReady = true;
+    musicPlaying = true;
+    fadeIn(piano, 0.32, 3000);
+    setBtnState(true);
+  }).catch(() => {
+    // Autoplay bloqué — attendre interaction
+  });
+}
+
+// Bouton mute — clic direct
+function toggleMusic() {
+  if (!audioReady && !musicPlaying) {
+    // Première fois — démarrer
+    startMusic();
+  } else if (musicPlaying) {
+    // Couper
+    fadeOut(piano, 1500, () => {
+      musicPlaying = false;
+      setBtnState(false);
+    });
+  } else {
+    // Reprendre
     piano.play().then(() => {
-      fadeIn(piano, 0.35, 3000);
       musicPlaying = true;
-      const icon = muteBtn ? muteBtn.querySelector('.music-icon') : null;
-      if (icon) icon.textContent = '🔊';
-      if (muteBtn) muteBtn.classList.add('playing');
+      fadeIn(piano, 0.32, 1500);
+      setBtnState(true);
     }).catch(() => {});
   }
-}, { once: true });
+}
 
-// Tooltip initial
-if (muteBtn) muteBtn.title = 'Activer la musique — Chopin Nocturne Op.9 No.2';
+// Premier clic n'importe où sur la page (hors bouton) → démarrer musique
+document.addEventListener('click', (e) => {
+  if (!audioReady && e.target !== muteBtn && !muteBtn?.contains(e.target)) {
+    startMusic();
+  }
+}, { once: true });
 
 // ── COLOR SHIFT — subtle hue animation on sections ──
 let hueShift = 0;
