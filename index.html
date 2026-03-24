@@ -514,5 +514,65 @@ const obs = new IntersectionObserver(es => es.forEach(e => { if (e.isIntersectin
 document.querySelectorAll('.reveal').forEach(el => obs.observe(el));
 </script>
 <script src="music.js"></script>
+<!-- ── POPUP MESSAGE ── -->
+<div id="popupOverlay" style="position:fixed;inset:0;z-index:1000;display:flex;align-items:center;justify-content:center;padding:20px;background:rgba(13,27,42,.75);backdrop-filter:blur(6px);opacity:0;transition:opacity .5s ease;">
+  <div id="popupBox" style="background:var(--surface,#fff);border-radius:16px;max-width:520px;width:100%;box-shadow:0 24px 80px rgba(0,0,0,.3);overflow:hidden;transform:translateY(24px);transition:transform .5s ease;">
+    <!-- Header -->
+    <div style="background:var(--navy,#0d1b2a);padding:20px 28px;display:flex;align-items:center;gap:12px;">
+      <div style="width:36px;height:36px;background:rgba(184,151,90,.15);border:1px solid rgba(184,151,90,.4);border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:16px;flex-shrink:0">🏛️</div>
+      <div>
+        <div style="font-size:10px;letter-spacing:.2em;text-transform:uppercase;color:var(--gold,#b8975a);font-family:'DM Sans',sans-serif;margin-bottom:2px">Association des Résidents</div>
+        <div style="font-size:13px;font-weight:600;color:white;font-family:'DM Sans',sans-serif">Missimi Living · Casablanca</div>
+      </div>
+      <button onclick="closePopup()" style="margin-left:auto;background:none;border:none;color:rgba(255,255,255,.4);font-size:20px;cursor:pointer;line-height:1;padding:4px;transition:color .2s" onmouseover="this.style.color='white'" onmouseout="this.style.color='rgba(255,255,255,.4)'">✕</button>
+    </div>
+    <!-- Body -->
+    <div style="padding:32px 28px;">
+      <div style="width:40px;height:2px;background:var(--gold,#b8975a);margin-bottom:20px;border-radius:1px"></div>
+      <p style="font-family:'Cormorant Garamond',serif;font-size:clamp(18px,3vw,24px);font-weight:400;line-height:1.65;color:var(--text,#1a1208);font-style:italic;margin-bottom:20px">"Les résidents restent <strong style="font-style:normal;font-weight:600">unis et déterminés</strong>.</p>
+      <p style="font-family:'Cormorant Garamond',serif;font-size:clamp(18px,3vw,24px);font-weight:400;line-height:1.65;color:var(--text,#1a1208);font-style:italic;margin-bottom:28px">Toutes les démarches nécessaires seront engagées, dans le <strong style="font-style:normal;font-weight:600">respect de la loi</strong>, jusqu'à l'<strong style="font-style:normal;font-weight:600">aboutissement complet de leurs droits</strong>."</p>
+      <div style="display:flex;align-items:center;gap:10px;padding-top:20px;border-top:1px solid var(--border,#e3ddd4)">
+        <div style="width:8px;height:8px;background:var(--gold,#b8975a);border-radius:50%;animation:blink 2s infinite;flex-shrink:0"></div>
+        <span style="font-size:12px;color:var(--muted,#6b5f4e);font-family:'DM Sans',sans-serif;letter-spacing:.04em">Association des Résidents Missimi Living · 2026</span>
+      </div>
+    </div>
+    <!-- Footer -->
+    <div style="padding:16px 28px 20px;text-align:center">
+      <button onclick="closePopup()" style="background:var(--navy,#0d1b2a);color:white;border:none;padding:12px 40px;border-radius:6px;font-size:13px;font-weight:600;cursor:pointer;font-family:'DM Sans',sans-serif;letter-spacing:.06em;text-transform:uppercase;transition:all .2s" onmouseover="this.style.background='#b8975a';this.style.color='#0d1b2a'" onmouseout="this.style.background='#0d1b2a';this.style.color='white'">Compris →</button>
+    </div>
+  </div>
+</div>
+
+<script>
+// Popup — apparaît après 1.5s
+window.addEventListener('load', () => {
+  setTimeout(() => {
+    const overlay = document.getElementById('popupOverlay');
+    const box     = document.getElementById('popupBox');
+    if (!overlay) return;
+    overlay.style.display = 'flex';
+    requestAnimationFrame(() => {
+      requestAnimationFrame(() => {
+        overlay.style.opacity = '1';
+        box.style.transform   = 'translateY(0)';
+      });
+    });
+  }, 1500);
+});
+
+function closePopup() {
+  const overlay = document.getElementById('popupOverlay');
+  const box     = document.getElementById('popupBox');
+  overlay.style.opacity  = '0';
+  box.style.transform    = 'translateY(20px)';
+  setTimeout(() => { overlay.style.display = 'none'; }, 500);
+}
+
+// Fermer en cliquant sur l'overlay
+document.getElementById('popupOverlay').addEventListener('click', (e) => {
+  if (e.target === document.getElementById('popupOverlay')) closePopup();
+});
+</script>
+
 </body>
 </html>
