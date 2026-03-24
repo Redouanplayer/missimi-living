@@ -68,8 +68,21 @@ footer{background:var(--navy);padding:32px 60px;display:flex;align-items:center;
 }
 </style>
 <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,500;0,600;1,300;1,400&family=DM+Sans:wght@300;400;500;600&family=Noto+Kufi+Arabic:wght@300;400;500&display=swap" rel="stylesheet">
+
+<style>
+#muteBtn{position:fixed;bottom:28px;right:28px;z-index:300;height:44px;border-radius:22px;border:1px solid rgba(184,151,90,.4);background:rgba(13,27,42,.88);backdrop-filter:blur(12px);color:white;font-size:15px;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:7px;padding:0 16px;transition:all .3s;box-shadow:0 4px 20px rgba(0,0,0,.3);font-family:"DM Sans",sans-serif;}
+#muteBtn:hover{background:rgba(184,151,90,.18);border-color:#b8975a;transform:translateY(-2px);}
+#muteBtn.playing .music-label{color:#b8975a;}
+@keyframes musicPulse{0%,100%{opacity:1;}50%{opacity:.4;}}
+#muteBtn.playing .music-icon{animation:musicPulse 2s ease-in-out infinite;}
+#muteBtn .music-label{font-size:10px;letter-spacing:.08em;color:rgba(255,255,255,.45);white-space:nowrap;}
+</style>
 </head>
 <body>
+<button id="muteBtn" onclick="toggleMusic(event)" title="Chopin — Nocturne Op.9">
+  <span class="music-icon">🔇</span>
+  <span class="music-label">Chopin Op.9</span>
+</button>
 <nav>
   <a href="index.html" class="nav-logo"><span class="nl-main">MISSIMI</span><span class="nl-sub">Living · Casablanca</span></a>
   <div class="nav-links" id="navLinks">
@@ -142,5 +155,6 @@ document.querySelectorAll('#navLinks a').forEach(a=>a.addEventListener('click',(
   const b=document.getElementById('burger');b.classList.remove('open');b.textContent='☰';
 }));
 </script>
+<script src="music.js"></script>
 </body>
 </html>

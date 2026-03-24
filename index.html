@@ -157,12 +157,7 @@ footer{background:var(--navy);padding:40px 60px;display:flex;align-items:center;
 
 /* ─── PARTICLES & EXTRAS ─── */
 #particleCanvas{position:fixed;top:0;left:0;pointer-events:none;z-index:3;opacity:.6;}
-#muteBtn{position:fixed;bottom:32px;right:32px;z-index:300;width:auto;min-width:48px;height:48px;border-radius:24px;border:1px solid rgba(184,151,90,.4);background:rgba(13,27,42,.88);backdrop-filter:blur(12px);color:white;font-size:16px;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:7px;padding:0 16px;transition:all .3s;box-shadow:0 4px 20px rgba(0,0,0,.35);}
-#muteBtn .music-label{font-size:10px;letter-spacing:.08em;color:rgba(255,255,255,.5);font-family:"DM Sans",sans-serif;white-space:nowrap;}
-#muteBtn:hover{background:rgba(184,151,90,.18);border-color:var(--gold);transform:translateY(-2px);box-shadow:0 6px 24px rgba(184,151,90,.2);}
-#muteBtn.playing .music-label{color:var(--gold);}
-@keyframes musicPulse{0%,100%{opacity:1;}50%{opacity:.4;}}
-#muteBtn.playing .music-icon{animation:musicPulse 2s ease-in-out infinite;}
+
 #scrollBar{position:fixed;top:0;left:0;height:2px;background:linear-gradient(to right,var(--gold-dark),var(--gold),var(--gold-light));z-index:999;width:0%;}
 .hs-num{text-shadow:0 0 30px rgba(184,151,90,.4);}
 .ig-num{text-shadow:0 0 20px rgba(184,151,90,.3);}
@@ -203,14 +198,24 @@ footer{background:var(--navy);padding:40px 60px;display:flex;align-items:center;
   .intro-features{grid-template-columns:1fr;}
 }
 </style>
+
+<style>
+#muteBtn{position:fixed;bottom:28px;right:28px;z-index:300;height:44px;border-radius:22px;border:1px solid rgba(184,151,90,.4);background:rgba(13,27,42,.88);backdrop-filter:blur(12px);color:white;font-size:15px;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:7px;padding:0 16px;transition:all .3s;box-shadow:0 4px 20px rgba(0,0,0,.3);font-family:"DM Sans",sans-serif;}
+#muteBtn:hover{background:rgba(184,151,90,.18);border-color:#b8975a;transform:translateY(-2px);}
+#muteBtn.playing .music-label{color:#b8975a;}
+@keyframes musicPulse{0%,100%{opacity:1;}50%{opacity:.4;}}
+#muteBtn.playing .music-icon{animation:musicPulse 2s ease-in-out infinite;}
+#muteBtn .music-label{font-size:10px;letter-spacing:.08em;color:rgba(255,255,255,.45);white-space:nowrap;}
+</style>
 </head>
 <body>
-<canvas id="particleCanvas"></canvas>
-<div id="scrollBar"></div>
-<button id="muteBtn" onclick="toggleMusic()" title="Activer la musique — Chopin Nocturne Op.9 No.2">
+<button id="muteBtn" onclick="toggleMusic(event)" title="Chopin — Nocturne Op.9">
   <span class="music-icon">🔇</span>
   <span class="music-label">Chopin Op.9</span>
 </button>
+<canvas id="particleCanvas"></canvas>
+<div id="scrollBar"></div>
+
 
 <!-- NAV -->
 <nav id="nav">
@@ -467,112 +472,6 @@ if (canvas) {
   drawParticles();
 }
 
-// ── PIANO CLASSIQUE — Chopin Nocturne Op.9 No.2 ─────
-// Source : Musopen / Internet Archive — CC0 Domaine public
-const muteBtn = document.getElementById('muteBtn');
-let musicPlaying = false;
-let audioReady = false;
-
-const piano = new Audio();
-const sources = [
-  'https://archive.org/download/musopen-chopin/Nocturne%20Op.%209%20no.%202%20in%20E%20flat%20major.mp3',
-  'https://archive.org/download/musopen-chopin/NocturneOp9No2.mp3',
-];
-let srcIndex = 0;
-piano.src = sources[srcIndex];
-piano.loop = true;
-piano.volume = 0;
-piano.preload = 'none';
-
-piano.addEventListener('error', () => {
-  srcIndex++;
-  if (srcIndex < sources.length) {
-    piano.src = sources[srcIndex];
-    if (musicPlaying) piano.play().catch(() => {});
-  }
-});
-
-// Mise à jour visuelle du bouton
-function setBtnState(playing) {
-  if (!muteBtn) return;
-  const icon = muteBtn.querySelector('.music-icon');
-  if (playing) {
-    if (icon) icon.textContent = '🔊';
-    muteBtn.classList.add('playing');
-    muteBtn.title = 'Couper la musique';
-  } else {
-    if (icon) icon.textContent = '🔇';
-    muteBtn.classList.remove('playing');
-    muteBtn.title = 'Chopin Op.9 — Cliquez pour écouter';
-  }
-}
-
-// Fade in
-function fadeIn(audio, target, duration) {
-  audio.volume = 0;
-  const steps = 50;
-  let step = 0;
-  const inc = target / steps;
-  const t = setInterval(() => {
-    step++;
-    audio.volume = Math.min(step * inc, target);
-    if (step >= steps) { audio.volume = target; clearInterval(t); }
-  }, duration / steps);
-}
-
-// Fade out
-function fadeOut(audio, duration, cb) {
-  const start = audio.volume;
-  const steps = 50;
-  let step = 0;
-  const dec = start / steps;
-  const t = setInterval(() => {
-    step++;
-    audio.volume = Math.max(start - step * dec, 0);
-    if (step >= steps) { audio.volume = 0; audio.pause(); clearInterval(t); if (cb) cb(); }
-  }, duration / steps);
-}
-
-// Démarrer la musique
-function startMusic() {
-  piano.play().then(() => {
-    audioReady = true;
-    musicPlaying = true;
-    fadeIn(piano, 0.32, 3000);
-    setBtnState(true);
-  }).catch(() => {
-    // Autoplay bloqué — attendre interaction
-  });
-}
-
-// Bouton mute — clic direct
-function toggleMusic() {
-  if (!audioReady && !musicPlaying) {
-    // Première fois — démarrer
-    startMusic();
-  } else if (musicPlaying) {
-    // Couper
-    fadeOut(piano, 1500, () => {
-      musicPlaying = false;
-      setBtnState(false);
-    });
-  } else {
-    // Reprendre
-    piano.play().then(() => {
-      musicPlaying = true;
-      fadeIn(piano, 0.32, 1500);
-      setBtnState(true);
-    }).catch(() => {});
-  }
-}
-
-// Premier clic n'importe où sur la page (hors bouton) → démarrer musique
-document.addEventListener('click', (e) => {
-  if (!audioReady && e.target !== muteBtn && !muteBtn?.contains(e.target)) {
-    startMusic();
-  }
-}, { once: true });
-
 // ── COLOR SHIFT — subtle hue animation on sections ──
 let hueShift = 0;
 function animateColors() {
@@ -614,5 +513,6 @@ dots.forEach((d, i) => d.addEventListener('click', () => { clearInterval(sliderT
 const obs = new IntersectionObserver(es => es.forEach(e => { if (e.isIntersecting) e.target.classList.add('vis'); }), { threshold: 0.1, rootMargin: '0px 0px -40px 0px' });
 document.querySelectorAll('.reveal').forEach(el => obs.observe(el));
 </script>
+<script src="music.js"></script>
 </body>
 </html>
