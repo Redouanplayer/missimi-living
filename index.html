@@ -155,6 +155,22 @@ footer{background:var(--navy);padding:40px 60px;display:flex;align-items:center;
 .ft-links a{font-size:11px;color:rgba(255,255,255,.35);text-decoration:none;letter-spacing:.07em;text-transform:uppercase;transition:color .2s;}
 .ft-links a:hover{color:var(--gold);}
 
+/* ─── PARTICLES & EXTRAS ─── */
+#particleCanvas{position:fixed;top:0;left:0;pointer-events:none;z-index:3;opacity:.6;}
+#muteBtn{position:fixed;bottom:32px;right:32px;z-index:300;width:auto;min-width:48px;height:48px;border-radius:24px;border:1px solid rgba(184,151,90,.4);background:rgba(13,27,42,.88);backdrop-filter:blur(12px);color:white;font-size:16px;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:7px;padding:0 16px;transition:all .3s;box-shadow:0 4px 20px rgba(0,0,0,.35);}
+#muteBtn .music-label{font-size:10px;letter-spacing:.08em;color:rgba(255,255,255,.5);font-family:"DM Sans",sans-serif;white-space:nowrap;}
+#muteBtn:hover{background:rgba(184,151,90,.18);border-color:var(--gold);transform:translateY(-2px);box-shadow:0 6px 24px rgba(184,151,90,.2);}
+#muteBtn.playing .music-label{color:var(--gold);}
+@keyframes musicPulse{0%,100%{opacity:1;}50%{opacity:.4;}}
+#muteBtn.playing .music-icon{animation:musicPulse 2s ease-in-out infinite;}
+#scrollBar{position:fixed;top:0;left:0;height:2px;background:linear-gradient(to right,var(--gold-dark),var(--gold),var(--gold-light));z-index:999;width:0%;}
+.hs-num{text-shadow:0 0 30px rgba(184,151,90,.4);}
+.ig-num{text-shadow:0 0 20px rgba(184,151,90,.3);}
+.ig{position:relative;overflow:hidden;}
+.ig::after{content:"";position:absolute;top:-50%;left:-60%;width:40%;height:200%;background:linear-gradient(90deg,transparent,rgba(255,255,255,.06),transparent);transform:skewX(-20deg);transition:left .6s ease;pointer-events:none;}
+.ig:hover::after{left:120%;}
+@keyframes ring{0%{transform:scale(1);opacity:.5;}100%{transform:scale(2.2);opacity:0;}}
+.assoc-glow-el{position:absolute;top:0;left:50%;transform:translateX(-50%);width:600px;height:300px;pointer-events:none;}
 /* ─── REVEAL ─── */
 .reveal{opacity:0;transform:translateY(28px);transition:opacity .7s ease,transform .7s ease;}
 .reveal.vis{opacity:1;transform:translateY(0);}
@@ -189,6 +205,12 @@ footer{background:var(--navy);padding:40px 60px;display:flex;align-items:center;
 </style>
 </head>
 <body>
+<canvas id="particleCanvas"></canvas>
+<div id="scrollBar"></div>
+<button id="muteBtn" onclick="toggleMusic()" title="Activer la musique — Chopin Nocturne Op.9 No.2">
+  <span class="music-icon">🔇</span>
+  <span class="music-label">Chopin Op.9</span>
+</button>
 
 <!-- NAV -->
 <nav id="nav">
@@ -232,10 +254,10 @@ footer{background:var(--navy);padding:40px 60px;display:flex;align-items:center;
   </div>
 
   <div class="hero-stats">
-    <div class="hs"><div class="hs-num serif">170<span>+</span></div><div class="hs-label">Appartements</div></div>
-    <div class="hs"><div class="hs-num serif">9</div><div class="hs-label">Immeubles</div></div>
-    <div class="hs"><div class="hs-num serif">249</div><div class="hs-label">Unités totales</div></div>
-    <div class="hs"><div class="hs-num serif">2</div><div class="hs-label">Parkings sous-sol</div></div>
+    <div class="hs"><div class="hs-num serif" data-count="170" data-suffix="+">0</div><div class="hs-label">Appartements</div></div>
+    <div class="hs"><div class="hs-num serif" data-count="9">0</div><div class="hs-label">Immeubles</div></div>
+    <div class="hs"><div class="hs-num serif" data-count="249">0</div><div class="hs-label">Unités totales</div></div>
+    <div class="hs"><div class="hs-num serif" data-count="2">0</div><div class="hs-label">Parkings sous-sol</div></div>
   </div>
 </section>
 
@@ -304,14 +326,14 @@ footer{background:var(--navy);padding:40px 60px;display:flex;align-items:center;
     <a href="projet.html" class="btn-gold" style="font-size:11px;padding:11px 22px">Voir le projet complet →</a>
   </div>
   <div class="infos-grid">
-    <div class="ig"><div class="ig-icon">🏢</div><div class="ig-num">9</div><div class="ig-label">Immeubles</div></div>
-    <div class="ig"><div class="ig-icon">🏠</div><div class="ig-num">170</div><div class="ig-label">Appartements</div></div>
-    <div class="ig"><div class="ig-icon">💼</div><div class="ig-num">45</div><div class="ig-label">Bureaux</div></div>
-    <div class="ig"><div class="ig-icon">🏪</div><div class="ig-num">34</div><div class="ig-label">Commerces</div></div>
-    <div class="ig"><div class="ig-icon">🚗</div><div class="ig-num">2</div><div class="ig-label">Parkings sous-sol</div></div>
-    <div class="ig"><div class="ig-icon">🛗</div><div class="ig-num">9</div><div class="ig-label">Ascenseurs</div></div>
-    <div class="ig"><div class="ig-icon">🌿</div><div class="ig-num">1</div><div class="ig-label">Jardin central</div></div>
-    <div class="ig"><div class="ig-icon">📐</div><div class="ig-num">5</div><div class="ig-label">Étages / immeuble</div></div>
+    <div class="ig"><div class="ig-icon">🏢</div><div class="ig-num" data-count="9">0</div><div class="ig-label">Immeubles</div></div>
+    <div class="ig"><div class="ig-icon">🏠</div><div class="ig-num" data-count="170">0</div><div class="ig-label">Appartements</div></div>
+    <div class="ig"><div class="ig-icon">💼</div><div class="ig-num" data-count="45">0</div><div class="ig-label">Bureaux</div></div>
+    <div class="ig"><div class="ig-icon">🏪</div><div class="ig-num" data-count="34">0</div><div class="ig-label">Commerces</div></div>
+    <div class="ig"><div class="ig-icon">🚗</div><div class="ig-num" data-count="2">0</div><div class="ig-label">Parkings sous-sol</div></div>
+    <div class="ig"><div class="ig-icon">🛗</div><div class="ig-num" data-count="10">0</div><div class="ig-label">Ascenseurs</div></div>
+    <div class="ig"><div class="ig-icon">🌿</div><div class="ig-num" data-count="1">0</div><div class="ig-label">Jardin central</div></div>
+    <div class="ig"><div class="ig-icon">📐</div><div class="ig-num" data-count="5">0</div><div class="ig-label">Étages / immeuble</div></div>
   </div>
 </section>
 
@@ -365,9 +387,172 @@ footer{background:var(--navy);padding:40px 60px;display:flex;align-items:center;
 </footer>
 
 <script>
-// Nav scroll
+// ── NAV scroll ────────────────────────────────────
 const nav = document.getElementById('nav');
-window.addEventListener('scroll', () => nav.classList.toggle('solid', scrollY > 80));
+window.addEventListener('scroll', () => {
+  nav.classList.toggle('solid', scrollY > 80);
+  // Scroll progress bar
+  const bar = document.getElementById('scrollBar');
+  if (bar) {
+    const pct = (scrollY / (document.body.scrollHeight - window.innerHeight)) * 100;
+    bar.style.width = Math.min(pct, 100) + '%';
+  }
+});
+
+// ── ENHANCED CountUp — ease-out elastic avec séparateur ──────
+function animateCount(el) {
+  const target = parseInt(el.dataset.count);
+  const suffix = el.dataset.suffix || '';
+  const duration = 2200;
+  const fps = 60;
+  const steps = Math.round(duration / 1000 * fps);
+  let step = 0;
+  const easeOutExpo = t => t === 1 ? 1 : 1 - Math.pow(2, -10 * t);
+  const timer = setInterval(() => {
+    step++;
+    const val = Math.round(easeOutExpo(step / steps) * target);
+    el.textContent = val.toLocaleString('fr-FR') + suffix;
+    if (step >= steps) { el.textContent = target.toLocaleString('fr-FR') + suffix; clearInterval(timer); }
+  }, 1000 / fps);
+}
+
+// Hero stats
+setTimeout(() => {
+  document.querySelectorAll('.hs-num[data-count]').forEach(el => animateCount(el));
+}, 1600);
+
+// Grid stats on scroll
+const countObs = new IntersectionObserver((entries) => {
+  entries.forEach(e => {
+    if (e.isIntersecting) {
+      e.target.querySelectorAll('[data-count]').forEach(el => {
+        if (!el.dataset.counted) { el.dataset.counted = '1'; animateCount(el); }
+      });
+    }
+  });
+}, { threshold: 0.2 });
+document.querySelectorAll('.infos, .intro-visual').forEach(s => countObs.observe(s));
+
+// ── PARTICLES — floating golden dust ─────────────────
+const canvas = document.getElementById('particleCanvas');
+if (canvas) {
+  const ctx = canvas.getContext('2d');
+  canvas.width = window.innerWidth;
+  canvas.height = window.innerHeight;
+  window.addEventListener('resize', () => { canvas.width = window.innerWidth; canvas.height = window.innerHeight; });
+  const particles = Array.from({ length: 55 }, () => ({
+    x: Math.random() * canvas.width,
+    y: Math.random() * canvas.height,
+    r: Math.random() * 1.8 + 0.3,
+    vx: (Math.random() - 0.5) * 0.3,
+    vy: -Math.random() * 0.4 - 0.1,
+    alpha: Math.random() * 0.5 + 0.1,
+    pulse: Math.random() * Math.PI * 2
+  }));
+  function drawParticles() {
+    ctx.clearRect(0, 0, canvas.width, canvas.height);
+    particles.forEach(p => {
+      p.pulse += 0.02;
+      p.alpha = 0.15 + Math.sin(p.pulse) * 0.12;
+      p.x += p.vx; p.y += p.vy;
+      if (p.y < -5) { p.y = canvas.height + 5; p.x = Math.random() * canvas.width; }
+      if (p.x < 0 || p.x > canvas.width) p.vx *= -1;
+      ctx.beginPath();
+      ctx.arc(p.x, p.y, p.r, 0, Math.PI * 2);
+      ctx.fillStyle = `rgba(184,151,90,${p.alpha})`;
+      ctx.fill();
+    });
+    requestAnimationFrame(drawParticles);
+  }
+  drawParticles();
+}
+
+// ── PIANO CLASSIQUE — Chopin Nocturne Op.9 No.2 ─────
+// Source : Musopen.org — Domaine public (CC PDM 1.0)
+const muteBtn = document.getElementById('muteBtn');
+let musicPlaying = false;
+
+// Créer l'élément audio
+const piano = new Audio();
+piano.src = 'https://upload.wikimedia.org/wikipedia/commons/transcoded/2/24/Chopin_nocturne_op9_no2.ogg/Chopin_nocturne_op9_no2.ogg.mp3';
+piano.loop = true;
+piano.volume = 0;
+piano.preload = 'none';
+
+// Fade in/out progressif
+function fadeIn(audio, target, duration) {
+  audio.volume = 0;
+  const steps = 40;
+  const step = target / steps;
+  let current = 0;
+  const t = setInterval(() => {
+    current += step;
+    audio.volume = Math.min(current, target);
+    if (current >= target) clearInterval(t);
+  }, duration / steps);
+}
+
+function fadeOut(audio, duration) {
+  const start = audio.volume;
+  const steps = 40;
+  const step = start / steps;
+  let current = start;
+  const t = setInterval(() => {
+    current -= step;
+    audio.volume = Math.max(current, 0);
+    if (current <= 0) { clearInterval(t); audio.pause(); }
+  }, duration / steps);
+}
+
+function toggleMusic() {
+  const icon = muteBtn.querySelector('.music-icon');
+  if (!musicPlaying) {
+    piano.play().then(() => {
+      fadeIn(piano, 0.35, 2500);
+      musicPlaying = true;
+      if (icon) icon.textContent = '🔊';
+      muteBtn.classList.add('playing');
+      muteBtn.title = 'Couper la musique';
+    }).catch(() => {});
+  } else {
+    fadeOut(piano, 2000);
+    musicPlaying = false;
+    if (icon) icon.textContent = '🔇';
+    muteBtn.classList.remove('playing');
+    muteBtn.title = 'Activer la musique — Chopin Nocturne Op.9 No.2';
+  }
+}
+
+// Démarrage au premier clic utilisateur
+let audioStarted = false;
+document.addEventListener('click', () => {
+  if (!audioStarted) {
+    audioStarted = true;
+    piano.play().then(() => {
+      fadeIn(piano, 0.35, 3000);
+      musicPlaying = true;
+      const icon = muteBtn ? muteBtn.querySelector('.music-icon') : null;
+      if (icon) icon.textContent = '🔊';
+      if (muteBtn) muteBtn.classList.add('playing');
+    }).catch(() => {});
+  }
+}, { once: true });
+
+// Tooltip initial
+if (muteBtn) muteBtn.title = 'Activer la musique — Chopin Nocturne Op.9 No.2';
+
+// ── COLOR SHIFT — subtle hue animation on sections ──
+let hueShift = 0;
+function animateColors() {
+  hueShift += 0.05;
+  const glows = document.querySelectorAll('.hero-glow, .assoc-glow-el');
+  glows.forEach((el, i) => {
+    const h = (hueShift + i * 60) % 360;
+    el.style.background = `radial-gradient(ellipse, hsla(${h},40%,60%,0.08), transparent 70%)`;
+  });
+  requestAnimationFrame(animateColors);
+}
+animateColors();
 
 // Burger menu
 function toggleMenu() {
@@ -384,18 +569,14 @@ document.querySelectorAll('#navLinks a').forEach(a => a.addEventListener('click'
 let current = 0;
 const slides = document.querySelectorAll('.hero-slide');
 const dots = document.querySelectorAll('.hdot');
-
 function goSlide(n) {
-  slides[current].classList.remove('active');
-  dots[current].classList.remove('active');
+  slides[current].classList.remove('active'); dots[current].classList.remove('active');
   current = n;
-  slides[current].classList.add('active');
-  dots[current].classList.add('active');
+  slides[current].classList.add('active'); dots[current].classList.add('active');
 }
-
 function nextSlide() { goSlide((current + 1) % slides.length); }
-let timer = setInterval(nextSlide, 5000);
-dots.forEach((d, i) => d.addEventListener('click', () => { clearInterval(timer); goSlide(i); timer = setInterval(nextSlide, 5000); }));
+let sliderTimer = setInterval(nextSlide, 5000);
+dots.forEach((d, i) => d.addEventListener('click', () => { clearInterval(sliderTimer); goSlide(i); sliderTimer = setInterval(nextSlide, 5000); }));
 
 // Reveal on scroll
 const obs = new IntersectionObserver(es => es.forEach(e => { if (e.isIntersecting) e.target.classList.add('vis'); }), { threshold: 0.1, rootMargin: '0px 0px -40px 0px' });
