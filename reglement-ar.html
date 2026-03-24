@@ -1,0 +1,315 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>النظام الداخلي — ميسيمي ليفينج</title>
+<link href="https://fonts.googleapis.com/css2?family=Noto+Kufi+Arabic:wght@300;400;500;600;700&family=Noto+Naskh+Arabic:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+:root{--gold:#b8975a;--gold-light:#d4b483;--navy:#0d1b2a;--cream:#faf8f4;--warm:#f5f0e8;--border:#e3ddd4;--text:#1a1208;--muted:#6b5f4e;--radius:4px;--radius-md:8px;--radius-lg:16px;}
+*,*::before,*::after{margin:0;padding:0;box-sizing:border-box;}html{scroll-behavior:smooth;}
+body{font-family:"Noto Naskh Arabic",serif;background:var(--cream);color:var(--text);direction:rtl;}
+::-webkit-scrollbar{width:3px;}::-webkit-scrollbar-thumb{background:var(--gold);}
+nav{position:fixed;top:0;left:0;right:0;z-index:100;padding:14px 60px;background:rgba(13,27,42,.97);backdrop-filter:blur(20px);box-shadow:0 1px 0 rgba(184,151,90,.2);display:flex;align-items:center;justify-content:space-between;direction:rtl;}
+.nav-logo{display:flex;flex-direction:column;line-height:1;text-decoration:none;}
+.nl-main{font-family:"Noto Kufi Arabic",sans-serif;font-size:18px;font-weight:600;color:white;}
+.nl-sub{font-size:9px;color:var(--gold);margin-top:2px;font-family:"Noto Kufi Arabic",sans-serif;}
+.nav-links{display:flex;gap:20px;align-items:center;flex-direction:row-reverse;}
+.nav-links a{font-size:12px;font-weight:500;color:rgba(255,255,255,.6);text-decoration:none;transition:color .2s;font-family:"Noto Kufi Arabic",sans-serif;}
+.nav-links a:hover,.nav-links a.active{color:var(--gold);}
+.nav-cta{background:var(--gold)!important;color:var(--navy)!important;padding:8px 14px;border-radius:var(--radius);}
+.burger{display:none;background:none;border:1px solid rgba(255,255,255,.3);color:white;font-size:16px;padding:5px 10px;border-radius:4px;cursor:pointer;}
+.page-hero{background:var(--navy);padding:120px 60px 64px;position:relative;overflow:hidden;}
+.ph-pattern{position:absolute;inset:0;background-image:repeating-linear-gradient(45deg,transparent,transparent 40px,rgba(184,151,90,.03) 40px,rgba(184,151,90,.03) 80px);}
+.ph-glow{position:absolute;top:0;left:0;width:400px;height:300px;background:radial-gradient(ellipse,rgba(184,151,90,.1),transparent 70%);}
+.ph-content{position:relative;z-index:2;}
+.ph-eyebrow{display:flex;align-items:center;gap:14px;margin-bottom:16px;flex-direction:row-reverse;justify-content:flex-end;}
+.pe-line{width:28px;height:1px;background:var(--gold);}
+.pe-text{font-size:11px;color:var(--gold);font-weight:500;font-family:"Noto Kufi Arabic",sans-serif;}
+.ph-title{font-family:"Noto Kufi Arabic",sans-serif;font-size:clamp(34px,5vw,58px);font-weight:300;color:white;line-height:1.35;margin-bottom:8px;}
+.ph-title em{font-style:normal;color:var(--gold);}
+.ph-sub-fr{font-size:13px;color:rgba(255,255,255,.3);direction:ltr;text-align:right;margin:8px 0;font-family:sans-serif;}
+.ph-sub{font-size:15px;color:rgba(255,255,255,.55);max-width:640px;line-height:2;}
+.main{padding:60px 60px;max-width:1100px;margin:0 auto;}
+.card{background:white;border:1px solid var(--border);border-radius:var(--radius-lg);padding:24px;transition:all .2s;}
+.card:hover{border-color:var(--gold);box-shadow:0 4px 20px rgba(184,151,90,.08);}
+.card-dark{background:var(--navy);border:1px solid rgba(184,151,90,.3);border-radius:var(--radius-lg);padding:24px;}
+.grid2{display:grid;grid-template-columns:1fr 1fr;gap:16px;}
+.divider{height:1px;background:var(--border);margin:40px 0;}
+.gl{font-size:10px;color:var(--gold);margin-bottom:8px;font-family:"Noto Kufi Arabic",sans-serif;font-weight:600;letter-spacing:.05em;}
+.art-title{font-size:15px;font-weight:600;margin-bottom:12px;font-family:"Noto Kufi Arabic",sans-serif;}
+.art-list{list-style:none;display:flex;flex-direction:column;gap:7px;}
+.art-list li{font-size:13px;color:var(--muted);padding-right:18px;position:relative;line-height:1.75;}
+.art-list li::before{content:"—";position:absolute;right:0;color:var(--gold);}
+.art-list li strong{color:var(--text);font-weight:600;}
+.art-list-dark li{color:rgba(255,255,255,.65);}
+.art-list-dark li strong{color:white;}
+.preambule-box{background:var(--navy);border-radius:var(--radius-lg);padding:28px 32px;margin-bottom:32px;}
+.btn-g{background:var(--gold);color:var(--navy);padding:12px 24px;border-radius:var(--radius);font-size:13px;font-weight:600;text-decoration:none;display:inline-flex;align-items:center;gap:8px;transition:all .2s;font-family:"Noto Kufi Arabic",sans-serif;}
+.btn-g:hover{background:var(--gold-light);transform:translateY(-1px);}
+.btn-o{border:1px solid var(--border);color:var(--text);padding:12px 24px;border-radius:var(--radius);font-size:13px;font-weight:500;text-decoration:none;display:inline-flex;align-items:center;gap:8px;transition:all .2s;font-family:"Noto Kufi Arabic",sans-serif;}
+.btn-o:hover{border-color:var(--gold);color:var(--gold);}
+footer{background:var(--navy);padding:32px 60px;display:flex;align-items:center;justify-content:space-between;margin-top:80px;direction:rtl;}
+.ftl{font-family:"Noto Kufi Arabic",sans-serif;font-size:17px;color:white;font-weight:500;}
+.ftl span{color:var(--gold);}
+.ftc{font-size:11px;color:rgba(255,255,255,.25);font-family:"Noto Kufi Arabic",sans-serif;}
+.ftlinks{display:flex;gap:16px;flex-direction:row-reverse;}
+.ftlinks a{font-size:12px;color:rgba(255,255,255,.35);text-decoration:none;transition:color .2s;font-family:"Noto Kufi Arabic",sans-serif;}
+.ftlinks a:hover{color:var(--gold);}
+.lang-switch{position:fixed;bottom:28px;right:28px;z-index:200;display:flex;gap:8px;}
+.ls-btn{padding:9px 18px;border-radius:20px;font-size:12px;font-weight:600;cursor:pointer;border:none;transition:all .2s;font-family:"Noto Kufi Arabic",sans-serif;}
+.ls-ar{background:var(--gold);color:var(--navy);}
+.ls-fr{background:rgba(255,255,255,.15);color:white;backdrop-filter:blur(8px);}
+.ls-fr:hover{background:rgba(255,255,255,.25);}
+@media(max-width:900px){
+  nav{padding:12px 16px;}
+  .nav-links{display:none;flex-direction:column;position:fixed;top:0;left:0;right:0;bottom:0;background:rgba(13,27,42,.98);z-index:200;justify-content:center;align-items:center;gap:24px;}
+  .nav-links.open{display:flex;}
+  .burger{display:block;position:relative;z-index:300;}
+  .burger.open{position:fixed;top:12px;left:16px;}
+  .page-hero{padding:100px 20px 48px;}
+  .main{padding:40px 20px;}
+  .grid2{grid-template-columns:1fr;}
+  footer{flex-direction:column;gap:12px;text-align:center;padding:24px 16px;}
+  .ftlinks{flex-wrap:wrap;justify-content:center;}
+}
+</style>
+</head>
+<body>
+
+<nav>
+  <a href="index.html" class="nav-logo">
+    <span class="nl-main">ميسيمي ليفينج</span>
+    <span class="nl-sub">Missimi Living · Casablanca</span>
+  </a>
+  <div class="nav-links" id="navLinks">
+    <a href="index.html">الرئيسية</a>
+    <a href="projet.html">المشروع</a>
+    <a href="association.html">الجمعية</a>
+    <a href="association-ar.html">النظام الأساسي</a>
+    <a href="reglement-ar.html" class="active">النظام الداخلي</a>
+    <a href="contact.html">اتصل بنا</a>
+    <a href="syndic-v3.html" class="nav-cta">فضاء السكان</a>
+  </div>
+  <button class="burger" id="burger" onclick="toggleMenu()">&#9776;</button>
+</nav>
+
+<div class="page-hero">
+  <div class="ph-pattern"></div>
+  <div class="ph-glow"></div>
+  <div class="ph-content">
+    <div class="ph-eyebrow"><div class="pe-line"></div><span class="pe-text">جمعية سكان ميسيمي ليفينج</span></div>
+    <h1 class="ph-title">النظام الداخلي<br><em>للمجمع السكني</em></h1>
+    <div class="ph-sub-fr">Règlement Intérieur — Résidence Missimi Living</div>
+    <p class="ph-sub">قواعد حسن الجوار والتعايش المشترك داخل مجمع ميسيمي ليفينج. نلتزم بها جميعًا من أجل إطار عيش هانئ ومريح للجميع.</p>
+  </div>
+</div>
+
+<div class="main">
+
+  <!-- PRÉAMBULE -->
+  <div class="preambule-box">
+    <div style="font-size:10px;letter-spacing:.1em;text-transform:uppercase;color:var(--gold);margin-bottom:10px;font-family:'Noto Kufi Arabic',sans-serif;font-weight:600">تمهيد</div>
+    <p style="font-size:14px;color:rgba(255,255,255,.75);line-height:2.1">يهدف هذا النظام الداخلي إلى ضمان الاشتغال الجيد للمجمع السكني ميسيمي ليفينج وضمان راحة وطمأنينة جميع ساكنيه. يسري على <strong style="color:white">جميع السكان — ملاكًا ومستأجرين وزوارهم</strong>. كل ساكن يلتزم باحترامه وإلزام محيطه به.</p>
+  </div>
+
+  <!-- ARTICLES GRID -->
+  <div class="grid2" style="margin-bottom:36px">
+
+    <!-- م 1 -->
+    <div class="card">
+      <div class="gl">المادة الأولى</div>
+      <div class="art-title">الانخراط في الجمعية والاشتراكات</div>
+      <ul class="art-list">
+        <li>لكل ساكن الحق في الانخراط بحرية في الجمعية</li>
+        <li>يُحدد مبلغ الاشتراك السنوي من قبل الجمع العام</li>
+        <li>الأعضاء المنتظمون في الأداء يشاركون في التصويت والقرارات</li>
+        <li>الانخراط مفتوح للملاك والمستأجرين على حد سواء</li>
+      </ul>
+    </div>
+
+    <!-- م 2 -->
+    <div class="card">
+      <div class="gl">المادة الثانية</div>
+      <div class="art-title">الأجزاء المشتركة</div>
+      <ul class="art-list">
+        <li>المحافظة على النظافة في جميع الفضاءات المشتركة</li>
+        <li>عدم تخزين الأشياء في الممرات والبهو</li>
+        <li>احترام مواقيت استخدام التجهيزات المشتركة</li>
+        <li>الإبلاغ عن أي تلف عبر منصة ريدتك</li>
+      </ul>
+    </div>
+
+    <!-- م 3 -->
+    <div class="card">
+      <div class="gl">المادة الثالثة</div>
+      <div class="art-title">الهدوء ومنع الإزعاج</div>
+      <ul class="art-list">
+        <li><strong>الصمت إلزامي</strong> من الساعة 22:00 إلى 8:00 في أيام العمل</li>
+        <li>الصمت من الساعة 23:00 إلى 9:00 في عطل نهاية الأسبوع</li>
+        <li>تجنب الضوضاء المفرطة في جميع الأوقات</li>
+        <li>الأشغال مسموح بها من 9:00-12:00 و15:00-18:00 في أيام العمل</li>
+      </ul>
+    </div>
+
+    <!-- م 4 -->
+    <div class="card">
+      <div class="gl">المادة الرابعة</div>
+      <div class="art-title">الأمن والولوج</div>
+      <ul class="art-list">
+        <li>عدم السماح بدخول أشخاص مجهولين دون تعريف</li>
+        <li>إغلاق أبواب الدخول بشكل منتظم</li>
+        <li>الإبلاغ عن أي نشاط مشبوه لعناصر الأمن</li>
+        <li>احترام تعليمات الإخلاء في حالات الطوارئ</li>
+      </ul>
+    </div>
+
+    <!-- م 5 -->
+    <div class="card">
+      <div class="gl">المادة الخامسة</div>
+      <div class="art-title">موقف السيارات تحت الأرض</div>
+      <ul class="art-list">
+        <li>الوقوف فقط في المكان المخصص لكل ساكن</li>
+        <li><strong>السرعة محدودة بـ 10 كلم/ساعة</strong> داخل الموقف</li>
+        <li>حظر تخزين المواد القابلة للاشتعال</li>
+        <li>إغلاق حاجز الدخول بعد المرور</li>
+      </ul>
+    </div>
+
+    <!-- م 6 -->
+    <div class="card">
+      <div class="gl">المادة السادسة</div>
+      <div class="art-title">النفايات والبيئة</div>
+      <ul class="art-list">
+        <li>استخدام حاويات الفرز المناسبة</li>
+        <li>عدم إلقاء المهملات خارج المناطق المخصصة لها</li>
+        <li>احترام مواقيت جمع النفايات</li>
+        <li>الحفاظ على المساحات الخضراء والحديقة المركزية</li>
+      </ul>
+    </div>
+
+    <!-- م 7 -->
+    <div class="card">
+      <div class="gl">المادة السابعة</div>
+      <div class="art-title">العلاقة مع السنديك</div>
+      <ul class="art-list">
+        <li>كل شكاية تمر عبر منصة <strong>ريدتك</strong></li>
+        <li>الجمعية تتكفل بالمتابعة الجماعية للمطالب</li>
+        <li>اجتماعات ربعية إلزامية بين السنديك والجمعية</li>
+        <li>عرض الحسابات في كل جمع عام سنوي</li>
+      </ul>
+    </div>
+
+    <!-- م 8 — ASCENSEURS -->
+    <div class="card">
+      <div class="gl">المادة الثامنة</div>
+      <div class="art-title">المصاعد</div>
+      <ul class="art-list">
+        <li>المصعد مخصص للأشخاص — <strong>ممنوع الدراجات والسكوتيرات والأمتعة الكبيرة</strong></li>
+        <li>عدم تجاوز <strong>الطاقة الاستيعابية المعلَّقة</strong></li>
+        <li>ممنوع التدخين أو تناول الطعام داخل المصعد</li>
+        <li>في حالة العطل : استخدام الهاتف الداخلي وعدم اقتحام الأبواب</li>
+        <li>منع الأطفال من اللعب وحدهم داخل المصعد</li>
+        <li>كل تلف ناتج عن سوء الاستخدام <strong>يتحمله مرتكبه</strong></li>
+        <li>الإبلاغ الفوري عن أي عطل عبر ريدتك أو الأمن</li>
+      </ul>
+    </div>
+
+    <!-- م 9 — ANIMAUX -->
+    <div class="card" style="grid-column:1/-1">
+      <div class="gl">المادة التاسعة</div>
+      <div class="art-title">الحيوانات الأليفة</div>
+      <ul class="art-list" style="margin-bottom:16px">
+        <li>الحيوانات الأليفة <strong>مسموح بها</strong> في إطار احترام الجيران التام</li>
+        <li>كل حيوان يجب أن يكون <strong>مقيدًا بسلسلة</strong> في جميع الأجزاء المشتركة</li>
+        <li><strong>التقاط الفضلات إلزامي</strong> — رميها في <strong>الحاويات المخصصة</strong> فقط، لا في الحديقة أو الممرات</li>
+        <li><strong>النباح المفرط</strong> المزعج للجيران محظور لا سيما في الليل</li>
+        <li>الحيوانات <strong>ممنوعة من المصعد</strong> دون موافقة المستخدمين الآخرين</li>
+        <li>عند تكرار الشكايات، يحق للسنديك طلب <strong>إزالة الحيوان</strong> من المجمع</li>
+      </ul>
+      <div style="background:#fee2e2;border:1px solid #fecaca;border-radius:var(--radius-md);padding:14px 18px">
+        <div style="font-size:11px;font-weight:700;color:#b91c1c;margin-bottom:10px;display:flex;align-items:center;gap:8px;font-family:'Noto Kufi Arabic',sans-serif;flex-direction:row-reverse;justify-content:flex-end">
+          <span style="background:#b91c1c;color:white;font-size:10px;padding:2px 10px;border-radius:10px;font-family:'Noto Kufi Arabic',sans-serif">المرسوم رقم 2.18.456</span>
+          الكلاب الخطيرة — حظر مطلق 🚫
+        </div>
+        <p style="font-size:13px;color:#7f1d1d;line-height:1.9;margin-bottom:10px">تطبيقًا لأحكام <strong>المرسوم رقم 2.18.456</strong> المتعلق بالكلاب الخطيرة بالمغرب، <strong>يُحظر حظرًا قاطعًا ومطلقًا</strong> اقتناء أو إدخال أو تنقل أي كلب من الفصائل التالية داخل مجمع ميسيمي ليفينج :</p>
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:10px">
+          <div style="background:rgba(185,28,28,.08);border-radius:6px;padding:10px 14px">
+            <div style="font-size:11px;font-weight:700;color:#b91c1c;margin-bottom:6px;font-family:'Noto Kufi Arabic',sans-serif">الفئة الأولى — هجوم</div>
+            <ul style="list-style:none;display:flex;flex-direction:column;gap:4px">
+              <li style="font-size:12px;color:#7f1d1d;padding-right:14px;position:relative"><span style="position:absolute;right:0;color:#b91c1c">•</span>البيتبول (أمريكان ستافوردشير)</li>
+              <li style="font-size:12px;color:#7f1d1d;padding-right:14px;position:relative"><span style="position:absolute;right:0;color:#b91c1c">•</span>البوربول (Boerboel)</li>
+              <li style="font-size:12px;color:#7f1d1d;padding-right:14px;position:relative"><span style="position:absolute;right:0;color:#b91c1c">•</span>توسا إينو (Tosa Inu)</li>
+              <li style="font-size:12px;color:#7f1d1d;padding-right:14px;position:relative"><span style="position:absolute;right:0;color:#b91c1c">•</span>فيلا برازيليرو (Fila Brasileiro)</li>
+              <li style="font-size:12px;color:#7f1d1d;padding-right:14px;position:relative"><span style="position:absolute;right:0;color:#b91c1c">•</span>الدوغ الأرجنتيني</li>
+            </ul>
+          </div>
+          <div style="background:rgba(185,28,28,.08);border-radius:6px;padding:10px 14px">
+            <div style="font-size:11px;font-weight:700;color:#b91c1c;margin-bottom:6px;font-family:'Noto Kufi Arabic',sans-serif">الفئة الثانية — حراسة ودفاع</div>
+            <ul style="list-style:none;display:flex;flex-direction:column;gap:4px">
+              <li style="font-size:12px;color:#7f1d1d;padding-right:14px;position:relative"><span style="position:absolute;right:0;color:#b91c1c">•</span>الروتفايلر (Rottweiler)</li>
+              <li style="font-size:12px;color:#7f1d1d;padding-right:14px;position:relative"><span style="position:absolute;right:0;color:#b91c1c">•</span>الدوبرمان (Dobermann)</li>
+              <li style="font-size:12px;color:#7f1d1d;padding-right:14px;position:relative"><span style="position:absolute;right:0;color:#b91c1c">•</span>ماستيف — دوغ دو بوردو</li>
+              <li style="font-size:12px;color:#7f1d1d;padding-right:14px;position:relative"><span style="position:absolute;right:0;color:#b91c1c">•</span>أمريكان ستافوردشير تيرير</li>
+              <li style="font-size:12px;color:#7f1d1d;padding-right:14px;position:relative"><span style="position:absolute;right:0;color:#b91c1c">•</span>وكل كلب يُبدي عدوانية موثقة</li>
+            </ul>
+          </div>
+        </div>
+        <div style="font-size:12px;color:#991b1b;line-height:1.8;padding:10px 14px;background:rgba(185,28,28,.06);border-radius:6px;font-family:'Noto Kufi Arabic',sans-serif">
+          ⚠️ كل مخالفة تستوجب <strong>إزالة الحيوان فورًا</strong> من المجمع دون إشعار مسبق، ويتعرض صاحبه للإبلاغ عنه لدى <strong>السلطات المختصة</strong> طبقًا للتشريعات المغربية الجاري بها العمل.
+        </div>
+      </div>
+    </div>
+
+    <!-- م 10 -->
+    <div class="card-dark">
+      <div class="gl" style="color:var(--gold)">المادة العاشرة</div>
+      <div class="art-title" style="color:var(--gold)">العقوبات والوساطة</div>
+      <ul class="art-list art-list-dark">
+        <li>إنذار ودي لكل مخالفة أولى</li>
+        <li>عند التكرار، يُحال الأمر للسنديك من قبل الجمعية</li>
+        <li>الوساطة دائمًا مفضَّلة قبل أي لجوء قانوني</li>
+        <li>الحوار والاحترام المتبادل هما أساس مجتمعنا</li>
+      </ul>
+    </div>
+
+  </div>
+
+  <div class="divider"></div>
+  <div style="text-align:center;padding:16px 0;display:flex;gap:12px;justify-content:center;flex-wrap:wrap">
+    <a href="syndic-v3.html" class="btn-g">تقديم شكاية ←</a>
+    <a href="reglement.html" class="btn-o">النسخة الفرنسية</a>
+    <a href="association-ar.html" class="btn-o">النظام الأساسي</a>
+  </div>
+</div>
+
+<!-- LANG SWITCH -->
+<div class="lang-switch">
+  <button class="ls-btn ls-ar">العربية ✓</button>
+  <button class="ls-btn ls-fr" onclick="location.href='reglement.html'">Français</button>
+</div>
+
+<footer>
+  <div class="ftl">ميسيمي <span>ليفينج</span></div>
+  <div class="ftc">© 2026 Missimi Living · الدار البيضاء</div>
+  <div class="ftlinks">
+    <a href="index.html">الرئيسية</a>
+    <a href="association.html">الجمعية</a>
+    <a href="reglement.html">النظام الداخلي</a>
+    <a href="syndic-v3.html">فضاء السكان</a>
+  </div>
+</footer>
+
+<script>
+function toggleMenu(){
+  const l=document.getElementById('navLinks'),b=document.getElementById('burger');
+  l.classList.toggle('open');b.classList.toggle('open');
+  b.textContent=l.classList.contains('open')?'✕':'☰';
+}
+document.querySelectorAll('#navLinks a').forEach(a=>a.addEventListener('click',()=>{
+  document.getElementById('navLinks').classList.remove('open');
+  const b=document.getElementById('burger');b.classList.remove('open');b.textContent='☰';
+}));
+</script>
+</body>
+</html>
