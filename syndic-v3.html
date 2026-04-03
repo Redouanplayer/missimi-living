@@ -415,7 +415,11 @@
   <div class="nav">
     <div class="nav-left">
       <div style="width:30px;height:30px;background:#e63946;border-radius:7px;display:flex;align-items:center;justify-content:center;color:white;font-weight:800;font-size:13px;flex-shrink:0">R</div>
-      <span style="font-size:15px;font-weight:800;letter-spacing:-.02em;color:var(--text)">Red<span style="color:#e63946">Tech</span> &nbsp;<span id="navResName" style="font-weight:500;color:var(--muted);font-size:13px"></span></span>
+      <span style="font-size:15px;font-weight:800;letter-spacing:-.02em;color:var(--text)">Red<span style="color:#e63946">Tech</span></span>
+        <span style="display:inline-flex;align-items:center;gap:6px;margin-left:10px">
+          <span id="navResCode" style="font-size:11px;font-weight:700;color:#e63946;background:#fee2e2;padding:2px 8px;border-radius:6px;font-family:'DM Mono',monospace;letter-spacing:.06em"></span>
+          <span id="navResName" style="font-weight:500;color:var(--muted);font-size:13px"></span>
+        </span>
     </div>
     <div class="nav-right">
       <a href="index.html" style="font-size:12px;color:var(--muted);text-decoration:none;padding:5px 12px;border:1px solid var(--border2);border-radius:var(--radius-sm);transition:all 0.15s;" onmouseover="this.style.background='var(--bg)'" onmouseout="this.style.background='transparent'">← Accueil</a>
@@ -889,7 +893,9 @@ function showApp() {
     pill.textContent = vAdmin.adminLabel + ' · Admin'; pill.className='role-pill pill-admin';
     document.getElementById('tabAdmin').textContent = vAdmin.adminSub;
     if (currentUserMeta.residence_code || currentUserMeta.residence_nom) {
-      document.getElementById('navResName').textContent = currentUserMeta.residence_code || currentUserMeta.residence_nom || 'Mon Espace';
+      document.getElementById('navResName').textContent = currentUserMeta.residence_nom || 'Mon Espace';
+      const codeEl = document.getElementById('navResCode');
+      if (codeEl) codeEl.textContent = currentUserMeta.residence_code || '';
     }
     tabAdmin.style.display='block'; tabNouveau.style.display='none'; tabSuivi.style.display='none';
     document.getElementById('tabServices').style.display='block';
@@ -908,7 +914,9 @@ function showApp() {
     document.getElementById('tabCompta').style.display='none';
     // Afficher le nom de la résidence dans la navbar
     if (currentUserMeta.residence_code || currentUserMeta.residence_nom) {
-      document.getElementById('navResName').textContent = currentUserMeta.residence_code || currentUserMeta.residence_nom || 'Mon Espace';
+      document.getElementById('navResName').textContent = currentUserMeta.residence_nom || 'Mon Espace';
+      const codeEl = document.getElementById('navResCode');
+      if (codeEl) codeEl.textContent = currentUserMeta.residence_code || '';
     }
     showTab('nouveau', tabNouveau);
   }
