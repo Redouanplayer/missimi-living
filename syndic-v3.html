@@ -368,8 +368,17 @@
         <div class="fg"><label class="lbl">Nom complet <span class="req">*</span></label><input type="text" id="regNom" placeholder="Mohammed Alami"></div>
         <div class="fg"><label class="lbl">Email <span class="req">*</span></label><input type="email" id="regEmail" placeholder="votre@email.com"></div>
         <div class="fg">
-          <label class="lbl"><span id="lblSpace">Nom de votre résidence</span> <span class="req">*</span></label>
-          <input type="text" id="regResidence" placeholder="Ex : Résidence Missimi Living">
+          <label class="lbl">Code de votre résidence <span class="req">*</span></label>
+          <div style="position:relative">
+            <input type="text" id="regResidence" placeholder="Ex : RE-MISS-4823"
+              style="text-transform:uppercase;letter-spacing:.08em;font-family:'DM Mono',monospace;font-weight:600"
+              oninput="this.value=this.value.toUpperCase()"
+              maxlength="20">
+            <span style="position:absolute;right:12px;top:50%;transform:translateY(-50%);font-size:14px;pointer-events:none">🔑</span>
+          </div>
+          <div style="font-size:11px;color:var(--muted);margin-top:4px">
+            Format : XX-XXXX-0000 · Demandez ce code à votre syndic
+          </div>
         </div>
         <div class="fr2">
           <div><label class="lbl"><span id="lblUnit">Appartement</span> <span class="req">*</span></label><input type="text" id="regApt" placeholder="Ex : 5A"></div>
@@ -756,21 +765,21 @@ async function doLogin() {
   // Bloquer les comptes en attente de validation
   if (currentRole === 'resident_pending') {
     await db.auth.signOut();
-    const resNom = currentUser.user_metadata?.residence_nom || 'votre résidence';
+    const resNom = currentUser.user_metadata?.residence_code || currentUser.user_metadata?.residence_nom || 'votre résidence';
     showErr(errEl, `⏳ Votre compte est en attente de validation par le syndic de ${resNom}. Réessayez plus tard.`);
     btn.disabled = false; btn.textContent = 'Se connecter →';
     return;
   }
   // Vérifier si la résidence est active (admin seulement)
   if (currentRole === 'admin') {
-    const { data: res } = await db.from('residences').select('actif,nom').eq('admin_id', currentUser.id).single();
+    const { data: res } = await db.from('residences').select('actif,nom,code_residence').eq('admin_id', currentUser.id).single();
     if (res && !res.actif) {
       await db.auth.signOut();
       showErr(document.getElementById('loginErr'), '⛔ Votre accès a été suspendu. Contactez RedTech.');
       btn.disabled = false; btn.textContent = 'Se connecter →';
       return;
     }
-    if (res) currentUserMeta.residence_nom = res.nom;
+    if (res) { currentUserMeta.residence_nom = res.nom; currentUserMeta.residence_code = res.code_residence || currentUserMeta.residence_code; }
   }
   showApp();
 }
@@ -800,37 +809,41 @@ function resetRegSector() {
     const el = document.getElementById(id); if(el) el.value='';
   });
   document.getElementById('registerErr').style.display='none';
+  document.getElementById('regResidence').value='';
   document.getElementById('registerOk').style.display='none';
 }
 
 async function doRegister() {
   const nom = document.getElementById('regNom').value.trim();
   const email = document.getElementById('regEmail').value.trim();
-  const resNom = document.getElementById('regResidence').value.trim();
-  const resId = '';
+  const resCode = document.getElementById('regResidence').value.trim().toUpperCase();
   const apt = document.getElementById('regApt').value.trim();
   const tel = document.getElementById('regTel').value.trim();
   const pwd = document.getElementById('regPwd').value;
   const errEl = document.getElementById('registerErr');
   const okEl = document.getElementById('registerOk');
   errEl.style.display='none'; okEl.style.display='none';
-  if (!nom||!email||!resNom||!apt||!tel||!pwd) { showErr(errEl,'Remplissez tous les champs obligatoires (*)'); return; }
+  if (!nom||!email||!resCode||!apt||!tel||!pwd) { showErr(errEl,'Remplissez tous les champs obligatoires (*)'); return; }
+  // Valider format code
+  if (!/^[A-Z]{2}-[A-Z0-9]{2,6}-[0-9]{4}$/.test(resCode)) {
+    showErr(errEl,'❌ Format de code invalide. Exemple : RE-MISS-4823'); return;
+  }
   if (tel.replace(/\s/g,'').length < 9) { showErr(errEl,'Numéro de téléphone invalide.'); return; }
   const pwdConfirm = document.getElementById('regPwdConfirm').value;
   if (pwd !== pwdConfirm) { showErr(errEl,'Les mots de passe ne correspondent pas.'); return; }
   if (pwd.length < 6) { showErr(errEl,'Le mot de passe doit contenir au moins 6 caractères.'); return; }
-  // Vérifier que la résidence existe dans Supabase
+  // Vérifier que le code résidence existe dans Supabase
   const btn = document.getElementById('registerBtn');
-  btn.disabled=true; btn.textContent='Vérification...';
+  btn.disabled=true; btn.textContent='Vérification du code...';
   const { data: resData, error: resErr } = await db
     .from('residences')
-    .select('id, nom')
-    .ilike('nom', resNom)
+    .select('id, nom, secteur, code_residence')
+    .eq('code_residence', resCode)
     .eq('actif', true)
     .single();
   if (resErr || !resData) {
-    btn.disabled=false; btn.textContent='Envoyer la demande';
-    showErr(errEl, `❌ La résidence "${resNom}" est introuvable. Vérifiez l'orthographe exacte auprès de votre syndic et réessayez.`);
+    btn.disabled=false; btn.textContent='Demander accès →';
+    showErr(errEl, `❌ Code "${resCode}" invalide ou inconnu. Vérifiez le code auprès de votre syndic.`);
     return;
   }
   // résidence trouvée — adapter le vocabulaire
@@ -843,12 +856,13 @@ async function doRegister() {
       role: 'resident_pending',
       residence_id: resData.id,
       residence_nom: resData.nom,
+      residence_code: resData.code_residence,
       secteur: resData.secteur || currentRegSector
     }}
   });
-  btn.disabled=false; btn.textContent='Envoyer la demande';
+  btn.disabled=false; btn.textContent='Demander accès →';
   if (error) { showErr(errEl, error.message); return; }
-  okEl.innerHTML = `✅ Demande envoyée pour <strong>${resData.nom}</strong> ! Le syndic va vérifier et valider votre inscription. Vous pourrez vous connecter une fois approuvé.`;
+  okEl.innerHTML = `✅ Demande envoyée pour <strong>${resData.nom}</strong> (${resData.code_residence}) !<br>Le syndic va vérifier et valider votre inscription.`;
   okEl.style.display='block';
   ['regNom','regEmail','regResidence','regApt','regTel','regPwd','regPwdConfirm'].forEach(id => { const el=document.getElementById(id); if(el) el.value=''; });
 }
@@ -874,8 +888,8 @@ function showApp() {
     const vAdmin = getSecteurVocab(currentUserMeta.secteur||'residence');
     pill.textContent = vAdmin.adminLabel + ' · Admin'; pill.className='role-pill pill-admin';
     document.getElementById('tabAdmin').textContent = vAdmin.adminSub;
-    if (currentUserMeta.residence_nom) {
-      document.getElementById('navResName').textContent = currentUserMeta.residence_nom;
+    if (currentUserMeta.residence_code || currentUserMeta.residence_nom) {
+      document.getElementById('navResName').textContent = currentUserMeta.residence_code || currentUserMeta.residence_nom || 'Mon Espace';
     }
     tabAdmin.style.display='block'; tabNouveau.style.display='none'; tabSuivi.style.display='none';
     document.getElementById('tabServices').style.display='block';
@@ -893,8 +907,8 @@ function showApp() {
     document.getElementById('tabServices').style.display='block';
     document.getElementById('tabCompta').style.display='none';
     // Afficher le nom de la résidence dans la navbar
-    if (currentUserMeta.residence_nom) {
-      document.getElementById('navResName').textContent = currentUserMeta.residence_nom;
+    if (currentUserMeta.residence_code || currentUserMeta.residence_nom) {
+      document.getElementById('navResName').textContent = currentUserMeta.residence_code || currentUserMeta.residence_nom || 'Mon Espace';
     }
     showTab('nouveau', tabNouveau);
   }
@@ -1020,7 +1034,7 @@ async function loadPendingResidents() {
   }
   // Filtrer uniquement les demandes pour la résidence de cet admin
   const { data: myRes } = await db.from('residences')
-    .select('id, nom')
+    .select('id, nom, code_residence')
     .eq('admin_id', currentUser.id)
     .single();
   if (!myRes) { renderPending([]); return; }
