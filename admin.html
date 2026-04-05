@@ -4,12 +4,11 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>RedTech — Admin Panel</title>
-<link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet">
-<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.39.3/dist/umd/supabase.min.js"></script>
+<link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet">
 <style>
 :root{
   --red:#e63946;--red-dark:#c1121f;--red-bg:#fee2e2;--red-border:#fecaca;
-  --bg:#f0f2f5;--surface:#ffffff;--navy:#0d1b2a;
+  --bg:#f0f2f5;--surface:#fff;--navy:#0d1b2a;
   --border:#e2e8f0;--text:#0f172a;--muted:#64748b;
   --green:#16a34a;--green-bg:#dcfce7;--green-border:#bbf7d0;
   --blue:#1d4ed8;--blue-bg:#dbeafe;--blue-border:#bfdbfe;
@@ -19,136 +18,112 @@
   --shadow-lg:0 8px 32px rgba(0,0,0,.12);
 }
 *,*::before,*::after{margin:0;padding:0;box-sizing:border-box;}
-html{height:100%;}
-body{font-family:"Plus Jakarta Sans",sans-serif;background:var(--bg);color:var(--text);min-height:100vh;display:flex;flex-direction:column;}
+body{font-family:"Plus Jakarta Sans",sans-serif;background:var(--bg);color:var(--text);min-height:100vh;}
 
-/* ── LOGIN ── */
-#loginScreen{flex:1;display:flex;align-items:center;justify-content:center;padding:20px;background:var(--navy);position:relative;overflow:hidden;}
-#loginScreen::before{content:"";position:absolute;inset:0;background:repeating-linear-gradient(45deg,transparent,transparent 40px,rgba(230,57,70,.03) 40px,rgba(230,57,70,.03) 80px);}
+/* LOGIN */
+#loginScreen{min-height:100vh;display:flex;align-items:center;justify-content:center;padding:20px;background:var(--navy);position:relative;overflow:hidden;}
 #loginScreen::after{content:"";position:absolute;top:-200px;right:-200px;width:500px;height:500px;background:radial-gradient(circle,rgba(230,57,70,.12),transparent 70%);pointer-events:none;}
 .login-card{background:var(--surface);border-radius:var(--radius-xl);padding:40px;width:100%;max-width:400px;box-shadow:var(--shadow-lg);position:relative;z-index:1;}
-.login-logo{display:flex;align-items:center;gap:10px;margin-bottom:32px;}
-.ll-icon{width:44px;height:44px;background:var(--red);border-radius:12px;display:flex;align-items:center;justify-content:center;color:white;font-weight:800;font-size:20px;flex-shrink:0;}
+.login-logo{display:flex;align-items:center;gap:10px;margin-bottom:28px;}
+.ll-icon{width:44px;height:44px;background:var(--red);border-radius:12px;display:flex;align-items:center;justify-content:center;color:white;font-weight:800;font-size:20px;}
 .ll-text{font-size:20px;font-weight:800;letter-spacing:-.03em;}
 .ll-text span{color:var(--red);}
-.ll-sub{font-size:11px;color:var(--muted);font-weight:500;letter-spacing:.04em;text-transform:uppercase;}
-.login-title{font-size:22px;font-weight:700;margin-bottom:6px;}
-.login-sub{font-size:13px;color:var(--muted);margin-bottom:28px;}
-.fg{margin-bottom:16px;}
-.lbl{font-size:12px;font-weight:600;color:var(--muted);display:block;margin-bottom:6px;letter-spacing:.02em;}
-input[type=text],input[type=email],input[type=password],input[type=tel],input[type=number],select{
-  width:100%;padding:11px 14px;border:1.5px solid var(--border);border-radius:var(--radius-md);
-  font-family:"Plus Jakarta Sans",sans-serif;font-size:13px;color:var(--text);
-  background:var(--surface);outline:none;transition:border-color .2s;
-}
-input:focus,select:focus{border-color:var(--red);}
-.btn{width:100%;padding:12px;border:none;border-radius:var(--radius-md);font-family:"Plus Jakarta Sans",sans-serif;font-size:14px;font-weight:700;cursor:pointer;transition:all .2s;}
-.btn-primary{background:var(--red);color:white;}
-.btn-primary:hover{background:var(--red-dark);transform:translateY(-1px);}
-.btn-primary:disabled{background:#cbd5e1;cursor:not-allowed;transform:none;}
-.err{font-size:13px;font-weight:500;color:var(--red);margin-top:10px;display:none;padding:8px 12px;background:var(--red-bg);border-radius:var(--radius);border:1px solid var(--red-border);}
+.ll-sub{font-size:11px;color:var(--muted);font-weight:500;text-transform:uppercase;letter-spacing:.06em;}
+h2{font-size:20px;font-weight:700;margin-bottom:6px;}
+.login-sub{font-size:13px;color:var(--muted);margin-bottom:24px;}
+.fg{margin-bottom:14px;}
+label{font-size:12px;font-weight:600;color:var(--muted);display:block;margin-bottom:5px;}
+input{width:100%;padding:11px 14px;border:1.5px solid var(--border);border-radius:var(--radius-md);font-family:"Plus Jakarta Sans",sans-serif;font-size:13px;color:var(--text);outline:none;transition:border-color .2s;}
+input:focus{border-color:var(--red);}
+.btn-login{width:100%;padding:13px;background:var(--red);color:white;border:none;border-radius:var(--radius-md);font-family:"Plus Jakarta Sans",sans-serif;font-size:14px;font-weight:700;cursor:pointer;margin-top:4px;transition:all .2s;}
+.btn-login:hover{background:var(--red-dark);}
+.btn-login:disabled{background:#94a3b8;cursor:not-allowed;}
+.login-err{display:none;margin-top:12px;padding:10px 14px;background:var(--red-bg);border:1px solid var(--red-border);border-radius:var(--radius);font-size:13px;color:var(--red);font-weight:500;}
 
-/* ── APP ── */
-#appScreen{display:none;flex:1;flex-direction:column;}
-.topbar{background:var(--navy);padding:0 28px;height:56px;display:flex;align-items:center;justify-content:space-between;flex-shrink:0;}
-.tb-logo{display:flex;align-items:center;gap:10px;}
-.tb-icon{width:32px;height:32px;background:var(--red);border-radius:8px;display:flex;align-items:center;justify-content:center;color:white;font-weight:800;font-size:15px;}
-.tb-name{font-size:15px;font-weight:800;color:white;letter-spacing:-.02em;}
+/* APP */
+#appScreen{display:none;min-height:100vh;flex-direction:column;}
+.topbar{background:var(--navy);padding:0 28px;height:56px;display:flex;align-items:center;justify-content:space-between;}
+.tb-logo{display:flex;align-items:center;gap:8px;}
+.tb-icon{width:30px;height:30px;background:var(--red);border-radius:7px;display:flex;align-items:center;justify-content:center;color:white;font-weight:800;font-size:14px;}
+.tb-name{font-size:14px;font-weight:800;color:white;}
 .tb-name span{color:var(--red);}
-.tb-badge{font-size:10px;font-weight:600;background:rgba(230,57,70,.2);color:#fca5a5;padding:3px 10px;border-radius:20px;margin-left:8px;letter-spacing:.06em;}
-.tb-right{display:flex;align-items:center;gap:12px;}
-.tb-user{font-size:12px;color:rgba(255,255,255,.45);}
-.tb-out{background:rgba(255,255,255,.08);border:1px solid rgba(255,255,255,.12);color:rgba(255,255,255,.7);padding:6px 14px;border-radius:6px;font-size:12px;font-weight:600;cursor:pointer;font-family:"Plus Jakarta Sans",sans-serif;transition:all .2s;}
-.tb-out:hover{background:rgba(255,255,255,.15);color:white;}
+.tb-badge{font-size:10px;font-weight:600;background:rgba(230,57,70,.2);color:#fca5a5;padding:2px 8px;border-radius:10px;margin-left:6px;}
+.tb-right{display:flex;align-items:center;gap:10px;}
+.tb-user{font-size:12px;color:rgba(255,255,255,.4);}
+.tb-out{background:rgba(255,255,255,.08);border:1px solid rgba(255,255,255,.12);color:rgba(255,255,255,.7);padding:5px 12px;border-radius:5px;font-size:12px;font-weight:600;cursor:pointer;font-family:"Plus Jakarta Sans",sans-serif;}
 
-.main{flex:1;padding:28px;overflow-y:auto;}
-.grid{display:grid;grid-template-columns:380px 1fr;gap:24px;align-items:start;}
-
-/* ── CARD ── */
-.card{background:var(--surface);border-radius:var(--radius-lg);border:1px solid var(--border);overflow:hidden;box-shadow:var(--shadow);}
-.card-hd{padding:18px 22px;border-bottom:1px solid var(--border);display:flex;align-items:center;gap:10px;}
-.card-icon{width:32px;height:32px;border-radius:8px;display:flex;align-items:center;justify-content:center;font-size:15px;flex-shrink:0;}
-.ci-red{background:var(--red-bg);}
-.ci-green{background:var(--green-bg);}
-.ci-blue{background:var(--blue-bg);}
-.ci-orange{background:var(--orange-bg);}
-.card-title{font-size:14px;font-weight:700;flex:1;}
-.card-sub{font-size:11px;color:var(--muted);}
-.card-body{padding:22px;}
-
-/* ── FORM ── */
-.fg2{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:14px;}
-.sector-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:6px;margin-bottom:14px;}
-.sector-btn{padding:10px 6px;border:1.5px solid var(--border);border-radius:var(--radius-md);background:var(--bg);cursor:pointer;text-align:center;transition:all .2s;font-family:"Plus Jakarta Sans",sans-serif;}
-.sector-btn:hover{border-color:var(--red);background:var(--red-bg);}
-.sector-btn.active{border-color:var(--red);background:var(--red-bg);}
-.sb-icon{font-size:18px;display:block;margin-bottom:4px;}
-.sb-label{font-size:10px;font-weight:600;color:var(--muted);}
-.sector-btn.active .sb-label{color:var(--red);}
-.divider{height:1px;background:var(--border);margin:18px 0;}
-.section-label{font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.1em;color:var(--muted);margin-bottom:12px;display:flex;align-items:center;gap:8px;}
-.section-label::after{content:"";flex:1;height:1px;background:var(--border);}
-.pwd-wrap{position:relative;}
-.pwd-wrap input{padding-right:42px;}
-.pwd-eye{position:absolute;right:12px;top:50%;transform:translateY(-50%);background:none;border:none;cursor:pointer;font-size:16px;color:var(--muted);padding:0;line-height:1;}
-.submit-btn{width:100%;padding:14px;background:var(--red);color:white;border:none;border-radius:var(--radius-md);font-family:"Plus Jakarta Sans",sans-serif;font-size:14px;font-weight:700;cursor:pointer;transition:all .2s;display:flex;align-items:center;justify-content:center;gap:8px;}
-.submit-btn:hover{background:var(--red-dark);transform:translateY(-1px);}
-.submit-btn:disabled{background:#cbd5e1;cursor:not-allowed;transform:none;}
-
-/* ── RESULT ── */
-.result-panel{display:none;}
-.result-success{background:linear-gradient(135deg,#0f172a,#1e293b);border-radius:var(--radius-lg);padding:28px;color:white;margin-bottom:16px;position:relative;overflow:hidden;}
-.rs-shine{position:absolute;top:0;left:0;right:0;height:2px;background:linear-gradient(to right,var(--red),#f59e0b,var(--green));}
-.rs-check{width:48px;height:48px;background:var(--green-bg);border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:22px;margin-bottom:16px;}
-.rs-title{font-size:18px;font-weight:700;margin-bottom:4px;}
-.rs-sub{font-size:13px;color:rgba(255,255,255,.5);margin-bottom:20px;}
-.code-display{background:rgba(230,57,70,.15);border:1px solid rgba(230,57,70,.3);border-radius:var(--radius-md);padding:16px 20px;display:flex;align-items:center;justify-content:space-between;margin-bottom:16px;}
-.cd-label{font-size:10px;color:rgba(255,255,255,.4);letter-spacing:.1em;text-transform:uppercase;margin-bottom:4px;}
-.cd-code{font-family:"DM Mono",monospace;font-size:22px;font-weight:700;color:#fca5a5;letter-spacing:.06em;}
-.copy-code{background:rgba(255,255,255,.1);border:none;color:white;padding:8px 14px;border-radius:6px;font-size:11px;cursor:pointer;font-family:"Plus Jakarta Sans",sans-serif;font-weight:600;transition:all .2s;}
-.copy-code:hover{background:rgba(255,255,255,.2);}
-.info-grid{display:grid;grid-template-columns:1fr 1fr;gap:8px;}
-.info-item{background:rgba(255,255,255,.06);border-radius:var(--radius);padding:10px 14px;}
-.ii-label{font-size:10px;color:rgba(255,255,255,.35);margin-bottom:3px;}
-.ii-val{font-size:13px;font-weight:600;color:white;}
-
-/* ── EMAIL TEMPLATE ── */
-.email-tpl{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius-md);overflow:hidden;}
-.et-bar{background:var(--navy);padding:10px 16px;display:flex;align-items:center;gap:6px;}
-.et-dot{width:8px;height:8px;border-radius:50%;}
-.et-title{font-size:10px;color:rgba(255,255,255,.4);font-family:"DM Mono",monospace;margin-left:6px;flex:1;}
-.copy-tpl{background:rgba(255,255,255,.1);border:none;color:rgba(255,255,255,.6);padding:4px 10px;border-radius:4px;font-size:10px;cursor:pointer;font-family:"Plus Jakarta Sans",sans-serif;}
-.et-body{padding:16px 20px;font-size:13px;line-height:1.9;color:var(--text);font-family:"DM Mono",monospace;}
-.et-key{color:var(--red);font-weight:600;}
-.et-val{color:var(--blue);}
-
-/* ── CLIENTS TABLE ── */
-.clients-card{margin-top:0;}
-.tbl-wrap{overflow-x:auto;}
-table{width:100%;border-collapse:collapse;}
-th{text-align:left;padding:10px 16px;font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.08em;color:var(--muted);border-bottom:1px solid var(--border);background:var(--bg);}
-td{padding:12px 16px;font-size:13px;border-bottom:0.5px solid var(--border);}
-tr:last-child td{border-bottom:none;}
-tr:hover td{background:#fafafa;}
-.badge{display:inline-flex;align-items:center;gap:5px;font-size:11px;font-weight:600;padding:3px 10px;border-radius:20px;}
-.b-active{background:var(--green-bg);color:var(--green);}
-.b-inactive{background:var(--red-bg);color:var(--red);}
-.code-cell{font-family:"DM Mono",monospace;font-size:12px;font-weight:600;color:var(--red);}
-.act-btn{padding:5px 12px;border-radius:5px;font-size:11px;font-weight:600;cursor:pointer;border:1px solid var(--border);background:var(--bg);font-family:"Plus Jakarta Sans",sans-serif;transition:all .2s;}
-.act-btn:hover{border-color:var(--red);color:var(--red);}
-.empty-state{text-align:center;padding:40px;color:var(--muted);font-size:13px;}
-
-/* ── STATS ── */
+.main{padding:24px;flex:1;}
 .stats-row{display:grid;grid-template-columns:repeat(3,1fr);gap:12px;margin-bottom:24px;}
-.stat{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius-md);padding:16px 20px;box-shadow:var(--shadow);}
-.stat-num{font-size:28px;font-weight:800;line-height:1;margin-bottom:4px;}
-.stat-label{font-size:12px;color:var(--muted);font-weight:500;}
+.stat{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius-lg);padding:16px 20px;}
+.stat-num{font-size:26px;font-weight:800;line-height:1;margin-bottom:4px;}
+.stat-lbl{font-size:12px;color:var(--muted);}
 .s-red{color:var(--red);}
 .s-green{color:var(--green);}
 .s-blue{color:var(--blue);}
 
-/* ── TOAST ── */
-.toast{position:fixed;bottom:24px;right:24px;background:#0f172a;color:white;padding:12px 20px;border-radius:var(--radius-md);font-size:13px;font-weight:600;z-index:999;opacity:0;transform:translateY(8px);transition:all .3s;pointer-events:none;}
+.grid{display:grid;grid-template-columns:380px 1fr;gap:20px;align-items:start;}
+.card{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius-lg);overflow:hidden;}
+.card-hd{padding:16px 20px;border-bottom:1px solid var(--border);display:flex;align-items:center;gap:10px;background:var(--bg);}
+.card-icon{width:30px;height:30px;border-radius:7px;display:flex;align-items:center;justify-content:center;font-size:14px;}
+.ci-red{background:var(--red-bg);}
+.ci-blue{background:var(--blue-bg);}
+.card-title{font-size:14px;font-weight:700;flex:1;}
+.card-sub{font-size:11px;color:var(--muted);}
+.card-body{padding:20px;}
+
+.sector-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:6px;margin-bottom:14px;}
+.sec-btn{padding:9px 4px;border:1.5px solid var(--border);border-radius:var(--radius-md);background:var(--bg);cursor:pointer;text-align:center;transition:all .2s;font-family:"Plus Jakarta Sans",sans-serif;}
+.sec-btn:hover,.sec-btn.active{border-color:var(--red);background:var(--red-bg);}
+.sec-btn .ico{font-size:16px;display:block;margin-bottom:3px;}
+.sec-btn .lbl{font-size:10px;font-weight:600;color:var(--muted);}
+.sec-btn.active .lbl{color:var(--red);}
+
+.sec-label{font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.1em;color:var(--muted);margin:12px 0 8px;display:flex;align-items:center;gap:8px;}
+.sec-label::after{content:"";flex:1;height:1px;background:var(--border);}
+.fg2{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:12px;}
+.fg2 .fg{margin-bottom:0;}
+.fg{margin-bottom:12px;}
+.pwd-wrap{position:relative;}
+.pwd-wrap input{padding-right:40px;}
+.eye-btn{position:absolute;right:10px;top:50%;transform:translateY(-50%);background:none;border:none;cursor:pointer;font-size:15px;color:var(--muted);padding:0;}
+
+.sub-btn{width:100%;padding:13px;background:var(--red);color:white;border:none;border-radius:var(--radius-md);font-family:"Plus Jakarta Sans",sans-serif;font-size:14px;font-weight:700;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:8px;transition:all .2s;margin-top:4px;}
+.sub-btn:hover{background:var(--red-dark);}
+.sub-btn:disabled{background:#94a3b8;cursor:not-allowed;}
+.form-err{display:none;margin-top:10px;padding:10px 14px;background:var(--red-bg);border:1px solid var(--red-border);border-radius:var(--radius);font-size:13px;color:var(--red);}
+
+/* RESULT */
+.result-box{display:none;margin-top:16px;background:#0f172a;border-radius:var(--radius-lg);padding:24px;color:white;position:relative;overflow:hidden;}
+.rb-shine{position:absolute;top:0;left:0;right:0;height:2px;background:linear-gradient(to right,var(--red),#f59e0b,var(--green));}
+.rb-ok{width:40px;height:40px;background:var(--green-bg);border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:18px;margin-bottom:12px;}
+.rb-title{font-size:16px;font-weight:700;margin-bottom:14px;}
+.code-box{background:rgba(230,57,70,.15);border:1px solid rgba(230,57,70,.3);border-radius:var(--radius-md);padding:14px 18px;display:flex;align-items:center;justify-content:space-between;margin-bottom:14px;}
+.code-lbl{font-size:10px;color:rgba(255,255,255,.4);text-transform:uppercase;letter-spacing:.08em;margin-bottom:3px;}
+.code-val{font-family:"DM Mono",monospace;font-size:20px;font-weight:700;color:#fca5a5;}
+.copy-btn{background:rgba(255,255,255,.1);border:none;color:white;padding:7px 12px;border-radius:5px;font-size:11px;cursor:pointer;font-family:"Plus Jakarta Sans",sans-serif;font-weight:600;}
+.info-grid{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:14px;}
+.info-item{background:rgba(255,255,255,.06);border-radius:var(--radius);padding:10px 12px;}
+.ii-lbl{font-size:10px;color:rgba(255,255,255,.35);margin-bottom:3px;}
+.ii-val{font-size:12px;font-weight:600;}
+.email-box{background:rgba(255,255,255,.05);border-radius:var(--radius-md);overflow:hidden;}
+.email-hd{background:var(--navy);padding:8px 14px;display:flex;justify-content:space-between;align-items:center;font-size:10px;color:rgba(255,255,255,.35);}
+.email-body{padding:14px 16px;font-family:"DM Mono",monospace;font-size:11px;line-height:1.9;color:rgba(255,255,255,.7);}
+
+/* TABLE */
+table{width:100%;border-collapse:collapse;}
+th{text-align:left;padding:9px 14px;font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.08em;color:var(--muted);border-bottom:1px solid var(--border);background:var(--bg);}
+td{padding:11px 14px;font-size:13px;border-bottom:.5px solid var(--border);}
+tr:last-child td{border-bottom:none;}
+tr:hover td{background:#fafafa;}
+.code-td{font-family:"DM Mono",monospace;font-size:12px;font-weight:600;color:var(--red);}
+.badge{font-size:11px;font-weight:600;padding:3px 9px;border-radius:20px;}
+.b-on{background:var(--green-bg);color:var(--green);}
+.b-off{background:var(--red-bg);color:var(--red);}
+.act-btn{padding:4px 10px;border-radius:4px;font-size:11px;font-weight:600;cursor:pointer;border:1px solid var(--border);background:var(--bg);font-family:"Plus Jakarta Sans",sans-serif;}
+.act-btn:hover{border-color:var(--red);color:var(--red);}
+.empty{text-align:center;padding:32px;color:var(--muted);font-size:13px;}
+
+.toast{position:fixed;bottom:20px;right:20px;background:#0f172a;color:white;padding:11px 18px;border-radius:var(--radius-md);font-size:13px;font-weight:600;z-index:999;opacity:0;transform:translateY(6px);transition:all .3s;pointer-events:none;}
 .toast.show{opacity:1;transform:translateY(0);}
 
 @media(max-width:900px){
@@ -160,182 +135,165 @@ tr:hover td{background:#fafafa;}
 </head>
 <body>
 
-<!-- ── LOGIN ── -->
+<!-- ══ LOGIN ══════════════════════════════════════════ -->
 <div id="loginScreen">
   <div class="login-card">
     <div class="login-logo">
       <div class="ll-icon">R</div>
       <div>
         <div class="ll-text">Red<span>Tech</span></div>
-        <div class="ll-sub">Admin Panel</div>
+        <div class="ll-sub">Owner Panel</div>
       </div>
     </div>
-    <div class="login-title">Accès administrateur</div>
-    <div class="login-sub">Connectez-vous avec votre compte RedTech owner</div>
+    <h2>Accès administrateur</h2>
+    <p class="login-sub">Connectez-vous avec votre compte RedTech</p>
     <div class="fg">
-      <label class="lbl">Email</label>
-      <input type="email" id="loginEmail" placeholder="admin@redtech.ma" autocomplete="username">
+      <label for="loginEmail">Email</label>
+      <input type="email" id="loginEmail" placeholder="admin@redtech.ma">
     </div>
     <div class="fg">
-      <label class="lbl">Mot de passe</label>
+      <label for="loginPwd">Mot de passe</label>
       <div class="pwd-wrap">
-        <input type="password" id="loginPwd" placeholder="••••••••" autocomplete="current-password" onkeydown="if(event.key==='Enter')doLogin()">
-        <button class="pwd-eye" onclick="togglePwd('loginPwd',this)">👁</button>
+        <input type="password" id="loginPwd" placeholder="••••••••">
+        <button class="eye-btn" id="eyeLogin">👁</button>
       </div>
     </div>
-    <div class="err" id="loginErr"></div>
-    <button class="btn btn-primary" id="loginBtn" onclick="doLogin()" style="margin-top:8px">Se connecter →</button>
+    <div class="login-err" id="loginErr"></div>
+    <button class="btn-login" id="loginBtn">Se connecter →</button>
   </div>
 </div>
 
-<!-- ── APP ── -->
-<div id="appScreen" style="display:none;flex:1;flex-direction:column">
+<!-- ══ APP ════════════════════════════════════════════ -->
+<div id="appScreen">
 
   <div class="topbar">
     <div class="tb-logo">
       <div class="tb-icon">R</div>
       <span class="tb-name">Red<span>Tech</span></span>
-      <span class="tb-badge">OWNER PANEL</span>
+      <span class="tb-badge">OWNER</span>
     </div>
     <div class="tb-right">
       <span class="tb-user" id="tbUser"></span>
-      <button class="tb-out" onclick="doLogout()">Déconnexion</button>
+      <button class="tb-out" id="logoutBtn">Déconnexion</button>
     </div>
   </div>
 
   <div class="main">
 
-    <!-- STATS -->
     <div class="stats-row">
-      <div class="stat"><div class="stat-num s-red" id="statTotal">—</div><div class="stat-label">Clients actifs</div></div>
-      <div class="stat"><div class="stat-num s-green" id="statActive">—</div><div class="stat-label">Résidences actives</div></div>
-      <div class="stat"><div class="stat-num s-blue" id="statUsers">—</div><div class="stat-label">Utilisateurs total</div></div>
+      <div class="stat"><div class="stat-num s-red" id="statTotal">—</div><div class="stat-lbl">Espaces créés</div></div>
+      <div class="stat"><div class="stat-num s-green" id="statActive">—</div><div class="stat-lbl">Actifs</div></div>
+      <div class="stat"><div class="stat-num s-blue" id="statInactive">—</div><div class="stat-lbl">Inactifs</div></div>
     </div>
 
     <div class="grid">
 
-      <!-- ── FORMULAIRE CRÉATION ── -->
+      <!-- FORMULAIRE -->
       <div>
         <div class="card">
           <div class="card-hd">
             <div class="card-icon ci-red">➕</div>
             <div>
               <div class="card-title">Nouveau client</div>
-              <div class="card-sub">Création instantanée en 1 clic</div>
+              <div class="card-sub">Création en 1 clic</div>
             </div>
           </div>
           <div class="card-body">
 
-            <!-- SECTEUR -->
-            <div class="section-label">Secteur</div>
+            <div class="sec-label">Secteur</div>
             <div class="sector-grid">
-              <button class="sector-btn active" onclick="setSector('residence',this)"><span class="sb-icon">🏢</span><span class="sb-label">residence</span></button>
-              <button class="sector-btn" onclick="setSector('hotel',this)"><span class="sb-icon">🏨</span><span class="sb-label">hotel</span></button>
-              <button class="sector-btn" onclick="setSector('campus',this)"><span class="sb-icon">🎓</span><span class="sb-label">campus</span></button>
-              <button class="sector-btn" onclick="setSector('industrie',this)"><span class="sb-icon">🏭</span><span class="sb-label">industrie</span></button>
-              <button class="sector-btn" onclick="setSector('mall',this)"><span class="sb-icon">🏬</span><span class="sb-label">mall</span></button>
-              <button class="sector-btn" onclick="setSector('collectivite',this)"><span class="sb-icon">🏛️</span><span class="sb-label">collectivite</span></button>
+              <button class="sec-btn active" data-sector="residence"><span class="ico">🏢</span><span class="lbl">residence</span></button>
+              <button class="sec-btn" data-sector="hotel"><span class="ico">🏨</span><span class="lbl">hotel</span></button>
+              <button class="sec-btn" data-sector="campus"><span class="ico">🎓</span><span class="lbl">campus</span></button>
+              <button class="sec-btn" data-sector="industrie"><span class="ico">🏭</span><span class="lbl">industrie</span></button>
+              <button class="sec-btn" data-sector="mall"><span class="ico">🏬</span><span class="lbl">mall</span></button>
+              <button class="sec-btn" data-sector="collectivite"><span class="ico">🏛️</span><span class="lbl">collectivite</span></button>
             </div>
 
-            <!-- ESPACE -->
-            <div class="section-label">Informations de l'espace</div>
+            <div class="sec-label">Espace</div>
             <div class="fg">
-              <label class="lbl">Nom de l'espace *</label>
+              <label>Nom de l'espace *</label>
               <input type="text" id="fNom" placeholder="Résidence Atlas">
             </div>
             <div class="fg2">
-              <div>
-                <label class="lbl">Ville *</label>
+              <div class="fg">
+                <label>Ville *</label>
                 <input type="text" id="fVille" placeholder="Casablanca">
               </div>
-              <div>
-                <label class="lbl">Nb unités *</label>
+              <div class="fg">
+                <label>Nb unités *</label>
                 <input type="number" id="fUnites" placeholder="120" min="1">
               </div>
             </div>
             <div class="fg">
-              <label class="lbl">Adresse</label>
+              <label>Adresse</label>
               <input type="text" id="fAdresse" placeholder="Bd Hassan II">
             </div>
 
-            <!-- ADMIN -->
-            <div class="section-label">Compte administrateur</div>
-            <div class="fg2">
-              <div>
-                <label class="lbl">Nom du gestionnaire *</label>
-                <input type="text" id="fAdminNom" placeholder="Karim Bennani">
-              </div>
-              <div>
-                <label class="lbl">Téléphone</label>
-                <input type="tel" id="fTel" placeholder="06 XX XX XX XX">
-              </div>
+            <div class="sec-label">Administrateur</div>
+            <div class="fg">
+              <label>Nom du gestionnaire *</label>
+              <input type="text" id="fAdminNom" placeholder="Karim Bennani">
             </div>
             <div class="fg">
-              <label class="lbl">Email *</label>
+              <label>Email *</label>
               <input type="email" id="fEmail" placeholder="syndic@gmail.com">
             </div>
             <div class="fg">
-              <label class="lbl">Mot de passe *</label>
+              <label>Mot de passe *</label>
               <div class="pwd-wrap">
-                <input type="password" id="fPwd" placeholder="Minimum 6 caractères">
-                <button class="pwd-eye" onclick="togglePwd('fPwd',this)">👁</button>
+                <input type="password" id="fPwd" placeholder="Min. 6 caractères">
+                <button class="eye-btn" id="eyeForm">👁</button>
               </div>
             </div>
 
-            <div id="formErr" class="err" style="margin-bottom:12px"></div>
-            <button class="submit-btn" id="submitBtn" onclick="createClient()">
-              <span id="submitIcon">🚀</span>
-              <span id="submitText">Créer le client</span>
+            <div class="form-err" id="formErr"></div>
+            <button class="sub-btn" id="submitBtn">
+              <span id="submitIco">🚀</span>
+              <span id="submitTxt">Créer le client</span>
             </button>
           </div>
         </div>
 
         <!-- RÉSULTAT -->
-        <div id="resultPanel" class="result-panel" style="margin-top:16px">
-          <div class="result-success">
-            <div class="rs-shine"></div>
-            <div class="rs-check">✅</div>
-            <div class="rs-title">Client créé avec succès !</div>
-            <div class="rs-sub" id="rSub">Résidence créée et admin lié</div>
-            <div class="code-display">
-              <div>
-                <div class="cd-label">Code résidence</div>
-                <div class="cd-code" id="rCode">—</div>
-              </div>
-              <button class="copy-code" onclick="copyCode()">📋 Copier</button>
+        <div class="result-box" id="resultBox">
+          <div class="rb-shine"></div>
+          <div class="rb-ok">✅</div>
+          <div class="rb-title">Client créé avec succès !</div>
+          <div class="code-box">
+            <div>
+              <div class="code-lbl">Code résidence</div>
+              <div class="code-val" id="rCode">—</div>
             </div>
-            <div class="info-grid">
-              <div class="info-item"><div class="ii-label">Espace</div><div class="ii-val" id="rNom">—</div></div>
-              <div class="info-item"><div class="ii-label">Secteur</div><div class="ii-val" id="rSecteur">—</div></div>
-              <div class="info-item"><div class="ii-label">Email admin</div><div class="ii-val" id="rEmail">—</div></div>
-              <div class="info-item"><div class="ii-label">Mot de passe</div><div class="ii-val" id="rPwd">—</div></div>
-            </div>
+            <button class="copy-btn" id="copyCodeBtn">📋 Copier</button>
           </div>
-          <!-- Email template -->
-          <div class="email-tpl">
-            <div class="et-bar">
-              <div class="et-dot" style="background:#ef4444"></div>
-              <div class="et-dot" style="background:#f59e0b"></div>
-              <div class="et-dot" style="background:#22c55e"></div>
-              <span class="et-title">Email de bienvenue — à copier/envoyer</span>
-              <button class="copy-tpl" onclick="copyEmail()">Copier</button>
+          <div class="info-grid">
+            <div class="info-item"><div class="ii-lbl">Espace</div><div class="ii-val" id="rNom">—</div></div>
+            <div class="info-item"><div class="ii-lbl">Secteur</div><div class="ii-val" id="rSecteur">—</div></div>
+            <div class="info-item"><div class="ii-lbl">Email</div><div class="ii-val" id="rEmail">—</div></div>
+            <div class="info-item"><div class="ii-lbl">Mot de passe</div><div class="ii-val" id="rPwd">—</div></div>
+          </div>
+          <div class="email-box">
+            <div class="email-hd">
+              <span>📧 Email de bienvenue</span>
+              <button class="copy-btn" id="copyEmailBtn">Copier</button>
             </div>
-            <div class="et-body" id="emailTpl">—</div>
+            <div class="email-body" id="emailBody">—</div>
           </div>
         </div>
       </div>
 
-      <!-- ── LISTE CLIENTS ── -->
-      <div class="card clients-card">
+      <!-- LISTE -->
+      <div class="card">
         <div class="card-hd">
           <div class="card-icon ci-blue">📋</div>
           <div>
             <div class="card-title">Clients RedTech</div>
-            <div class="card-sub">Toutes les résidences actives</div>
+            <div class="card-sub">Tous les espaces</div>
           </div>
-          <button onclick="loadClients()" style="background:var(--bg);border:1px solid var(--border);padding:5px 12px;border-radius:6px;font-size:11px;font-weight:600;cursor:pointer;font-family:'Plus Jakarta Sans',sans-serif;color:var(--muted);">↻ Actualiser</button>
+          <button class="act-btn" id="refreshBtn">↻ Actualiser</button>
         </div>
-        <div class="tbl-wrap">
+        <div style="overflow-x:auto">
           <table>
             <thead>
               <tr>
@@ -344,12 +302,12 @@ tr:hover td{background:#fafafa;}
                 <th>Secteur</th>
                 <th>Unités</th>
                 <th>Statut</th>
-                <th>Créé le</th>
+                <th>Date</th>
                 <th></th>
               </tr>
             </thead>
             <tbody id="clientsBody">
-              <tr><td colspan="7" class="empty-state">Chargement...</td></tr>
+              <tr><td colspan="7" class="empty">Chargement...</td></tr>
             </tbody>
           </table>
         </div>
@@ -361,330 +319,338 @@ tr:hover td{background:#fafafa;}
 
 <div class="toast" id="toast"></div>
 
+<!-- ══ SUPABASE + SCRIPTS ════════════════════════════ -->
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.39.3/dist/umd/supabase.min.js"></script>
 <script>
-// ── CONFIG SUPABASE ──────────────────────────────────
-const SUPABASE_URL = 'https://nwusjraxjfirsonbndfy.supabase.co';
-const SUPABASE_KEY = 'sb_publishable_A8Re17ZjBi7-b8iZgnUceg_wGoeQJ77';
 
-// IMPORTANT : remplace par ta Service Role Key pour les opérations admin
-// Supabase → Settings → API → service_role key
-const SERVICE_KEY  = 'REMPLACE_PAR_TA_SERVICE_ROLE_KEY';
+// ── CONFIG ───────────────────────────────────────────
+const SB_URL = 'https://nwusjraxjfirsonbndfy.supabase.co';
+const SB_KEY = 'sb_publishable_A8Re17ZjBi7-b8iZgnUceg_wGoeQJ77';
+// Remplace par ta service_role key (Supabase → Settings → API)
+const SB_SERVICE = 'REMPLACE_PAR_TA_SERVICE_ROLE_KEY';
 
-const { createClient } = supabase;
-const db = createClient(SUPABASE_URL, SUPABASE_KEY);
+const OWNER_EMAILS = ['idberka@live.com', 'redouane.idberka@impbrands.com'];
 
-// ── ÉTAT ────────────────────────────────────────────
-let currentSector = 'residence';
-let lastResult    = null;
-let currentOwner  = null;
+// ── INIT ─────────────────────────────────────────────
+let db, currentSector = 'residence', lastResult = null;
 
-// ── LOGIN ────────────────────────────────────────────
-async function doLogin() {
-  const email = document.getElementById('loginEmail').value.trim();
-  const pwd   = document.getElementById('loginPwd').value;
-  const err   = document.getElementById('loginErr');
-  const btn   = document.getElementById('loginBtn');
+window.addEventListener('load', function() {
 
-  // Validation basique
-  if (!email || !pwd) {
-    showErrEl(err, '⚠️ Remplissez les deux champs');
+  if (!window.supabase) {
+    showErr(document.getElementById('loginErr'), 'Erreur : Supabase non chargé. Vérifiez votre connexion.');
     return;
   }
 
-  btn.disabled = true;
-  btn.textContent = 'Connexion en cours...';
-  err.style.display = 'none';
+  db = supabase.createClient(SB_URL, SB_KEY);
 
-  try {
-    // Vérifier que Supabase est chargé
-    if (!window.supabase || !db) {
-      throw new Error('Supabase non chargé — vérifiez votre connexion internet');
-    }
+  // ── LOGIN ──────────────────────────────────────────
+  document.getElementById('loginBtn').addEventListener('click', doLogin);
+  document.getElementById('loginPwd').addEventListener('keydown', function(e) {
+    if (e.key === 'Enter') doLogin();
+  });
+  document.getElementById('eyeLogin').addEventListener('click', function() {
+    toggleEye('loginPwd', this);
+  });
 
-    const { data, error } = await db.auth.signInWithPassword({ email, password: pwd });
+  // ── APP BUTTONS ────────────────────────────────────
+  document.getElementById('logoutBtn').addEventListener('click', function() {
+    db.auth.signOut().then(function() { location.reload(); });
+  });
+  document.getElementById('submitBtn').addEventListener('click', doCreate);
+  document.getElementById('refreshBtn').addEventListener('click', loadClients);
+  document.getElementById('eyeForm').addEventListener('click', function() {
+    toggleEye('fPwd', this);
+  });
+  document.getElementById('copyCodeBtn').addEventListener('click', function() {
+    copyText(document.getElementById('rCode').textContent, 'Code copié !');
+  });
+  document.getElementById('copyEmailBtn').addEventListener('click', function() {
+    copyText(document.getElementById('emailBody').innerText, 'Email copié !');
+  });
 
-    if (error) {
-      throw new Error(error.message);
-    }
+  // Secteur buttons
+  document.querySelectorAll('.sec-btn').forEach(function(btn) {
+    btn.addEventListener('click', function() {
+      document.querySelectorAll('.sec-btn').forEach(function(b) { b.classList.remove('active'); });
+      btn.classList.add('active');
+      currentSector = btn.dataset.sector;
+    });
+  });
 
-    if (!data || !data.user) {
-      throw new Error('Réponse invalide du serveur');
-    }
+  // Vérifier session existante
+  db.auth.getSession().then(function(res) {
+    var user = res.data && res.data.session && res.data.session.user;
+    if (user && isOwner(user)) enterApp(user);
+  });
 
-    // Vérif accès
-    const role = data.user.user_metadata?.role || '';
-    const OWNER_EMAILS = ['idberka@live.com', 'redouane.idberka@impbrands.com'];
-    const isOwner = role === 'owner' || role === 'admin' || OWNER_EMAILS.includes(email.toLowerCase());
+}); // fin window.load
 
-    if (!isOwner) {
-      await db.auth.signOut();
-      throw new Error('⛔ Compte non autorisé pour cet espace admin');
-    }
+// ── FONCTIONS ─────────────────────────────────────────
 
-    // Succès
-    currentOwner = data.user;
-    document.getElementById('tbUser').textContent = email;
-    document.getElementById('loginScreen').style.display = 'none';
-    document.getElementById('appScreen').style.display   = 'flex';
-    loadStats();
-    loadClients();
-
-  } catch(e) {
-    showErrEl(err, '❌ ' + (e.message || 'Erreur inconnue'));
-    btn.disabled = false;
-    btn.textContent = 'Se connecter →';
-  }
+function isOwner(user) {
+  var role = (user.user_metadata && user.user_metadata.role) || '';
+  return role === 'owner' || role === 'admin' || OWNER_EMAILS.indexOf(user.email.toLowerCase()) !== -1;
 }
 
-async function doLogout() {
-  await db.auth.signOut();
-  location.reload();
+function enterApp(user) {
+  document.getElementById('tbUser').textContent = user.email;
+  document.getElementById('loginScreen').style.display = 'none';
+  document.getElementById('appScreen').style.display = 'flex';
+  loadStats();
+  loadClients();
 }
 
-// ── SECTEUR ─────────────────────────────────────────
-function setSector(s, btn) {
-  currentSector = s;
-  document.querySelectorAll('.sector-btn').forEach(b => b.classList.remove('active'));
-  btn.classList.add('active');
-}
-
-// ── CRÉATION CLIENT — 1 SEUL CLIC ───────────────────
-async function createClient() {
-  const nom      = document.getElementById('fNom').value.trim();
-  const ville    = document.getElementById('fVille').value.trim();
-  const unites   = parseInt(document.getElementById('fUnites').value) || 0;
-  const adresse  = document.getElementById('fAdresse').value.trim() || ville;
-  const adminNom = document.getElementById('fAdminNom').value.trim();
-  const email    = document.getElementById('fEmail').value.trim();
-  const pwd      = document.getElementById('fPwd').value;
-  const errEl    = document.getElementById('formErr');
+function doLogin() {
+  var email = document.getElementById('loginEmail').value.trim();
+  var pwd   = document.getElementById('loginPwd').value;
+  var errEl = document.getElementById('loginErr');
+  var btn   = document.getElementById('loginBtn');
 
   errEl.style.display = 'none';
-  document.getElementById('resultPanel').style.display = 'none';
 
-  // Validation
-  if (!nom || !ville || !unites || !adminNom || !email || !pwd) {
-    showErrEl(errEl, 'Remplissez tous les champs obligatoires (*)'); return;
-  }
-  if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
-    showErrEl(errEl, 'Email invalide'); return;
-  }
-  if (pwd.length < 6) {
-    showErrEl(errEl, 'Mot de passe : 6 caractères minimum'); return;
-  }
-
-  const btn = document.getElementById('submitBtn');
-  const icon = document.getElementById('submitIcon');
-  const txt  = document.getElementById('submitText');
-  btn.disabled = true;
-  icon.textContent = '⏳'; txt.textContent = 'Création du compte...';
-
-  try {
-    // ── ÉTAPE 1 : Créer compte Auth ────────────────
-    icon.textContent = '⏳'; txt.textContent = 'Création du compte...';
-    const SERVICE_KEY_SET = SERVICE_KEY && SERVICE_KEY !== 'REMPLACE_PAR_TA_SERVICE_ROLE_KEY';
-
-    if (SERVICE_KEY_SET) {
-      // Mode API Admin (SERVICE_KEY configurée) — 1 seule étape
-      const authResp = await fetch(`${SUPABASE_URL}/auth/v1/admin/users`, {
-        method: 'POST',
-        headers: {
-          'Content-Type':  'application/json',
-          'apikey':        SERVICE_KEY,
-          'Authorization': `Bearer ${SERVICE_KEY}`
-        },
-        body: JSON.stringify({
-          email, password: pwd,
-          email_confirm: true,
-          user_metadata: { role: 'admin', nom: adminNom }
-        })
-      });
-      const authData = await authResp.json();
-      if (!authResp.ok && !authData.msg?.includes('already') && !authData.message?.includes('already')) {
-        throw new Error(authData.msg || authData.message || 'Erreur création compte Auth');
-      }
-    } else {
-      // Mode fallback — signUp standard (email confirmation désactivée dans Supabase)
-      const { error: signUpErr } = await db.auth.signUp({
-        email, password: pwd,
-        options: { data: { role: 'admin', nom: adminNom } }
-      });
-      if (signUpErr && !signUpErr.message?.includes('already')) {
-        throw new Error(signUpErr.message);
-      }
-      // Attendre 1s que le compte soit disponible
-      await new Promise(r => setTimeout(r, 1000));
-    }
-
-    // ── ÉTAPE 2 : Créer résidence + lier via SQL ─────
-    icon.textContent = '⏳'; txt.textContent = 'Création de la résidence...';
-
-    const { data: sqlData, error: sqlErr } = await db.rpc('create_and_link_admin', {
-      p_email:       email,
-      p_nom_admin:   adminNom,
-      p_nom_espace:  nom,
-      p_adresse:     adresse,
-      p_ville:       ville,
-      p_nb_apparts:  unites,
-      p_secteur:     currentSector
-    });
-
-    if (sqlErr) throw new Error(sqlErr.message);
-    if (!sqlData?.success) throw new Error(sqlData?.error || 'Erreur SQL inconnue');
-
-    // ── SUCCÈS ────────────────────────────────────────
-    lastResult = { ...sqlData, pwd, adminNom, tel: document.getElementById('fTel').value.trim() };
-    showResult(lastResult);
-    loadStats();
-    loadClients();
-    toast('✅ Client créé — ' + sqlData.code);
-
-    // Reset form
-    ['fNom','fVille','fUnites','fAdresse','fAdminNom','fTel','fEmail','fPwd'].forEach(id => {
-      const el = document.getElementById(id);
-      if (el) el.value = '';
-    });
-
-  } catch(e) {
-    showErrEl(errEl, '❌ ' + (e.message || 'Erreur inattendue'));
-  } finally {
-    btn.disabled = false;
-    icon.textContent = '🚀'; txt.textContent = 'Créer le client';
-  }
-}
-
-// ── AFFICHER RÉSULTAT ────────────────────────────────
-function showResult(r) {
-  document.getElementById('rCode').textContent    = r.code;
-  document.getElementById('rNom').textContent     = r.espace;
-  document.getElementById('rSecteur').textContent = r.secteur;
-  document.getElementById('rEmail').textContent   = r.admin_email;
-  document.getElementById('rPwd').textContent     = r.pwd;
-  document.getElementById('rSub').textContent     = `${r.espace} — Secteur : ${r.secteur}`;
-
-  // Email template
-  document.getElementById('emailTpl').innerHTML = `
-<span class="et-key">Objet :</span> <span class="et-val">✅ Votre espace RedTech est prêt !</span><br><br>
-Bonjour <span class="et-val">${r.adminNom}</span>,<br><br>
-Votre espace de gestion RedTech est maintenant actif.<br><br>
-🔐 <span class="et-key">Code résidence :</span> <span class="et-val">${r.code}</span><br>
-🌐 <span class="et-key">Lien :</span> <span class="et-val">missimi-living.vercel.app/syndic-v3</span><br>
-📧 <span class="et-key">Email :</span> <span class="et-val">${r.admin_email}</span><br>
-🔑 <span class="et-key">Mot de passe :</span> <span class="et-val">${r.pwd}</span><br><br>
-<span style="color:var(--muted)">⚠️ Changez votre mot de passe à la première connexion.<br>
-Transmettez le code résidence à vos résidents pour leur inscription.</span><br><br>
-Cordialement,<br>
-<span class="et-key">L'équipe RedTech</span>
-  `;
-
-  document.getElementById('resultPanel').style.display = 'block';
-  document.getElementById('resultPanel').scrollIntoView({ behavior:'smooth', block:'start' });
-}
-
-// ── STATS ────────────────────────────────────────────
-async function loadStats() {
-  const { data: res } = await db.from('residences').select('actif').eq('demo', false);
-  const { count: usersCount } = await db.from('residences').select('*', { count:'exact', head:true });
-  const total  = res?.length || 0;
-  const active = res?.filter(r => r.actif).length || 0;
-  document.getElementById('statTotal').textContent  = total;
-  document.getElementById('statActive').textContent = active;
-  document.getElementById('statUsers').textContent  = usersCount || '—';
-}
-
-// ── LISTE CLIENTS ────────────────────────────────────
-async function loadClients() {
-  const tbody = document.getElementById('clientsBody');
-  tbody.innerHTML = '<tr><td colspan="7" class="empty-state">Chargement...</td></tr>';
-
-  const { data, error } = await db
-    .from('residences')
-    .select('id, code_residence, nom, secteur, nb_apparts, actif, created_at')
-    .not('demo', 'is', true)
-    .order('created_at', { ascending: false });
-
-  if (error || !data?.length) {
-    tbody.innerHTML = '<tr><td colspan="7" class="empty-state">Aucun client</td></tr>';
+  if (!email || !pwd) {
+    showErr(errEl, '⚠️ Remplissez email et mot de passe');
     return;
   }
 
-  tbody.innerHTML = data.map(r => `
-    <tr>
-      <td class="code-cell">${r.code_residence || '—'}</td>
-      <td style="font-weight:600">${r.nom}</td>
-      <td style="color:var(--muted);font-size:12px">${r.secteur || '—'}</td>
-      <td style="font-family:'DM Mono',monospace">${r.nb_apparts || '—'}</td>
-      <td><span class="badge ${r.actif ? 'b-active' : 'b-inactive'}">${r.actif ? '● Actif' : '● Inactif'}</span></td>
-      <td style="color:var(--muted);font-size:12px">${r.created_at ? new Date(r.created_at).toLocaleDateString('fr-FR') : '—'}</td>
-      <td>
-        <button class="act-btn" onclick="toggleClient('${r.id}',${r.actif})">${r.actif ? 'Désactiver' : 'Réactiver'}</button>
-      </td>
-    </tr>
-  `).join('');
+  btn.disabled = true;
+  btn.textContent = '⏳ Connexion...';
+
+  db.auth.signInWithPassword({ email: email, password: pwd })
+    .then(function(res) {
+      if (res.error) {
+        showErr(errEl, '❌ ' + res.error.message);
+        btn.disabled = false;
+        btn.textContent = 'Se connecter →';
+        return;
+      }
+      var user = res.data.user;
+      if (!isOwner(user)) {
+        db.auth.signOut();
+        showErr(errEl, '⛔ Accès non autorisé pour ce compte');
+        btn.disabled = false;
+        btn.textContent = 'Se connecter →';
+        return;
+      }
+      enterApp(user);
+    })
+    .catch(function(e) {
+      showErr(errEl, '❌ ' + (e.message || 'Erreur inconnue'));
+      btn.disabled = false;
+      btn.textContent = 'Se connecter →';
+    });
 }
 
-// ── TOGGLE CLIENT ────────────────────────────────────
-async function toggleClient(id, currentActif) {
-  const { error } = await db.from('residences').update({ actif: !currentActif }).eq('id', id);
-  if (error) { toast('❌ Erreur : ' + error.message); return; }
-  toast(currentActif ? '⏸ Client désactivé' : '✅ Client réactivé');
-  loadClients();
-  loadStats();
+function doCreate() {
+  var nom      = document.getElementById('fNom').value.trim();
+  var ville    = document.getElementById('fVille').value.trim();
+  var unites   = parseInt(document.getElementById('fUnites').value) || 0;
+  var adresse  = document.getElementById('fAdresse').value.trim() || ville;
+  var adminNom = document.getElementById('fAdminNom').value.trim();
+  var email    = document.getElementById('fEmail').value.trim();
+  var pwd      = document.getElementById('fPwd').value;
+  var errEl    = document.getElementById('formErr');
+  var btn      = document.getElementById('submitBtn');
+
+  errEl.style.display = 'none';
+  document.getElementById('resultBox').style.display = 'none';
+
+  if (!nom || !ville || !unites || !adminNom || !email || !pwd) {
+    showErr(errEl, '⚠️ Remplissez tous les champs obligatoires (*)');
+    return;
+  }
+  if (pwd.length < 6) {
+    showErr(errEl, '⚠️ Mot de passe : minimum 6 caractères');
+    return;
+  }
+
+  btn.disabled = true;
+  document.getElementById('submitIco').textContent = '⏳';
+  document.getElementById('submitTxt').textContent = 'Création en cours...';
+
+  var serviceKeyOk = SB_SERVICE && SB_SERVICE !== 'REMPLACE_PAR_TA_SERVICE_ROLE_KEY';
+
+  function step2() {
+    document.getElementById('submitTxt').textContent = 'Création de la résidence...';
+    db.rpc('create_and_link_admin', {
+      p_email:      email,
+      p_nom_admin:  adminNom,
+      p_nom_espace: nom,
+      p_adresse:    adresse,
+      p_ville:      ville,
+      p_nb_apparts: unites,
+      p_secteur:    currentSector
+    }).then(function(res) {
+      btn.disabled = false;
+      document.getElementById('submitIco').textContent = '🚀';
+      document.getElementById('submitTxt').textContent = 'Créer le client';
+
+      if (res.error) { showErr(errEl, '❌ ' + res.error.message); return; }
+      var d = res.data;
+      if (!d || !d.success) { showErr(errEl, '❌ ' + (d && d.error || 'Erreur SQL')); return; }
+
+      showResult(d, pwd, adminNom);
+      toast('✅ ' + d.code + ' créé !');
+      loadStats();
+      loadClients();
+      ['fNom','fVille','fUnites','fAdresse','fAdminNom','fEmail','fPwd'].forEach(function(id) {
+        var el = document.getElementById(id);
+        if (el) el.value = '';
+      });
+    }).catch(function(e) {
+      btn.disabled = false;
+      document.getElementById('submitIco').textContent = '🚀';
+      document.getElementById('submitTxt').textContent = 'Créer le client';
+      showErr(errEl, '❌ ' + e.message);
+    });
+  }
+
+  if (serviceKeyOk) {
+    // API Admin — crée compte + step2
+    fetch(SB_URL + '/auth/v1/admin/users', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'apikey': SB_SERVICE,
+        'Authorization': 'Bearer ' + SB_SERVICE
+      },
+      body: JSON.stringify({
+        email: email,
+        password: pwd,
+        email_confirm: true,
+        user_metadata: { role: 'admin', nom: adminNom }
+      })
+    })
+    .then(function(r) { return r.json(); })
+    .then(function(authData) {
+      if (!authData.id && !authData.email) {
+        var msg = authData.msg || authData.message || '';
+        if (!msg.toLowerCase().includes('already')) {
+          throw new Error(msg || 'Erreur création compte');
+        }
+      }
+      step2();
+    })
+    .catch(function(e) {
+      btn.disabled = false;
+      document.getElementById('submitIco').textContent = '🚀';
+      document.getElementById('submitTxt').textContent = 'Créer le client';
+      showErr(errEl, '❌ ' + e.message);
+    });
+  } else {
+    // Fallback signUp si pas de service key
+    db.auth.signUp({
+      email: email,
+      password: pwd,
+      options: { data: { role: 'admin', nom: adminNom } }
+    }).then(function(res) {
+      if (res.error && !res.error.message.toLowerCase().includes('already')) {
+        throw new Error(res.error.message);
+      }
+      return new Promise(function(resolve) { setTimeout(resolve, 800); });
+    }).then(step2)
+    .catch(function(e) {
+      btn.disabled = false;
+      document.getElementById('submitIco').textContent = '🚀';
+      document.getElementById('submitTxt').textContent = 'Créer le client';
+      showErr(errEl, '❌ ' + e.message);
+    });
+  }
 }
 
-// ── COPY HELPERS ─────────────────────────────────────
-function copyCode() {
-  navigator.clipboard.writeText(document.getElementById('rCode').textContent)
-    .then(() => toast('📋 Code copié !'));
+function showResult(d, pwd, adminNom) {
+  document.getElementById('rCode').textContent    = d.code;
+  document.getElementById('rNom').textContent     = d.espace;
+  document.getElementById('rSecteur').textContent = d.secteur;
+  document.getElementById('rEmail').textContent   = d.admin_email;
+  document.getElementById('rPwd').textContent     = pwd;
+  document.getElementById('emailBody').innerHTML  =
+    'Objet : ✅ Votre espace RedTech est prêt !\n\n' +
+    'Bonjour ' + adminNom + ',\n\n' +
+    '🔐 Code résidence : ' + d.code + '\n' +
+    '🌐 Lien : missimi-living.vercel.app/syndic-v3\n' +
+    '📧 Email : ' + d.admin_email + '\n' +
+    '🔑 Mot de passe : ' + pwd + '\n\n' +
+    '⚠️ Changez votre mot de passe à la première connexion.\n' +
+    'Transmettez le code à vos résidents pour leur inscription.\n\n' +
+    'Cordialement, RedTech';
+  document.getElementById('resultBox').style.display = 'block';
+  document.getElementById('resultBox').scrollIntoView({ behavior: 'smooth', block: 'start' });
 }
 
-function copyEmail() {
-  const text = document.getElementById('emailTpl').innerText;
-  navigator.clipboard.writeText(text).then(() => toast('📧 Email copié !'));
+function loadStats() {
+  db.from('residences').select('actif').then(function(res) {
+    var data = res.data || [];
+    var total    = data.length;
+    var active   = data.filter(function(r) { return r.actif; }).length;
+    var inactive = total - active;
+    document.getElementById('statTotal').textContent    = total;
+    document.getElementById('statActive').textContent   = active;
+    document.getElementById('statInactive').textContent = inactive;
+  });
 }
 
-// ── UTILS ────────────────────────────────────────────
-function togglePwd(id, btn) {
-  const inp = document.getElementById(id);
+function loadClients() {
+  var tbody = document.getElementById('clientsBody');
+  tbody.innerHTML = '<tr><td colspan="7" class="empty">Chargement...</td></tr>';
+  db.from('residences')
+    .select('id,code_residence,nom,secteur,nb_apparts,actif,created_at')
+    .order('created_at', { ascending: false })
+    .then(function(res) {
+      var data = res.data;
+      if (!data || !data.length) {
+        tbody.innerHTML = '<tr><td colspan="7" class="empty">Aucun client</td></tr>';
+        return;
+      }
+      tbody.innerHTML = data.map(function(r) {
+        var date = r.created_at ? new Date(r.created_at).toLocaleDateString('fr-FR') : '—';
+        return '<tr>' +
+          '<td class="code-td">' + (r.code_residence || '—') + '</td>' +
+          '<td style="font-weight:600">' + r.nom + '</td>' +
+          '<td style="color:var(--muted);font-size:12px">' + (r.secteur || '—') + '</td>' +
+          '<td style="font-family:\'DM Mono\',monospace">' + (r.nb_apparts || '—') + '</td>' +
+          '<td><span class="badge ' + (r.actif ? 'b-on' : 'b-off') + '">' + (r.actif ? '● Actif' : '● Inactif') + '</span></td>' +
+          '<td style="color:var(--muted);font-size:12px">' + date + '</td>' +
+          '<td><button class="act-btn" onclick="toggleClient(\'' + r.id + '\',' + r.actif + ')">' + (r.actif ? 'Désactiver' : 'Réactiver') + '</button></td>' +
+          '</tr>';
+      }).join('');
+    });
+}
+
+function toggleClient(id, actif) {
+  db.from('residences').update({ actif: !actif }).eq('id', id)
+    .then(function(res) {
+      if (res.error) { toast('❌ ' + res.error.message); return; }
+      toast(actif ? '⏸ Désactivé' : '✅ Réactivé');
+      loadClients();
+      loadStats();
+    });
+}
+
+function toggleEye(inputId, btn) {
+  var inp = document.getElementById(inputId);
   inp.type = inp.type === 'password' ? 'text' : 'password';
   btn.textContent = inp.type === 'password' ? '👁' : '🙈';
 }
 
-function showErrEl(el, msg) {
-  el.textContent = msg;
-  el.style.display = 'block';
-  el.style.color = '#e63946';
-  el.style.fontSize = '13px';
-  el.style.marginTop = '10px';
-  el.style.fontWeight = '500';
+function copyText(text, msg) {
+  navigator.clipboard.writeText(text).then(function() { toast(msg); });
 }
 
-let toastTimer;
+function showErr(el, msg) {
+  el.textContent = msg;
+  el.style.display = 'block';
+}
+
+var toastTimer;
 function toast(msg) {
-  const t = document.getElementById('toast');
+  var t = document.getElementById('toast');
   t.textContent = msg;
   t.classList.add('show');
   clearTimeout(toastTimer);
-  toastTimer = setTimeout(() => t.classList.remove('show'), 3000);
+  toastTimer = setTimeout(function() { t.classList.remove('show'); }, 3000);
 }
 
-// Vérifier session existante
-db.auth.getSession().then(({ data }) => {
-  if (data.session?.user) {
-    const u = data.session.user;
-    const role = u.user_metadata?.role || '';
-    const OWNER_EMAILS = ['idberka@live.com', 'redouane.idberka@impbrands.com'];
-    const isOwner = role === 'owner' || role === 'admin' || OWNER_EMAILS.includes(u.email?.toLowerCase());
-    if (isOwner) {
-      currentOwner = u;
-      document.getElementById('tbUser').textContent = u.email;
-      document.getElementById('loginScreen').style.display = 'none';
-      document.getElementById('appScreen').style.display   = 'flex';
-      loadStats();
-      loadClients();
-    }
-  }
-});
 </script>
 </body>
 </html>
