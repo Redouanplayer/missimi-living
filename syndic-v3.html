@@ -808,17 +808,37 @@ async function doLogin() {
     btn.disabled = false; btn.textContent = 'Se connecter →';
     return;
   }
-  // Vérifier si la résidence est active (admin seulement)
-  if (currentRole === 'admin') {
-    const { data: res } = await db.from('residences').select('actif,nom,code_residence').eq('admin_id', currentUser.id).single();
-    if (res && !res.actif) {
-      await db.auth.signOut();
-      showErr(document.getElementById('loginErr'), '⛔ Votre accès a été suspendu. Contactez RedTech.');
-      btn.disabled = false; btn.textContent = 'Se connecter →';
-      return;
-    }
-    if (res) { currentUserMeta.residence_nom = res.nom; currentUserMeta.residence_code = res.code_residence || currentUserMeta.residence_code; }
+// Vérifier si la résidence est active (admin — supporte plusieurs admins)
+if (currentRole === 'admin') {
+  // Chercher la résidence via la table residence_admins
+  const { data: adminRow } = await db
+    .from('residence_admins')
+    .select('residence_id, residences(actif, nom, code_residence)')
+    .eq('user_id', currentUser.id)
+    .single();
+
+  // Fallback : ancienne méthode avec admin_id direct
+  let res = adminRow?.residences || null;
+  if (!res) {
+    const { data: resDirect } = await db
+      .from('residences')
+      .select('actif,nom,code_residence')
+      .eq('admin_id', currentUser.id)
+      .single();
+    res = resDirect;
   }
+
+  if (res && !res.actif) {
+    await db.auth.signOut();
+    showErr(document.getElementById('loginErr'), '⛔ Votre accès a été suspendu. Contactez RedTech.');
+    btn.disabled = false; btn.textContent = 'Se connecter →';
+    return;
+  }
+  if (res) {
+    currentUserMeta.residence_nom = res.nom;
+    currentUserMeta.residence_code = res.code_residence || currentUserMeta.residence_code;
+  }
+}
   showApp();
 }
 
