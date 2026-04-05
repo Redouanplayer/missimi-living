@@ -131,6 +131,63 @@ tr:hover td{background:#fafafa;}
   .stats-row{grid-template-columns:1fr 1fr;}
   .fg2{grid-template-columns:1fr;}
 }
+
+/* MODAL CONFIRMATION */
+.modal-overlay{position:fixed;inset:0;background:rgba(0,0,0,.5);backdrop-filter:blur(4px);z-index:500;display:none;align-items:center;justify-content:center;padding:20px;}
+.modal-overlay.open{display:flex;}
+.modal{background:var(--surface);border-radius:var(--radius-lg);padding:28px;max-width:420px;width:100%;box-shadow:var(--shadow-lg);}
+.modal-icon{width:48px;height:48px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:22px;margin-bottom:14px;}
+.mi-red{background:var(--red-bg);}
+.mi-orange{background:var(--orange-bg);}
+.mi-blue{background:var(--blue-bg);}
+.modal-title{font-size:16px;font-weight:700;margin-bottom:6px;}
+.modal-desc{font-size:13px;color:var(--muted);line-height:1.6;margin-bottom:20px;}
+.modal-desc strong{color:var(--text);}
+.modal-btns{display:flex;gap:10px;justify-content:flex-end;}
+.mbtn{padding:9px 20px;border-radius:var(--radius-md);font-family:"Plus Jakarta Sans",sans-serif;font-size:13px;font-weight:600;cursor:pointer;border:none;transition:all .2s;}
+.mbtn-cancel{background:var(--bg);color:var(--muted);border:1px solid var(--border);}
+.mbtn-danger{background:var(--red);color:white;}
+.mbtn-danger:hover{background:var(--red-dark);}
+.mbtn-warn{background:var(--orange,#ea580c);color:white;}
+.mbtn-warn:hover{background:#c2410c;}
+.mbtn-info{background:var(--blue);color:white;}
+.mbtn-info:hover{background:#1e40af;}
+
+/* ACTIONS DROPDOWN */
+.actions-cell{position:relative;}
+.actions-menu{position:absolute;right:0;top:100%;z-index:100;background:var(--surface);border:1px solid var(--border);border-radius:var(--radius-md);box-shadow:var(--shadow-lg);min-width:170px;display:none;overflow:hidden;}
+.actions-menu.open{display:block;}
+.am-item{display:flex;align-items:center;gap:8px;padding:10px 14px;font-size:13px;font-weight:500;cursor:pointer;transition:background .15s;border:none;background:none;width:100%;text-align:right;font-family:"Plus Jakarta Sans",sans-serif;}
+.am-item:hover{background:var(--bg);}
+.am-item.danger{color:var(--red);}
+.am-item.warn{color:var(--orange,#ea580c);}
+.am-item.info{color:var(--blue);}
+.am-sep{height:1px;background:var(--border);}
+.actions-trigger{padding:5px 10px;border-radius:5px;font-size:14px;border:1px solid var(--border);background:var(--bg);cursor:pointer;transition:all .2s;line-height:1;}
+.actions-trigger:hover{background:var(--surface);border-color:var(--muted);}
+
+/* DASHBOARD STORAGE */
+.dash-section{margin-bottom:24px;}
+.dash-title{font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.1em;color:var(--muted);margin-bottom:12px;display:flex;align-items:center;gap:8px;}
+.dash-title::after{content:"";flex:1;height:1px;background:var(--border);}
+.storage-card{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius-lg);padding:20px;margin-bottom:12px;}
+.sc-header{display:flex;align-items:center;justify-content:space-between;margin-bottom:14px;}
+.sc-title{font-size:14px;font-weight:700;}
+.sc-used{font-size:13px;color:var(--muted);}
+.progress-bar{height:8px;background:var(--border);border-radius:20px;overflow:hidden;margin-bottom:8px;}
+.progress-fill{height:100%;border-radius:20px;transition:width .6s ease;}
+.pf-green{background:linear-gradient(to right,#16a34a,#22c55e);}
+.pf-orange{background:linear-gradient(to right,#ea580c,#f97316);}
+.pf-red{background:linear-gradient(to right,#dc2626,#ef4444);}
+.sc-labels{display:flex;justify-content:space-between;font-size:11px;color:var(--muted);}
+.storage-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;}
+.sg-item{background:var(--bg);border:1px solid var(--border);border-radius:var(--radius-md);padding:12px 14px;text-align:center;}
+.sg-icon{font-size:20px;margin-bottom:6px;}
+.sg-val{font-size:16px;font-weight:700;margin-bottom:2px;}
+.sg-lbl{font-size:10px;color:var(--muted);font-weight:500;}
+
+/* TABLE améliorée */
+.tbl-col-7{min-width:80px;}
 </style>
 </head>
 <body>
@@ -184,6 +241,37 @@ tr:hover td{background:#fafafa;}
       <div class="stat"><div class="stat-num s-red" id="statTotal">—</div><div class="stat-lbl">Espaces créés</div></div>
       <div class="stat"><div class="stat-num s-green" id="statActive">—</div><div class="stat-lbl">Actifs</div></div>
       <div class="stat"><div class="stat-num s-blue" id="statInactive">—</div><div class="stat-lbl">Inactifs</div></div>
+    </div>
+
+    <!-- DASHBOARD STOCKAGE -->
+    <div class="dash-section">
+      <div class="dash-title">Dashboard — Capacité &amp; Stockage</div>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:12px">
+        <div class="storage-card">
+          <div class="sc-header">
+            <div><div class="sc-title">🗄️ Base de données</div><div class="sc-used" id="dbUsedLabel">Calcul...</div></div>
+            <div style="font-size:22px;font-weight:800;color:var(--green)" id="dbPct">—</div>
+          </div>
+          <div class="progress-bar"><div class="progress-fill pf-green" id="dbBar" style="width:0%"></div></div>
+          <div class="sc-labels"><span id="dbUsed">—</span><span style="font-weight:600">500 MB (Free)</span></div>
+        </div>
+        <div class="storage-card">
+          <div class="sc-header">
+            <div><div class="sc-title">📁 Stockage fichiers</div><div class="sc-used" id="storUsedLabel">Calcul...</div></div>
+            <div style="font-size:22px;font-weight:800;color:var(--green)" id="storPct">—</div>
+          </div>
+          <div class="progress-bar"><div class="progress-fill pf-green" id="storBar" style="width:0%"></div></div>
+          <div class="sc-labels"><span id="storUsed">—</span><span style="font-weight:600">1 GB (Free)</span></div>
+        </div>
+      </div>
+      <div class="storage-grid">
+        <div class="sg-item"><div class="sg-icon">🎫</div><div class="sg-val" id="dTickets">—</div><div class="sg-lbl">Tickets</div></div>
+        <div class="sg-item"><div class="sg-icon">💬</div><div class="sg-val" id="dComments">—</div><div class="sg-lbl">Commentaires</div></div>
+        <div class="sg-item"><div class="sg-icon">💰</div><div class="sg-val" id="dCompta">—</div><div class="sg-lbl">Compta</div></div>
+        <div class="sg-item"><div class="sg-icon">🔧</div><div class="sg-val" id="dPros">—</div><div class="sg-lbl">Professionnels</div></div>
+        <div class="sg-item"><div class="sg-icon">🏢</div><div class="sg-val" id="dResidences">—</div><div class="sg-lbl">Résidences</div></div>
+        <div class="sg-item"><div class="sg-icon">👤</div><div class="sg-val" id="dUsers">—</div><div class="sg-lbl">Admins liés</div></div>
+      </div>
     </div>
 
     <div class="grid">
@@ -303,7 +391,7 @@ tr:hover td{background:#fafafa;}
                 <th>Unités</th>
                 <th>Statut</th>
                 <th>Date</th>
-                <th></th>
+                <th>Actions</th>
               </tr>
             </thead>
             <tbody id="clientsBody">
@@ -317,6 +405,19 @@ tr:hover td{background:#fafafa;}
   </div>
 </div>
 
+
+<!-- MODAL CONFIRMATION -->
+<div class="modal-overlay" id="modalOverlay">
+  <div class="modal">
+    <div class="modal-icon" id="modalIcon">⚠️</div>
+    <div class="modal-title" id="modalTitle">Confirmer</div>
+    <div class="modal-desc" id="modalDesc">Êtes-vous sûr ?</div>
+    <div class="modal-btns">
+      <button class="mbtn mbtn-cancel" id="modalCancel">Annuler</button>
+      <button class="mbtn mbtn-danger" id="modalConfirm">Confirmer</button>
+    </div>
+  </div>
+</div>
 <div class="toast" id="toast"></div>
 
 <!-- ══ SUPABASE + SCRIPTS ════════════════════════════ -->
@@ -398,6 +499,7 @@ function enterApp(user) {
   document.getElementById('appScreen').style.display = 'flex';
   loadStats();
   loadClients();
+  loadDashboard();
 }
 
 function doLogin() {
@@ -594,7 +696,7 @@ function loadClients() {
   var tbody = document.getElementById('clientsBody');
   tbody.innerHTML = '<tr><td colspan="7" class="empty">Chargement...</td></tr>';
   db.from('residences')
-    .select('id,code_residence,nom,secteur,nb_apparts,actif,created_at')
+    .select('id,code_residence,nom,secteur,nb_apparts,actif,created_at,admin_id')
     .order('created_at', { ascending: false })
     .then(function(res) {
       var data = res.data;
@@ -603,29 +705,234 @@ function loadClients() {
         return;
       }
       tbody.innerHTML = data.map(function(r) {
-        var date = r.created_at ? new Date(r.created_at).toLocaleDateString('fr-FR') : '—';
+        var date  = r.created_at ? new Date(r.created_at).toLocaleDateString('fr-FR') : '—';
+        var badge = r.actif
+          ? '<span class="badge b-on">● Actif</span>'
+          : '<span class="badge b-off">● Inactif</span>';
+        var menuId = 'menu-' + r.id;
         return '<tr>' +
           '<td class="code-td">' + (r.code_residence || '—') + '</td>' +
           '<td style="font-weight:600">' + r.nom + '</td>' +
           '<td style="color:var(--muted);font-size:12px">' + (r.secteur || '—') + '</td>' +
-          '<td style="font-family:\'DM Mono\',monospace">' + (r.nb_apparts || '—') + '</td>' +
-          '<td><span class="badge ' + (r.actif ? 'b-on' : 'b-off') + '">' + (r.actif ? '● Actif' : '● Inactif') + '</span></td>' +
+          '<td style="font-family:\'DM Mono\',monospace;font-size:12px">' + (r.nb_apparts || '—') + '</td>' +
+          '<td>' + badge + '</td>' +
           '<td style="color:var(--muted);font-size:12px">' + date + '</td>' +
-          '<td><button class="act-btn" onclick="toggleClient(\'' + r.id + '\',' + r.actif + ')">' + (r.actif ? 'Désactiver' : 'Réactiver') + '</button></td>' +
+          '<td style="position:relative">' +
+            '<button class="actions-trigger" onclick="toggleMenu(\'' + r.id + '\')">⋯</button>' +
+            '<div class="actions-menu" id="' + menuId + '">' +
+              (r.actif
+                ? '<button class="am-item warn" onclick="closeMenus();confirmSuspend(\'' + r.id + '\',\'' + r.nom.replace(/'/g,"\\'") + '\')">⏸ Suspendre</button>'
+                : '<button class="am-item info" onclick="closeMenus();confirmReactivate(\'' + r.id + '\',\'' + r.nom.replace(/'/g,"\\'") + '\')">▶ Réactiver</button>'
+              ) +
+              '<button class="am-item info" onclick="closeMenus();confirmViderArchive(\'' + r.id + '\',\'' + r.nom.replace(/'/g,"\\'") + '\')">🗑 Vider l\'archive</button>' +
+              '<div class="am-sep"></div>' +
+              '<button class="am-item danger" onclick="closeMenus();confirmDelete(\'' + r.id + '\',\'' + r.nom.replace(/'/g,"\\'") + '\',\'' + (r.admin_id||'') + '\')">⛔ Supprimer</button>' +
+            '</div>' +
+          '</td>' +
           '</tr>';
       }).join('');
     });
 }
 
-function toggleClient(id, actif) {
-  db.from('residences').update({ actif: !actif }).eq('id', id)
-    .then(function(res) {
-      if (res.error) { toast('❌ ' + res.error.message); return; }
-      toast(actif ? '⏸ Désactivé' : '✅ Réactivé');
-      loadClients();
-      loadStats();
-    });
+function closeMenus() {
+  document.querySelectorAll('.actions-menu.open').forEach(function(m){ m.classList.remove('open'); });
 }
+
+document.addEventListener('click', function(e) {
+  if (!e.target.classList.contains('actions-trigger')) closeMenus();
+});
+
+function toggleMenu(id) {
+  var menu = document.getElementById('menu-' + id);
+  var wasOpen = menu.classList.contains('open');
+  closeMenus();
+  if (!wasOpen) menu.classList.add('open');
+}
+
+// ── MODAL ────────────────────────────────────────────
+var pendingAction = null;
+
+function showModal(icon, title, desc, btnLabel, btnClass, action) {
+  pendingAction = action;
+  document.getElementById('modalIcon').textContent     = icon;
+  document.getElementById('modalTitle').textContent    = title;
+  document.getElementById('modalDesc').innerHTML       = desc;
+  document.getElementById('modalConfirm').textContent  = btnLabel;
+  document.getElementById('modalConfirm').className    = 'mbtn ' + btnClass;
+  document.getElementById('modalOverlay').classList.add('open');
+}
+
+document.getElementById('modalCancel').addEventListener('click', function() {
+  document.getElementById('modalOverlay').classList.remove('open');
+  pendingAction = null;
+});
+document.getElementById('modalOverlay').addEventListener('click', function(e) {
+  if (e.target === this) { this.classList.remove('open'); pendingAction = null; }
+});
+document.getElementById('modalConfirm').addEventListener('click', function() {
+  document.getElementById('modalOverlay').classList.remove('open');
+  if (pendingAction) { pendingAction(); pendingAction = null; }
+});
+
+// ── ACTIONS ──────────────────────────────────────────
+function confirmSuspend(id, nom) {
+  showModal('⏸', 'Suspendre le client',
+    'Voulez-vous suspendre <strong>' + nom + '</strong> ?<br>Les utilisateurs ne pourront plus se connecter.',
+    'Suspendre', 'mbtn-warn',
+    function() {
+      db.from('residences').update({ actif: false }).eq('id', id).then(function(res) {
+        if (res.error) { toast('❌ ' + res.error.message); return; }
+        toast('⏸ ' + nom + ' suspendu');
+        loadClients(); loadStats();
+      });
+    }
+  );
+}
+
+function confirmReactivate(id, nom) {
+  showModal('▶', 'Réactiver le client',
+    'Voulez-vous réactiver <strong>' + nom + '</strong> ?<br>Les utilisateurs pourront à nouveau se connecter.',
+    'Réactiver', 'mbtn-info',
+    function() {
+      db.from('residences').update({ actif: true }).eq('id', id).then(function(res) {
+        if (res.error) { toast('❌ ' + res.error.message); return; }
+        toast('✅ ' + nom + ' réactivé');
+        loadClients(); loadStats();
+      });
+    }
+  );
+}
+
+function confirmViderArchive(id, nom) {
+  showModal('🗑', 'Vider l\'archive',
+    'Supprimer <strong>toutes les données</strong> de <strong>' + nom + '</strong> ?<br><br>' +
+    '• Tous les tickets et commentaires<br>• Toute la comptabilité<br>• Tous les professionnels<br><br>' +
+    '<span style="color:var(--red);font-weight:600">⚠️ Action irréversible.</span>',
+    'Vider l\'archive', 'mbtn-warn',
+    function() { viderArchive(id, nom); }
+  );
+}
+
+function viderArchive(id, nom) {
+  toast('⏳ Vidage en cours...');
+  var tables = ['commentaires', 'tickets', 'comptabilite', 'professionnels'];
+  var i = 0;
+  function next() {
+    if (i >= tables.length) {
+      toast('🗑 Archive de ' + nom + ' vidée');
+      loadStats(); loadClients(); loadDashboard();
+      return;
+    }
+    db.from(tables[i]).delete().eq('residence_id', id).then(function() { i++; next(); });
+  }
+  next();
+}
+
+function confirmDelete(id, nom, adminId) {
+  showModal('⛔', 'Supprimer le client',
+    'Supprimer définitivement <strong>' + nom + '</strong> ?<br><br>' +
+    'Seront supprimés :<br>• Tickets, commentaires, comptabilité<br>• La résidence<br>• Le compte administrateur<br><br>' +
+    '<span style="color:var(--red);font-weight:700">⛔ Impossible d\'annuler.</span>',
+    'Supprimer définitivement', 'mbtn-danger',
+    function() { deleteClient(id, nom, adminId); }
+  );
+}
+
+function deleteClient(id, nom, adminId) {
+  toast('⏳ Suppression en cours...');
+  var tables = ['commentaires', 'tickets', 'comptabilite', 'professionnels'];
+  var i = 0;
+  function deleteNext() {
+    if (i >= tables.length) {
+      db.from('residences').delete().eq('id', id).then(function(res) {
+        if (res.error) { toast('❌ ' + res.error.message); return; }
+        if (adminId && SB_SERVICE !== 'REMPLACE_PAR_TA_SERVICE_ROLE_KEY') {
+          fetch(SB_URL + '/auth/v1/admin/users/' + adminId, {
+            method: 'DELETE',
+            headers: { 'apikey': SB_SERVICE, 'Authorization': 'Bearer ' + SB_SERVICE }
+          }).then(function() {
+            toast('🗑 ' + nom + ' supprimé'); loadClients(); loadStats(); loadDashboard();
+          });
+        } else {
+          toast('🗑 ' + nom + ' supprimé (compte Auth à supprimer manuellement)');
+          loadClients(); loadStats(); loadDashboard();
+        }
+      });
+      return;
+    }
+    db.from(tables[i]).delete().eq('residence_id', id).then(function() { i++; deleteNext(); });
+  }
+  deleteNext();
+}
+
+// ── DASHBOARD STOCKAGE ────────────────────────────────
+function loadDashboard() {
+  var tables = [
+    { id: 'dTickets',    t: 'tickets' },
+    { id: 'dComments',   t: 'commentaires' },
+    { id: 'dCompta',     t: 'comptabilite' },
+    { id: 'dPros',       t: 'professionnels' },
+    { id: 'dResidences', t: 'residences' },
+  ];
+  tables.forEach(function(item) {
+    db.from(item.t).select('*', { count:'exact', head:true }).then(function(res) {
+      var el = document.getElementById(item.id);
+      if (el) el.textContent = res.count !== null ? res.count.toLocaleString('fr-FR') : '—';
+    });
+  });
+
+  // Users (admins liés)
+  db.from('residences').select('admin_id').then(function(res) {
+    var el = document.getElementById('dUsers');
+    if (el) el.textContent = (res.data||[]).filter(function(r){ return r.admin_id; }).length;
+  });
+
+  // Estimation DB
+  Promise.all([
+    db.from('tickets').select('*',{count:'exact',head:true}),
+    db.from('commentaires').select('*',{count:'exact',head:true}),
+    db.from('comptabilite').select('*',{count:'exact',head:true}),
+    db.from('residences').select('*',{count:'exact',head:true})
+  ]).then(function(results) {
+    var t  = results[0].count || 0;
+    var co = results[1].count || 0;
+    var ca = results[2].count || 0;
+    var r  = results[3].count || 0;
+    var estKB = (t * 2) + (co * 0.5) + (ca * 1) + (r * 0.5);
+    var estMB = Math.max(estKB / 1024, 0.1);
+    setStorageBar('db', estMB, 500, Math.min((estMB/500)*100, 100));
+  });
+
+  // Estimation fichiers
+  db.from('tickets').select('pieces_jointes').then(function(res) {
+    var count = 0;
+    (res.data||[]).forEach(function(row) {
+      try { count += JSON.parse(row.pieces_jointes||'[]').length; } catch(e) {}
+    });
+    var mb = Math.max(count * 0.3, 0.01);
+    setStorageBar('stor', mb, 1024, Math.min((mb/1024)*100, 100));
+  });
+}
+
+function setStorageBar(prefix, usedMB, limitMB, pct) {
+  var bar   = document.getElementById(prefix + 'Bar');
+  var usedEl= document.getElementById(prefix + 'Used');
+  var pctEl = document.getElementById(prefix + 'Pct');
+  var lblEl = document.getElementById(prefix + 'UsedLabel');
+  if (!bar) return;
+  var p   = Math.round(pct * 10) / 10;
+  var col = pct < 60 ? 'pf-green' : pct < 80 ? 'pf-orange' : 'pf-red';
+  bar.className     = 'progress-fill ' + col;
+  bar.style.width   = p + '%';
+  pctEl.textContent = p + '%';
+  pctEl.style.color = pct < 60 ? 'var(--green)' : pct < 80 ? 'var(--orange,#ea580c)' : 'var(--red)';
+  var fmt = usedMB < 1 ? Math.round(usedMB*1024)+' KB' : usedMB < 1024 ? usedMB.toFixed(1)+' MB' : (usedMB/1024).toFixed(2)+' GB';
+  var lim = limitMB >= 1024 ? (limitMB/1024)+'GB' : limitMB+'MB';
+  if (usedEl) usedEl.textContent = fmt + ' utilisés';
+  if (lblEl)  lblEl.textContent  = fmt + ' / ' + lim;
+}
+
+
 
 function toggleEye(inputId, btn) {
   var inp = document.getElementById(inputId);
