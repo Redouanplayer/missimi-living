@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Règlement Intérieur — Missimi Living</title>
+<title>Règlement Copropriété — Missimi Living</title>
 <style>
 :root{--gold:#b8975a;--gold-light:#d4b483;--navy:#0d1b2a;--cream:#faf8f4;--warm:#f5f0e8;--border:#e3ddd4;--text:#1a1208;--muted:#6b5f4e;--radius:4px;--radius-md:8px;--radius-lg:16px;}
 *,*::before,*::after{margin:0;padding:0;box-sizing:border-box;}html{scroll-behavior:smooth;}
@@ -26,26 +26,57 @@ nav{position:fixed;top:0;left:0;right:0;z-index:100;padding:14px 60px;background
 .pe-text{font-size:10px;letter-spacing:.25em;text-transform:uppercase;color:var(--gold);font-weight:500;}
 .ph-title{font-family:"Cormorant Garamond",serif;font-size:clamp(36px,5vw,60px);font-weight:300;color:white;line-height:1.1;margin-bottom:8px;}
 .ph-title em{font-style:italic;color:var(--gold);}
-.ph-sub{font-size:14px;color:rgba(255,255,255,.5);max-width:580px;line-height:1.75;font-weight:300;}
+.ph-sub{font-size:14px;color:rgba(255,255,255,.5);max-width:600px;line-height:1.75;font-weight:300;}
+.ph-badge{display:inline-flex;align-items:center;gap:10px;background:rgba(184,151,90,.12);border:1px solid rgba(184,151,90,.3);border-radius:20px;padding:6px 18px;margin-top:20px;flex-wrap:wrap;}
+.ph-badge span{font-size:11px;letter-spacing:.1em;text-transform:uppercase;color:var(--gold);}
+.ph-badge .sep{opacity:.3;}
 .main{padding:60px 60px;max-width:1100px;margin:0 auto;}
-.se{display:flex;align-items:center;gap:12px;margin-bottom:12px;}
-.se-line{width:24px;height:1px;background:var(--gold);}
-.se-text{font-size:10px;letter-spacing:.25em;text-transform:uppercase;color:var(--gold);}
-.section-title{font-family:"Cormorant Garamond",serif;font-size:clamp(28px,4vw,44px);font-weight:300;line-height:1.1;margin-bottom:8px;}
-.section-title em{font-style:italic;color:var(--gold);}
-.section-ar{font-family:"Noto Kufi Arabic",sans-serif;font-size:16px;color:var(--muted);direction:rtl;margin-bottom:28px;font-weight:300;}
-.card{background:white;border:1px solid var(--border);border-radius:var(--radius-lg);padding:24px;transition:all .2s;}
-.card:hover{border-color:var(--gold);box-shadow:0 4px 20px rgba(184,151,90,.08);}
-.card-dark{background:var(--navy);border:1px solid rgba(184,151,90,.3);border-radius:var(--radius-lg);padding:24px;}
+.chapter{margin-bottom:52px;}
+.chapter-header{display:flex;align-items:center;gap:16px;margin-bottom:24px;padding-bottom:14px;border-bottom:1px solid var(--border);}
+.ch-num{font-size:10px;letter-spacing:.28em;text-transform:uppercase;color:var(--gold);white-space:nowrap;font-weight:600;}
+.ch-title{font-family:"Cormorant Garamond",serif;font-size:clamp(20px,3vw,28px);font-weight:400;color:var(--text);}
+.ch-title em{font-style:italic;color:var(--gold);}
+.section-label{font-size:10px;letter-spacing:.2em;text-transform:uppercase;color:var(--muted);margin-bottom:14px;padding-left:2px;font-style:italic;display:block;}
+.card{background:white;border:1px solid var(--border);border-radius:var(--radius-lg);padding:24px;transition:all .2s;margin-bottom:12px;}
+.card:last-child{margin-bottom:0;}
+.card:hover{border-color:rgba(184,151,90,.4);box-shadow:0 4px 20px rgba(184,151,90,.08);}
+.card-dark{background:var(--navy);border:1px solid rgba(184,151,90,.25);border-radius:var(--radius-lg);padding:24px;margin-bottom:12px;}
+.card-gold{background:linear-gradient(135deg,rgba(184,151,90,.07),rgba(184,151,90,.02));border:1px solid rgba(184,151,90,.28);border-radius:var(--radius-lg);padding:24px;margin-bottom:12px;}
+.art-label{font-size:10px;letter-spacing:.22em;text-transform:uppercase;color:var(--gold);margin-bottom:8px;font-weight:600;}
+.art-sub{font-size:12px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:var(--text);margin-top:16px;margin-bottom:8px;}
+.body-text{font-size:13.5px;color:var(--muted);line-height:1.85;}
+.official-quote{font-size:13px;color:var(--muted);line-height:1.85;font-style:italic;border-left:2px solid rgba(184,151,90,.45);padding-left:16px;margin-bottom:12px;}
+.note{background:rgba(184,151,90,.06);border:1px solid rgba(184,151,90,.2);border-radius:var(--radius-md);padding:12px 16px;font-size:13px;color:var(--muted);line-height:1.75;margin-top:12px;}
+.note strong{color:var(--text);}
 .grid2{display:grid;grid-template-columns:1fr 1fr;gap:16px;}
 .grid3{display:grid;grid-template-columns:repeat(3,1fr);gap:16px;}
-.divider{height:1px;background:var(--border);margin:40px 0;}
-.tag{display:inline-flex;align-items:center;gap:6px;background:rgba(184,151,90,.1);border:1px solid rgba(184,151,90,.3);color:var(--gold);font-size:11px;font-weight:500;padding:4px 12px;border-radius:20px;margin-bottom:20px;}
+ul.r{list-style:none;display:flex;flex-direction:column;gap:7px;}
+ul.r li{font-size:13px;color:var(--muted);padding-left:18px;position:relative;line-height:1.65;}
+ul.r li .d{position:absolute;left:0;color:var(--gold);font-weight:700;}
+ul.r li strong{color:var(--text);}
+.toc{background:var(--warm);border:1px solid var(--border);border-radius:var(--radius-lg);padding:22px 26px;margin-bottom:44px;}
+.toc-title{font-size:10px;letter-spacing:.22em;text-transform:uppercase;color:var(--gold);margin-bottom:16px;font-weight:600;}
+.toc-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:6px;}
+.toc-item{display:flex;align-items:center;gap:8px;text-decoration:none;padding:7px 10px;border-radius:6px;transition:background .2s;}
+.toc-item:hover{background:rgba(184,151,90,.08);}
+.toc-num{font-size:10px;color:var(--gold);font-weight:700;min-width:20px;}
+.toc-txt{font-size:12px;color:var(--muted);}
+.divider{height:1px;background:var(--border);margin:44px 0;}
+.danger-box{background:#fff5f5;border:1px solid #fecaca;border-radius:var(--radius-md);padding:16px 20px;margin-top:14px;}
+.danger-title{font-size:11px;font-weight:700;color:#b91c1c;letter-spacing:.08em;text-transform:uppercase;margin-bottom:10px;display:flex;align-items:center;gap:8px;flex-wrap:wrap;}
+.danger-text{font-size:13px;color:#7f1d1d;line-height:1.75;margin-bottom:10px;}
+.danger-foot{font-size:12px;color:#991b1b;line-height:1.7;padding:10px 14px;background:rgba(185,28,28,.05);border-radius:6px;}
+.tag-red{background:rgba(185,28,28,.1);border:1px solid rgba(185,28,28,.3);color:#b91c1c;font-size:10px;font-weight:700;padding:2px 10px;border-radius:10px;letter-spacing:.04em;}
+.role-card{background:white;border:1px solid var(--border);border-radius:var(--radius-lg);padding:20px;transition:all .2s;text-align:center;}
+.role-card:hover{border-color:var(--gold);box-shadow:0 4px 20px rgba(184,151,90,.1);}
+.role-card.pres{border-top:3px solid var(--gold);}
+.role-icon{font-size:30px;margin-bottom:10px;}
+.role-name{font-size:11px;letter-spacing:.14em;text-transform:uppercase;color:var(--gold);margin-bottom:8px;font-weight:600;}
+.role-desc{font-size:12.5px;color:var(--muted);line-height:1.6;}
 .btn-g{background:var(--gold);color:var(--navy);padding:12px 26px;border-radius:var(--radius);font-size:11px;font-weight:600;letter-spacing:.08em;text-transform:uppercase;text-decoration:none;display:inline-flex;align-items:center;gap:8px;transition:all .2s;}
 .btn-g:hover{background:var(--gold-light);transform:translateY(-1px);}
 .btn-o{border:1px solid var(--border);color:var(--text);padding:12px 26px;border-radius:var(--radius);font-size:11px;font-weight:500;letter-spacing:.08em;text-transform:uppercase;text-decoration:none;display:inline-flex;align-items:center;gap:8px;transition:all .2s;}
 .btn-o:hover{border-color:var(--gold);color:var(--gold);}
-.gl{font-size:10px;letter-spacing:.18em;text-transform:uppercase;color:var(--gold);margin-bottom:6px;}
 footer{background:var(--navy);padding:32px 60px;display:flex;align-items:center;justify-content:space-between;margin-top:80px;}
 .ftl{font-family:"Cormorant Garamond",serif;font-size:17px;color:white;letter-spacing:.1em;}
 .ftl span{color:var(--gold);}
@@ -53,6 +84,12 @@ footer{background:var(--navy);padding:32px 60px;display:flex;align-items:center;
 .ftlinks{display:flex;gap:18px;}
 .ftlinks a{font-size:11px;color:rgba(255,255,255,.35);text-decoration:none;letter-spacing:.06em;text-transform:uppercase;transition:color .2s;}
 .ftlinks a:hover{color:var(--gold);}
+#muteBtn{position:fixed;bottom:28px;right:28px;z-index:300;height:44px;border-radius:22px;border:1px solid rgba(184,151,90,.4);background:rgba(13,27,42,.88);backdrop-filter:blur(12px);color:white;font-size:15px;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:7px;padding:0 16px;transition:all .3s;box-shadow:0 4px 20px rgba(0,0,0,.3);font-family:"DM Sans",sans-serif;}
+#muteBtn:hover{background:rgba(184,151,90,.18);border-color:#b8975a;transform:translateY(-2px);}
+#muteBtn.playing .music-label{color:#b8975a;}
+@keyframes musicPulse{0%,100%{opacity:1;}50%{opacity:.4;}}
+#muteBtn.playing .music-icon{animation:musicPulse 2s ease-in-out infinite;}
+#muteBtn .music-label{font-size:10px;letter-spacing:.08em;color:rgba(255,255,255,.45);white-space:nowrap;}
 @media(max-width:900px){
   nav{padding:12px 16px;}
   .nav-links{display:none;flex-direction:column;position:fixed;top:0;left:0;right:0;bottom:0;background:rgba(13,27,42,.98);z-index:200;justify-content:center;align-items:center;gap:24px;}
@@ -62,100 +99,539 @@ footer{background:var(--navy);padding:32px 60px;display:flex;align-items:center;
   .burger.open{position:fixed;top:12px;right:16px;}
   .page-hero{padding:100px 20px 48px;}
   .main{padding:40px 20px;}
-  .grid2,.grid3{grid-template-columns:1fr;}
+  .grid2,.grid3,.toc-grid{grid-template-columns:1fr;}
   footer{flex-direction:column;gap:12px;text-align:center;padding:24px 16px;}
   .ftlinks{flex-wrap:wrap;justify-content:center;}
 }
 </style>
 <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,500;0,600;1,300;1,400&family=DM+Sans:wght@300;400;500;600&family=Noto+Kufi+Arabic:wght@300;400;500&display=swap" rel="stylesheet">
-
-<style>
-#muteBtn{position:fixed;bottom:28px;right:28px;z-index:300;height:44px;border-radius:22px;border:1px solid rgba(184,151,90,.4);background:rgba(13,27,42,.88);backdrop-filter:blur(12px);color:white;font-size:15px;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:7px;padding:0 16px;transition:all .3s;box-shadow:0 4px 20px rgba(0,0,0,.3);font-family:"DM Sans",sans-serif;}
-#muteBtn:hover{background:rgba(184,151,90,.18);border-color:#b8975a;transform:translateY(-2px);}
-#muteBtn.playing .music-label{color:#b8975a;}
-@keyframes musicPulse{0%,100%{opacity:1;}50%{opacity:.4;}}
-#muteBtn.playing .music-icon{animation:musicPulse 2s ease-in-out infinite;}
-#muteBtn .music-label{font-size:10px;letter-spacing:.08em;color:rgba(255,255,255,.45);white-space:nowrap;}
-</style>
 </head>
 <body>
+
 <button id="muteBtn" onclick="toggleMusic(event)" title="Chopin — Nocturne Op.9">
   <span class="music-icon">🔇</span>
   <span class="music-label">Chopin Op.9</span>
 </button>
+
 <nav>
   <a href="index.html" class="nav-logo"><span class="nl-main">MISSIMI</span><span class="nl-sub">Living · Casablanca</span></a>
   <div class="nav-links" id="navLinks">
     <a href="index.html">Accueil</a>
     <a href="projet.html">Le Projet</a>
     <a href="association.html">Association</a>
-    <a href="reglement.html" class="active">Règlement</a>
+    <a href="reglement.html" class="active">Règlement Copropriété</a>
     <a href="contact.html">Contact</a>
     <a href="syndic-v3.html" class="nav-cta">Espace Résident</a>
   </div>
   <button class="burger" id="burger" onclick="toggleMenu()">&#9776;</button>
 </nav>
+
 <div class="page-hero">
   <div class="ph-pattern"></div><div class="ph-glow"></div>
   <div class="ph-content">
-    <div class="ph-eyebrow"><div class="pe-line"></div><span class="pe-text">Association des Résidents Missimi</span></div>
-    <h1 class="ph-title">Règlement <em>Intérieur</em></h1>
-    <p class="ph-sub">Les règles du bon voisinage et du vivre-ensemble au sein de la Résidence Missimi Living.</p>
+    <div class="ph-eyebrow"><div class="pe-line"></div><span class="pe-text">Résidence Missimi — Casablanca</span></div>
+    <h1 class="ph-title">Règlement de <em>Copropriété</em></h1>
+    <p class="ph-sub">Document officiel régissant les droits, obligations et règles de vie commune au sein de la Résidence Missimi Living, conformément à la Loi 18.00 et à la Loi 106-12.</p>
+    <div class="ph-badge">
+      <span>📄 T.F. : 59508/64</span>
+      <span class="sep">|</span>
+      <span>Propriété dite : Missimi-15</span>
+      <span class="sep">|</span>
+      <span>Fait à Casablanca, le 22 Avril 2025</span>
+    </div>
   </div>
 </div>
+
 <div class="main">
-<div class="card-dark" style="margin-bottom:32px">
-  <div class="gl">Préambule</div>
-  <p style="font-size:14px;color:rgba(255,255,255,.7);line-height:1.85;margin-top:8px">Le présent règlement intérieur s'applique à <strong style="color:white">tous les résidents, propriétaires, locataires et leurs visiteurs</strong> de la Résidence Missimi Living. Il vise à garantir le bien-être, la sécurité et la bonne entente entre tous les occupants.</p>
-</div>
-<div class="grid2" style="margin-bottom:36px"><div class="card"><div class="gl">Article 1</div><div style="font-size:15px;font-weight:600;margin-bottom:10px;">Adhésion & Cotisations</div><ul style="list-style:none;display:flex;flex-direction:column;gap:6px"><li style="font-size:13px;color:var(--muted);padding-left:16px;position:relative;line-height:1.6"><span style="position:absolute;left:0;color:var(--gold)">—</span>Tout résident peut adhérer librement à l'association</li><li style="font-size:13px;color:var(--muted);padding-left:16px;position:relative;line-height:1.6"><span style="position:absolute;left:0;color:var(--gold)">—</span>Une cotisation annuelle symbolique est fixée par l'AG</li><li style="font-size:13px;color:var(--muted);padding-left:16px;position:relative;line-height:1.6"><span style="position:absolute;left:0;color:var(--gold)">—</span>Les membres à jour participent aux votes et décisions</li><li style="font-size:13px;color:var(--muted);padding-left:16px;position:relative;line-height:1.6"><span style="position:absolute;left:0;color:var(--gold)">—</span>L'adhésion est ouverte aux propriétaires et locataires</li></ul></div><div class="card"><div class="gl">Article 2</div><div style="font-size:15px;font-weight:600;margin-bottom:10px;">Parties Communes</div><ul style="list-style:none;display:flex;flex-direction:column;gap:6px"><li style="font-size:13px;color:var(--muted);padding-left:16px;position:relative;line-height:1.6"><span style="position:absolute;left:0;color:var(--gold)">—</span>Maintenir la propreté dans tous les espaces communs</li><li style="font-size:13px;color:var(--muted);padding-left:16px;position:relative;line-height:1.6"><span style="position:absolute;left:0;color:var(--gold)">—</span>Ne pas stocker d'objets dans les couloirs et halls</li><li style="font-size:13px;color:var(--muted);padding-left:16px;position:relative;line-height:1.6"><span style="position:absolute;left:0;color:var(--gold)">—</span>Respecter les horaires d'utilisation des équipements</li><li style="font-size:13px;color:var(--muted);padding-left:16px;position:relative;line-height:1.6"><span style="position:absolute;left:0;color:var(--gold)">—</span>Signaler tout dégât via la plateforme RedTech</li></ul></div><div class="card"><div class="gl">Article 3</div><div style="font-size:15px;font-weight:600;margin-bottom:10px;">Tranquillité & Nuisances</div><ul style="list-style:none;display:flex;flex-direction:column;gap:6px"><li style="font-size:13px;color:var(--muted);padding-left:16px;position:relative;line-height:1.6"><span style="position:absolute;left:0;color:var(--gold)">—</span>Silence obligatoire de 22h00 à 8h00 en semaine</li><li style="font-size:13px;color:var(--muted);padding-left:16px;position:relative;line-height:1.6"><span style="position:absolute;left:0;color:var(--gold)">—</span>Silence de 23h00 à 9h00 le week-end</li><li style="font-size:13px;color:var(--muted);padding-left:16px;position:relative;line-height:1.6"><span style="position:absolute;left:0;color:var(--gold)">—</span>Éviter les bruits excessifs à toute heure</li><li style="font-size:13px;color:var(--muted);padding-left:16px;position:relative;line-height:1.6"><span style="position:absolute;left:0;color:var(--gold)">—</span>Travaux autorisés 9h-12h et 15h-18h en semaine</li></ul></div><div class="card"><div class="gl">Article 4</div><div style="font-size:15px;font-weight:600;margin-bottom:10px;">Sécurité & Accès</div><ul style="list-style:none;display:flex;flex-direction:column;gap:6px"><li style="font-size:13px;color:var(--muted);padding-left:16px;position:relative;line-height:1.6"><span style="position:absolute;left:0;color:var(--gold)">—</span>Ne pas laisser entrer des inconnus sans identification</li><li style="font-size:13px;color:var(--muted);padding-left:16px;position:relative;line-height:1.6"><span style="position:absolute;left:0;color:var(--gold)">—</span>Fermer systématiquement les portes d'accès</li><li style="font-size:13px;color:var(--muted);padding-left:16px;position:relative;line-height:1.6"><span style="position:absolute;left:0;color:var(--gold)">—</span>Signaler toute activité suspecte à la sécurité</li><li style="font-size:13px;color:var(--muted);padding-left:16px;position:relative;line-height:1.6"><span style="position:absolute;left:0;color:var(--gold)">—</span>Respecter les consignes d'évacuation d'urgence</li></ul></div><div class="card"><div class="gl">Article 5</div><div style="font-size:15px;font-weight:600;margin-bottom:10px;">Parking Souterrain</div><ul style="list-style:none;display:flex;flex-direction:column;gap:6px"><li style="font-size:13px;color:var(--muted);padding-left:16px;position:relative;line-height:1.6"><span style="position:absolute;left:0;color:var(--gold)">—</span>Se garer uniquement à sa place assignée</li><li style="font-size:13px;color:var(--muted);padding-left:16px;position:relative;line-height:1.6"><span style="position:absolute;left:0;color:var(--gold)">—</span>Vitesse limitée à 10 km/h dans le parking</li><li style="font-size:13px;color:var(--muted);padding-left:16px;position:relative;line-height:1.6"><span style="position:absolute;left:0;color:var(--gold)">—</span>Ne pas stocker de matières inflammables</li><li style="font-size:13px;color:var(--muted);padding-left:16px;position:relative;line-height:1.6"><span style="position:absolute;left:0;color:var(--gold)">—</span>Fermer la barrière d'accès derrière soi</li></ul></div><div class="card"><div class="gl">Article 6</div><div style="font-size:15px;font-weight:600;margin-bottom:10px;">Déchets & Environnement</div><ul style="list-style:none;display:flex;flex-direction:column;gap:6px"><li style="font-size:13px;color:var(--muted);padding-left:16px;position:relative;line-height:1.6"><span style="position:absolute;left:0;color:var(--gold)">—</span>Utiliser les bacs de tri appropriés</li><li style="font-size:13px;color:var(--muted);padding-left:16px;position:relative;line-height:1.6"><span style="position:absolute;left:0;color:var(--gold)">—</span>Ne pas déposer d'encombrants hors zones prévues</li><li style="font-size:13px;color:var(--muted);padding-left:16px;position:relative;line-height:1.6"><span style="position:absolute;left:0;color:var(--gold)">—</span>Respecter les horaires de collecte</li><li style="font-size:13px;color:var(--muted);padding-left:16px;position:relative;line-height:1.6"><span style="position:absolute;left:0;color:var(--gold)">—</span>Préserver les espaces verts et le jardin central</li></ul></div><div class="card"><div class="gl">Article 7</div><div style="font-size:15px;font-weight:600;margin-bottom:10px;">Relations avec le Syndic</div><ul style="list-style:none;display:flex;flex-direction:column;gap:6px"><li style="font-size:13px;color:var(--muted);padding-left:16px;position:relative;line-height:1.6"><span style="position:absolute;left:0;color:var(--gold)">—</span>Toute réclamation passe par la plateforme RedTech</li><li style="font-size:13px;color:var(--muted);padding-left:16px;position:relative;line-height:1.6"><span style="position:absolute;left:0;color:var(--gold)">—</span>L'association assure le suivi collectif des demandes</li><li style="font-size:13px;color:var(--muted);padding-left:16px;position:relative;line-height:1.6"><span style="position:absolute;left:0;color:var(--gold)">—</span>Réunions trimestrielles syndic-association obligatoires</li><li style="font-size:13px;color:var(--muted);padding-left:16px;position:relative;line-height:1.6"><span style="position:absolute;left:0;color:var(--gold)">—</span>Comptes présentés à l'Assemblée Générale annuelle</li></ul></div><div class="card"><div class="gl">Article 8</div><div style="font-size:15px;font-weight:600;margin-bottom:10px;">Ascenseurs</div><ul style="list-style:none;display:flex;flex-direction:column;gap:6px"><li style="font-size:13px;color:var(--muted);padding-left:16px;position:relative;line-height:1.6"><span style="position:absolute;left:0;color:var(--gold)">—</span>L'ascenseur est réservé aux personnes — <strong>pas de vélos, trottinettes ou encombrants</strong></li><li style="font-size:13px;color:var(--muted);padding-left:16px;position:relative;line-height:1.6"><span style="position:absolute;left:0;color:var(--gold)">—</span>Ne pas surcharger l'ascenseur au-delà de la <strong>capacité affichée</strong></li><li style="font-size:13px;color:var(--muted);padding-left:16px;position:relative;line-height:1.6"><span style="position:absolute;left:0;color:var(--gold)">—</span>Interdiction de fumer ou de manger dans la cabine</li><li style="font-size:13px;color:var(--muted);padding-left:16px;position:relative;line-height:1.6"><span style="position:absolute;left:0;color:var(--gold)">—</span>En cas de panne, utiliser l'interphone et ne pas forcer les portes</li><li style="font-size:13px;color:var(--muted);padding-left:16px;position:relative;line-height:1.6"><span style="position:absolute;left:0;color:var(--gold)">—</span>Interdire aux enfants de jouer seuls dans l'ascenseur</li><li style="font-size:13px;color:var(--muted);padding-left:16px;position:relative;line-height:1.6"><span style="position:absolute;left:0;color:var(--gold)">—</span>Toute dégradation engage la <strong>responsabilité de son auteur</strong></li><li style="font-size:13px;color:var(--muted);padding-left:16px;position:relative;line-height:1.6"><span style="position:absolute;left:0;color:var(--gold)">—</span>Signaler immédiatement toute panne via RedTech ou à la sécurité</li></ul></div><div class="card" style="grid-column:1/-1"><div class="gl">Article 9</div><div style="font-size:15px;font-weight:600;margin-bottom:12px;">Animaux de compagnie</div>
-<ul style="list-style:none;display:flex;flex-direction:column;gap:7px;margin-bottom:16px">
-<li style="font-size:13px;color:var(--muted);padding-left:16px;position:relative;line-height:1.6"><span style="position:absolute;left:0;color:var(--gold)">—</span>Les animaux domestiques sont <strong>tolérés</strong> dans le strict respect des autres résidents</li>
-<li style="font-size:13px;color:var(--muted);padding-left:16px;position:relative;line-height:1.6"><span style="position:absolute;left:0;color:var(--gold)">—</span>Tout animal doit être <strong>tenu en laisse</strong> dans toutes les parties communes</li>
-<li style="font-size:13px;color:var(--muted);padding-left:16px;position:relative;line-height:1.6"><span style="position:absolute;left:0;color:var(--gold)">—</span><strong>Ramassage obligatoire</strong> des déjections — les déposer uniquement dans les <strong>poubelles prévues</strong>, jamais dans le jardin ou les couloirs</li>
-<li style="font-size:13px;color:var(--muted);padding-left:16px;position:relative;line-height:1.6"><span style="position:absolute;left:0;color:var(--gold)">—</span>Les <strong>aboiements ou bruits excessifs</strong> perturbant les voisins sont interdits, notamment la nuit</li>
-<li style="font-size:13px;color:var(--muted);padding-left:16px;position:relative;line-height:1.6"><span style="position:absolute;left:0;color:var(--gold)">—</span>Les animaux sont <strong>interdits dans l'ascenseur</strong> sans accord des autres utilisateurs présents</li>
-<li style="font-size:13px;color:var(--muted);padding-left:16px;position:relative;line-height:1.6"><span style="position:absolute;left:0;color:var(--gold)">—</span>En cas de plainte répétée, le syndic peut exiger le <strong>retrait de l'animal</strong> de la résidence</li>
-</ul>
-<div style="background:#fee2e2;border:1px solid #fecaca;border-radius:var(--radius-md);padding:14px 18px">
-  <div style="font-size:11px;font-weight:700;color:#b91c1c;letter-spacing:.08em;text-transform:uppercase;margin-bottom:10px;display:flex;align-items:center;gap:6px">
-    🚫 Chiens dangereux — Interdiction absolue
-    <span style="background:#b91c1c;color:white;font-size:10px;padding:2px 10px;border-radius:10px;letter-spacing:.04em">Décret n°2.18.456</span>
-  </div>
-  <p style="font-size:13px;color:#7f1d1d;line-height:1.75;margin-bottom:10px">Conformément au <strong>Décret n°2.18.456</strong> relatif aux chiens dangereux au Maroc, il est <strong>formellement et absolument interdit</strong> de détenir, introduire ou faire circuler dans la résidence Missimi Living tout chien appartenant aux races ou catégories suivantes :</p>
-  <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:10px">
-    <div style="background:rgba(185,28,28,.08);border-radius:6px;padding:10px 14px">
-      <div style="font-size:11px;font-weight:700;color:#b91c1c;margin-bottom:6px;text-transform:uppercase;letter-spacing:.06em">Catégorie 1 — Attaque</div>
-      <ul style="list-style:none;display:flex;flex-direction:column;gap:4px">
-        <li style="font-size:12px;color:#7f1d1d;padding-left:14px;position:relative"><span style="position:absolute;left:0;color:#b91c1c">•</span>Pitbull (American Staffordshire Terrier)</li>
-        <li style="font-size:12px;color:#7f1d1d;padding-left:14px;position:relative"><span style="position:absolute;left:0;color:#b91c1c">•</span>Boerbull (Boerboel)</li>
-        <li style="font-size:12px;color:#7f1d1d;padding-left:14px;position:relative"><span style="position:absolute;left:0;color:#b91c1c">•</span>Tosa Inu</li>
-        <li style="font-size:12px;color:#7f1d1d;padding-left:14px;position:relative"><span style="position:absolute;left:0;color:#b91c1c">•</span>Fila Brasileiro</li>
-        <li style="font-size:12px;color:#7f1d1d;padding-left:14px;position:relative"><span style="position:absolute;left:0;color:#b91c1c">•</span>Dogue Argentin</li>
-      </ul>
-    </div>
-    <div style="background:rgba(185,28,28,.08);border-radius:6px;padding:10px 14px">
-      <div style="font-size:11px;font-weight:700;color:#b91c1c;margin-bottom:6px;text-transform:uppercase;letter-spacing:.06em">Catégorie 2 — Garde &amp; Défense</div>
-      <ul style="list-style:none;display:flex;flex-direction:column;gap:4px">
-        <li style="font-size:12px;color:#7f1d1d;padding-left:14px;position:relative"><span style="position:absolute;left:0;color:#b91c1c">•</span>Rottweiler</li>
-        <li style="font-size:12px;color:#7f1d1d;padding-left:14px;position:relative"><span style="position:absolute;left:0;color:#b91c1c">•</span>American Staffordshire Terrier</li>
-        <li style="font-size:12px;color:#7f1d1d;padding-left:14px;position:relative"><span style="position:absolute;left:0;color:#b91c1c">•</span>Mastiff (Dogue de Bordeaux)</li>
-        <li style="font-size:12px;color:#7f1d1d;padding-left:14px;position:relative"><span style="position:absolute;left:0;color:#b91c1c">•</span>Dobermann</li>
-        <li style="font-size:12px;color:#7f1d1d;padding-left:14px;position:relative"><span style="position:absolute;left:0;color:#b91c1c">•</span>Et tout chien présentant un comportement agressif avéré</li>
-      </ul>
-    </div>
-  </div>
-  <div style="font-size:12px;color:#991b1b;line-height:1.7;padding:10px 14px;background:rgba(185,28,28,.06);border-radius:6px">
-    ⚠️ Tout contrevenant s'expose à une <strong>expulsion immédiate de l'animal</strong> de la résidence, sans préavis, et peut faire l'objet d'un <strong>signalement aux autorités compétentes</strong> conformément à la législation marocaine en vigueur.
+
+<!-- SOMMAIRE -->
+<div class="toc">
+  <div class="toc-title">📋 Sommaire — 9 Chapitres · 23 Articles</div>
+  <div class="toc-grid">
+    <a href="#ch1" class="toc-item"><span class="toc-num">I</span><span class="toc-txt">Objet</span></a>
+    <a href="#ch2" class="toc-item"><span class="toc-num">II</span><span class="toc-txt">Droits sur les parties communes</span></a>
+    <a href="#ch3" class="toc-item"><span class="toc-num">III</span><span class="toc-txt">Cession – Quitus</span></a>
+    <a href="#ch4" class="toc-item"><span class="toc-num">IV</span><span class="toc-txt">Parties privatives &amp; communes</span></a>
+    <a href="#ch5" class="toc-item"><span class="toc-num">V</span><span class="toc-txt">Droits &amp; obligations</span></a>
+    <a href="#ch6" class="toc-item"><span class="toc-num">VI</span><span class="toc-txt">Personnel de service &amp; charges</span></a>
+    <a href="#ch7" class="toc-item"><span class="toc-num">VII</span><span class="toc-txt">Comptes des charges</span></a>
+    <a href="#ch8" class="toc-item"><span class="toc-num">VIII</span><span class="toc-txt">Assurances</span></a>
+    <a href="#ch9" class="toc-item"><span class="toc-num">IX</span><span class="toc-txt">Administration des parties communes</span></a>
   </div>
 </div>
-</div><div class="card-dark"><div class="gl">Article 10</div><div style="font-size:15px;font-weight:600;margin-bottom:10px;color:var(--gold)">Sanctions & Médiation</div><ul style="list-style:none;display:flex;flex-direction:column;gap:6px"><li style="font-size:13px;color:rgba(255,255,255,.6);padding-left:16px;position:relative;line-height:1.6"><span style="position:absolute;left:0;color:var(--gold)">—</span>Avertissement amiable pour tout premier manquement</li><li style="font-size:13px;color:rgba(255,255,255,.6);padding-left:16px;position:relative;line-height:1.6"><span style="position:absolute;left:0;color:var(--gold)">—</span>En cas de récidive, saisine du syndic par l'association</li><li style="font-size:13px;color:rgba(255,255,255,.6);padding-left:16px;position:relative;line-height:1.6"><span style="position:absolute;left:0;color:var(--gold)">—</span>La médiation est toujours privilégiée avant tout recours</li><li style="font-size:13px;color:rgba(255,255,255,.6);padding-left:16px;position:relative;line-height:1.6"><span style="position:absolute;left:0;color:var(--gold)">—</span>Le dialogue et le respect mutuel sont nos piliers</li></ul></div></div>
+
+<!-- ══════════════════════════════════
+     CHAPITRE I — OBJET
+══════════════════════════════════ -->
+<div class="chapter" id="ch1">
+  <div class="chapter-header">
+    <span class="ch-num">Chapitre I</span>
+    <h2 class="ch-title"><em>Objet</em></h2>
+  </div>
+  <div class="card">
+    <div class="art-label">Article 1</div>
+    <p class="body-text" style="margin-bottom:12px">Le présent règlement a pour objet de fixer les conditions d'exercice des droits et obligations des copropriétaires découlant de la <strong>Loi 18.00</strong> relative au statut de la copropriété des immeubles bâtis, telle qu'elle a été modifiée et complétée par la <strong>Loi 106-12</strong>, et notamment :</p>
+    <ul class="r">
+      <li><span class="d">—</span>Organiser l'administration de l'immeuble</li>
+      <li><span class="d">—</span>Prévoir les conditions d'amélioration de gestion et d'entretien de cet immeuble, de son assurance et de sa restauration</li>
+    </ul>
+    <div class="note">Le présent règlement et les modifications susceptibles de lui être apportées constitueront la règle commune à laquelle tous les copropriétaires devront se conformer.</div>
+  </div>
+  <div class="card">
+    <div class="art-label">Article 2</div>
+    <p class="body-text">Dans tous les contrats translatifs ou déclaratifs de la propriété d'un ou plusieurs lots, il devra être fait mention du présent règlement et que les nouveaux copropriétaires l'ont consulté et sont tenus à son exécution.</p>
+    <p style="font-size:12px;color:var(--gold);margin-top:10px;font-style:italic">Un exemplaire de ce règlement portant signature de l'Ingénieur Géomètre Topographe est obligatoirement remis à chaque copropriétaire.</p>
+  </div>
+</div>
+
+<!-- ══════════════════════════════════
+     CHAPITRE II — PARTIES COMMUNES
+══════════════════════════════════ -->
+<div class="chapter" id="ch2">
+  <div class="chapter-header">
+    <span class="ch-num">Chapitre II</span>
+    <h2 class="ch-title">Droits des copropriétaires sur les <em>parties communes</em></h2>
+  </div>
+  <div class="card">
+    <div class="art-label">Article 3</div>
+    <p class="body-text">Chaque copropriétaire possède, outre la propriété privative d'immeuble qui lui est cédée, des droits de copropriété sur les parties communes suivant les <strong>tantièmes</strong> indiqués au tableau annexé au présent règlement de copropriété.</p>
+  </div>
+</div>
+
+<!-- ══════════════════════════════════
+     CHAPITRE III — CESSION / QUITUS
+══════════════════════════════════ -->
+<div class="chapter" id="ch3">
+  <div class="chapter-header">
+    <span class="ch-num">Chapitre III</span>
+    <h2 class="ch-title"><em>Cession</em> – Quitus</h2>
+  </div>
+  <div class="grid2">
+    <div class="card">
+      <div class="art-label">Article 4</div>
+      <p class="body-text">La cession des lots de l'immeuble est libre. <strong>Néanmoins un droit de préférence pourrait être institué</strong> selon les dispositions de l'article 39 de la Loi 18.00, telle que modifiée et complétée par la Loi 106-12.</p>
+    </div>
+    <div class="card">
+      <div class="art-label">Article 5</div>
+      <p class="body-text">Tout cessionnaire est tenu d'exiger du cédant, avant d'acquérir, un <strong>quitus de tous comptes provisionnels</strong> et parts des charges de copropriété délivré par le syndicat des copropriétaires.</p>
+      <p style="font-size:12.5px;color:var(--muted);margin-top:8px;line-height:1.7">Faute de l'avoir obtenu, il est fait application des dispositions des articles 42 et 43 de la loi précitée.</p>
+    </div>
+  </div>
+</div>
+
+<!-- ══════════════════════════════════
+     CHAPITRE IV — PARTIES PRIVATIVES / COMMUNES
+══════════════════════════════════ -->
+<div class="chapter" id="ch4">
+  <div class="chapter-header">
+    <span class="ch-num">Chapitre IV</span>
+    <h2 class="ch-title">Parties <em>privatives</em> – Parties communes</h2>
+  </div>
+
+  <div class="card">
+    <div class="art-label">Article 6 — Parties privatives</div>
+    <p class="body-text" style="margin-bottom:14px">Les parties privatives sont destinées à l'usage exclusif et particulier des copropriétaires. Elles comprennent notamment :</p>
+    <div class="grid2">
+      <ul class="r">
+        <li><span class="d">—</span>Les cloisons intérieures avec leurs portes</li>
+        <li><span class="d">—</span>Les carrelages, dalles ou parquets et revêtements de sol et plafond</li>
+        <li><span class="d">—</span>Les portes palières, fenêtres, volets, stores, châssis et chambrantes</li>
+        <li><span class="d">—</span>Les installations des cuisines, placards, penderies et étagères</li>
+        <li><span class="d">—</span>Les barres d'appui, balcons, terrasses et loggias</li>
+      </ul>
+      <ul class="r">
+        <li><span class="d">—</span>Les installations sanitaires : salles d'eau, toilettes, WC</li>
+        <li><span class="d">—</span>Les installations d'eau chaude et de climatisation</li>
+        <li><span class="d">—</span>La serrurerie, la robinetterie et accessoires dépendants</li>
+        <li><span class="d">—</span>Tout ce qui concerne la décoration : glaces, peinture, boiserie…</li>
+        <li><span class="d">—</span>En général, tout ce qui se trouve à l'intérieur des appartements</li>
+      </ul>
+    </div>
+  </div>
+
+  <div class="card">
+    <div class="art-label">Article 7 — Parties communes</div>
+    <p class="body-text" style="margin-bottom:14px">Les parties communes sont affectées à l'usage ou à l'utilité de tous les copropriétaires. Elles comprennent notamment :</p>
+    <div class="grid2">
+      <ul class="r">
+        <li><span class="d">✓</span>Sol (sauf cas stipulés à l'alinéa 2 de l'article 2 de la Loi)</li>
+        <li><span class="d">✓</span>Le sous-sol s'il n'est pas destiné à l'usage privatif</li>
+        <li><span class="d">✓</span>Toitures et terrasses destinées à l'usage commun</li>
+        <li><span class="d">✓</span>Toutes les canalisations souterraines hors locaux privatifs</li>
+        <li><span class="d">✓</span>Armature des bâtiments : fondations, ossature, piliers, poteaux</li>
+        <li><span class="d">✓</span>Matériel commun servant à l'entretien des espaces libres</li>
+        <li><span class="d">✓</span>Façades : ornements, pergolas, ossature, couvertures des balcons</li>
+        <li><span class="d">✓</span>Ventilation : coffres gaines, conduits de fumée, tuyaux</li>
+        <li><span class="d">✓</span>Espaces verts, vestibules d'entrée, cages d'escaliers, paliers</li>
+        <li><span class="d">✓</span>Couloirs, places, dégagements et locaux de circulation communs</li>
+      </ul>
+      <ul class="r">
+        <li><span class="d">✓</span>Canalisations : colonnes montantes et descendantes</li>
+        <li><span class="d">✓</span>Compteurs généraux d'eau, d'électricité et appareils communs</li>
+        <li><span class="d">✓</span>Installations d'éclairage dans l'immeuble et les allées</li>
+        <li><span class="d">✓</span>Réseau de distribution TV : antenne collective et conduits</li>
+        <li><span class="d">✓</span>Locaux poubelles avec leurs accessoires</li>
+        <li><span class="d">✓</span>Appareils et installations de défense contre l'incendie</li>
+        <li><span class="d">✓</span>Local syndic, conciergerie, dépendances et locaux de services</li>
+        <li><span class="d">✓</span>Installation téléphonique</li>
+      </ul>
+    </div>
+  </div>
+
+  <div class="card">
+    <div class="art-label">Article 8 — Murs mitoyens</div>
+    <p class="body-text">Sont réputés mitoyens les murs et cloisons non porteurs séparant deux parties privatives contiguës (article 4 bis de la loi précitée). Le propriétaire confirme que les murs et cloisons séparant deux parties privatives contiguës prévues dans l'immeuble objet du présent règlement <strong>ne sont pas des murs porteurs</strong>.</p>
+  </div>
+</div>
+
+<!-- ══════════════════════════════════
+     CHAPITRE V — DROITS ET OBLIGATIONS
+══════════════════════════════════ -->
+<div class="chapter" id="ch5">
+  <div class="chapter-header">
+    <span class="ch-num">Chapitre V</span>
+    <h2 class="ch-title">Droits et obligations des copropriétaires <em>et occupants</em></h2>
+  </div>
+
+  <!-- Art 9 -->
+  <div class="card">
+    <div class="art-label">Article 9 — Usage des parties communes</div>
+    <ul class="r">
+      <li><span class="d">—</span>Chaque copropriétaire peut user librement des parties communes, à condition de <strong>respecter leur destination</strong> et de ne pas porter atteinte aux droits des autres copropriétaires</li>
+      <li><span class="d">—</span>Toutes les parties communes — passages, allées, entrées, vestibules, escaliers et couloirs — doivent être <strong>libres en tout temps</strong></li>
+      <li><span class="d">—</span>Il est interdit de <strong>déposer, entreposer ou mettre à demeure</strong> un objet quelconque dans les parties communes</li>
+      <li><span class="d">—</span>Aucun travail de ménage (brossage, battage de tapis, literie, meubles…) dans les escaliers, paliers, passages et vestibules</li>
+      <li><span class="d">—</span>Les passages et couloirs sont exclusivement réservés aux piétons — <strong>tout accès ou stationnement de véhicules est strictement interdit</strong></li>
+      <li><span class="d">—</span>Les copropriétaires doivent se conformer aux règles d'hygiène et de salubrité, éviter de salir ou dégrader les espaces verts et jardins</li>
+      <li><span class="d">—</span>Aucune antenne ou parabole de télévision ne pourra être installée sur les façades de l'immeuble</li>
+    </ul>
+  </div>
+
+  <!-- Art 10 — grand article -->
+  <div class="card">
+    <div class="art-label">Article 10 — Usage des parties privatives</div>
+
+    <div class="art-sub">Dispositions générales</div>
+    <ul class="r" style="margin-bottom:0">
+      <li><span class="d">—</span>Chaque copropriétaire a le droit de jouir et disposer de ses locaux à condition de <strong>ne pas nuire aux droits des autres</strong></li>
+      <li><span class="d">—</span>Chaque copropriétaire est responsable de ses fautes et négligences, conformément aux dispositions du Dahir formant Code des Obligations et Contrats</li>
+    </ul>
+
+    <div class="art-sub">Conditions d'occupation</div>
+    <ul class="r" style="margin-bottom:0">
+      <li><span class="d">—</span>Chaque occupant doit veiller à ce que la <strong>tranquillité de l'immeuble</strong> ne soit à aucun moment troublée par son fait, celui de sa famille, de ses visiteurs ou des personnes à son service</li>
+      <li><span class="d">—</span>Il est <strong>interdit à tout occupant</strong> de faire aucun bruit gênant pour les voisins de quelque nature que ce soit</li>
+      <li><span class="d">—</span>Les locations ne pourront jamais porter exclusivement sur les parties communes</li>
+    </ul>
+
+    <div class="art-sub">🐾 Animaux de compagnie</div>
+    <p class="official-quote">Tous les animaux criards, malpropres ou dangereux sont interdits. Toutefois, les chats et les chiens sont tolérés mais les dégâts et dégradations qu'ils pourront causer seront à la charge de leurs propriétaires. Ceux-ci devront veiller à ce que leurs animaux n'apportent aucun trouble à la tranquillité de l'immeuble. Ils devront être portés à bras au sein des parties communes.</p>
+    <ul class="r" style="margin-bottom:14px">
+      <li><span class="d">—</span>Tout animal doit être <strong>tenu en laisse</strong> dans toutes les parties communes</li>
+      <li><span class="d">—</span><strong>Ramassage obligatoire</strong> des déjections — à déposer uniquement dans les poubelles prévues, jamais dans le jardin ou les couloirs</li>
+      <li><span class="d">—</span>Les <strong>aboiements ou bruits excessifs</strong> perturbant les voisins sont interdits, notamment la nuit (22h–8h)</li>
+      <li><span class="d">—</span>Les animaux sont <strong>interdits dans l'ascenseur</strong> sans accord des autres utilisateurs présents</li>
+      <li><span class="d">—</span>En cas de plainte répétée, le syndic peut exiger le <strong>retrait de l'animal</strong> de la résidence</li>
+    </ul>
+    <div class="danger-box">
+      <div class="danger-title">🚫 Chiens dangereux — Interdiction absolue <span class="tag-red">Décret n°2.18.456</span></div>
+      <p class="danger-text">Il est <strong>formellement et absolument interdit</strong> de détenir, introduire ou faire circuler dans la résidence tout chien appartenant aux races suivantes :</p>
+      <div class="grid2" style="gap:8px;margin-bottom:10px">
+        <div style="background:rgba(185,28,28,.06);border-radius:6px;padding:10px 14px">
+          <div style="font-size:11px;font-weight:700;color:#b91c1c;margin-bottom:6px;text-transform:uppercase;letter-spacing:.06em">Catégorie 1 — Attaque</div>
+          <ul style="list-style:none;display:flex;flex-direction:column;gap:4px">
+            <li style="font-size:12px;color:#7f1d1d;padding-left:12px;position:relative"><span style="position:absolute;left:0;color:#b91c1c">•</span>Pitbull (American Staffordshire Terrier)</li>
+            <li style="font-size:12px;color:#7f1d1d;padding-left:12px;position:relative"><span style="position:absolute;left:0;color:#b91c1c">•</span>Boerbull (Boerboel)</li>
+            <li style="font-size:12px;color:#7f1d1d;padding-left:12px;position:relative"><span style="position:absolute;left:0;color:#b91c1c">•</span>Tosa Inu</li>
+            <li style="font-size:12px;color:#7f1d1d;padding-left:12px;position:relative"><span style="position:absolute;left:0;color:#b91c1c">•</span>Fila Brasileiro</li>
+            <li style="font-size:12px;color:#7f1d1d;padding-left:12px;position:relative"><span style="position:absolute;left:0;color:#b91c1c">•</span>Dogue Argentin</li>
+          </ul>
+        </div>
+        <div style="background:rgba(185,28,28,.06);border-radius:6px;padding:10px 14px">
+          <div style="font-size:11px;font-weight:700;color:#b91c1c;margin-bottom:6px;text-transform:uppercase;letter-spacing:.06em">Catégorie 2 — Garde &amp; Défense</div>
+          <ul style="list-style:none;display:flex;flex-direction:column;gap:4px">
+            <li style="font-size:12px;color:#7f1d1d;padding-left:12px;position:relative"><span style="position:absolute;left:0;color:#b91c1c">•</span>Rottweiler</li>
+            <li style="font-size:12px;color:#7f1d1d;padding-left:12px;position:relative"><span style="position:absolute;left:0;color:#b91c1c">•</span>American Staffordshire Terrier</li>
+            <li style="font-size:12px;color:#7f1d1d;padding-left:12px;position:relative"><span style="position:absolute;left:0;color:#b91c1c">•</span>Mastiff (Dogue de Bordeaux)</li>
+            <li style="font-size:12px;color:#7f1d1d;padding-left:12px;position:relative"><span style="position:absolute;left:0;color:#b91c1c">•</span>Dobermann</li>
+            <li style="font-size:12px;color:#7f1d1d;padding-left:12px;position:relative"><span style="position:absolute;left:0;color:#b91c1c">•</span>Tout chien présentant un comportement agressif avéré</li>
+          </ul>
+        </div>
+      </div>
+      <div class="danger-foot">⚠️ Tout contrevenant s'expose à une <strong>expulsion immédiate de l'animal</strong>, sans préavis, et peut faire l'objet d'un <strong>signalement aux autorités compétentes</strong> conformément à la législation marocaine en vigueur.</div>
+    </div>
+
+    <div class="art-sub">🛗 Utilisation des ascenseurs</div>
+    <ul class="r" style="margin-bottom:0">
+      <li><span class="d">—</span>L'ascenseur est réservé aux personnes — <strong>pas de vélos, trottinettes ou encombrants</strong></li>
+      <li><span class="d">—</span>Ne pas dépasser la <strong>capacité de charge affichée</strong> dans la cabine</li>
+      <li><span class="d">—</span>Interdiction de <strong>fumer, manger ou boire</strong> dans la cabine</li>
+      <li><span class="d">—</span>En cas de panne, utiliser l'<strong>interphone</strong> et ne pas forcer les portes</li>
+      <li><span class="d">—</span>Interdire aux enfants de jouer seuls dans l'ascenseur</li>
+      <li><span class="d">—</span>Toute dégradation engage la <strong>responsabilité financière</strong> de son auteur</li>
+      <li><span class="d">—</span>Signaler toute panne immédiatement via <strong>RedTech</strong> ou à la sécurité</li>
+    </ul>
+
+    <div class="art-sub">Utilisation des fenêtres et balcons</div>
+    <ul class="r" style="margin-bottom:0">
+      <li><span class="d">—</span>Il ne pourra jamais être étendu de linge ou autres sur les balcons et fenêtres, qui devront être <strong>tenus en parfait état de propreté</strong></li>
+      <li><span class="d">—</span>L'ornementation florale et végétale sera tolérée</li>
+      <li><span class="d">—</span>Les tapis et habits ne pourront être <strong>secoués ou brossés</strong> par les fenêtres et balcons</li>
+    </ul>
+
+    <div class="art-sub">Façades &amp; Enseignes</div>
+    <ul class="r" style="margin-bottom:0">
+      <li><span class="d">—</span>Il ne pourra être établi sur les façades rien qui puisse nuire aux habitants ou contrevenir aux règlements en vigueur</li>
+      <li><span class="d">—</span>Toute installation d'enseigne ou affiche <strong>sans l'accord préalable du syndicat des copropriétaires</strong> est strictement interdite</li>
+    </ul>
+
+    <div class="art-sub">Plaques d'identité</div>
+    <p class="body-text">Les copropriétaires et locataires pourront poser sur la porte desservant leur appartement une plaque comportant leur nom, dont les caractéristiques, dimensions et matériaux devront être <strong>agréés par le syndicat</strong>.</p>
+
+    <div class="art-sub">Usage des appareils récepteurs ou reproducteurs de son</div>
+    <ul class="r" style="margin-bottom:0">
+      <li><span class="d">—</span>Les appareils de son devront être utilisés avec <strong>modération</strong>, de sorte qu'aucun bruit ne puisse être perçu en dehors des locaux où ils fonctionnent</li>
+    </ul>
+
+    <div class="art-sub">Travaux &amp; Modifications</div>
+    <ul class="r" style="margin-bottom:0">
+      <li><span class="d">—</span>Les copropriétaires doivent prendre en charge sans indemnité les travaux de réparations ou modifications nécessaires aux parties communes</li>
+      <li><span class="d">—</span>Les copropriétaires doivent livrer accès pour effectuer des réparations se rapportant aux canalisations et conduites communes</li>
+      <li><span class="d">—</span>Dans le cas où des travaux entraîneraient des détériorations, les lieux devront être remis en état <strong>aux frais de la copropriété</strong></li>
+      <li><span class="d">—</span><strong>Sont interdits</strong> : tout travail concernant les gros-œuvres, toute modification des portes palières et cloisons, toute intervention sur l'aspect extérieur de l'édifice (fenêtres, stores, balcons, façades)</li>
+    </ul>
+
+    <div class="art-sub">🅿️ Parkings</div>
+    <ul class="r" style="margin-bottom:0">
+      <li><span class="d">—</span>Les parkings ne pourront servir qu'au <strong>remisage des voitures</strong></li>
+      <li><span class="d">—</span>Il ne pourra y être entreposé aucun récipient contenant du <strong>carburant ou matières inflammables</strong></li>
+      <li><span class="d">—</span>Il est interdit de procéder au <strong>lavage de voitures</strong> et d'encombrer les aires de circulation et les accès</li>
+      <li><span class="d">—</span>L'emploi des <strong>klaxons</strong> est strictement interdit</li>
+    </ul>
+  </div>
+</div>
+
+<!-- ══════════════════════════════════
+     CHAPITRE VI — PERSONNEL / CHARGES
+══════════════════════════════════ -->
+<div class="chapter" id="ch6">
+  <div class="chapter-header">
+    <span class="ch-num">Chapitre VI</span>
+    <h2 class="ch-title">Personnel de service <em>&amp; Charges</em></h2>
+  </div>
+  <div class="grid2" style="margin-bottom:0">
+    <div class="card">
+      <div class="art-label">Article 11</div>
+      <p class="body-text">Les concierges et/ou gardiens devront <strong>prévenir le syndic, sans aucun retard</strong>, de tout incident qui se produirait dans l'immeuble et de toutes autres dégradations dont ils auraient connaissance, de façon que toutes les mesures utiles puissent être prises immédiatement.</p>
+    </div>
+    <div class="card">
+      <div class="art-label">Article 12</div>
+      <p class="body-text">En cas de démission, limogeage ou de départ volontaire du concierge, le syndicat des copropriétaires doit pourvoir à son remplacement et entamer la procédure judiciaire d'éviction des lieux conformément aux dispositions de <strong>l'article 20 de la loi précitée</strong>.</p>
+    </div>
+  </div>
+  <div class="card" style="margin-top:12px">
+    <div class="art-label">Article 13 — Les charges communes comprennent</div>
+    <p class="body-text" style="margin-bottom:14px">Toutes les charges relatives à la conservation, l'entretien et l'administration des parties communes, <strong>la maintenance des équipements collectifs et des services communs</strong>, notamment :</p>
+    <div class="grid2">
+      <ul class="r">
+        <li><span class="d">—</span>Les contributions, taxes et charges sous quelque dénomination auxquelles sont assujetties les parties communes</li>
+        <li><span class="d">—</span>Les assurances : incendie, explosions, dégâts des eaux, responsabilité civile et accidents de travail</li>
+        <li><span class="d">—</span>Les frais d'entretien, grosses réparations et frais d'aménagement de toutes les parties communes</li>
+        <li><span class="d">—</span>Les frais de gestion et d'administration du syndic</li>
+      </ul>
+      <ul class="r">
+        <li><span class="d">—</span>La consommation d'eau pour le nettoyage des parties communes et l'arrosage</li>
+        <li><span class="d">—</span>La consommation d'électricité pour l'éclairage des parties communes</li>
+        <li><span class="d">—</span>Le salaire du personnel</li>
+        <li><span class="d">—</span>L'achat, la réparation et remplacement des ustensiles et produits de ménage</li>
+        <li><span class="d">—</span>L'aménagement d'accès réservés aux handicapés</li>
+        <li><span class="d">—</span>L'aménagement des lieux à l'occasion de la fête de l'aïd AL ADHA</li>
+      </ul>
+    </div>
+    <div class="note" style="margin-top:14px">Cette énonciation est exhaustive et non pas limitative.</div>
+  </div>
+</div>
+
+<!-- ══════════════════════════════════
+     CHAPITRE VII — COMPTES DES CHARGES
+══════════════════════════════════ -->
+<div class="chapter" id="ch7">
+  <div class="chapter-header">
+    <span class="ch-num">Chapitre VII</span>
+    <h2 class="ch-title">Comptes des <em>charges</em></h2>
+  </div>
+  <div class="card-gold">
+    <div class="art-label">Article 14 — Détermination des charges</div>
+    <p class="body-text" style="margin-bottom:10px">Les différentes charges des dépenses annuelles sont estimées provisoirement à la somme fixée selon les cas.</p>
+    <p class="body-text">Les charges communes indiquées ci-dessus seront réparties entre les copropriétaires <strong>au prorata de la quote-part</strong> leur appartenant dans les parties communes. Certaines charges relatives à des parties communes dont l'usage est réservé à un ou plusieurs copropriétaires seulement, seront supportées par ces derniers selon la même règle.</p>
+  </div>
+  <div class="grid2" style="margin-top:0">
+    <div class="card">
+      <div class="art-label">Article 15</div>
+      <p class="body-text">Les comptes des charges communes seront arrêtés <strong>annuellement</strong> et soumis à l'approbation de l'assemblée générale. Leurs relevés sont communiqués à l'avance par le syndic à chaque copropriétaire.</p>
+    </div>
+    <div class="card">
+      <div class="art-label">Article 16</div>
+      <p class="body-text">Les copropriétaires ont l'obligation de faire parvenir au syndicat leur <strong>quote-part des charges par chèque bancaire</strong> ou par versement, au plus tard dans un mois de la mise en recouvrement de l'acompte provisionnel ou de la décision de l'assemblée générale.</p>
+    </div>
+    <div class="card">
+      <div class="art-label">Article 17</div>
+      <p class="body-text">Les copropriétaires qui aggraveraient par leur fait les charges communes <strong>supporteront seuls les frais et dépenses</strong> qui seraient ainsi occasionnés.</p>
+    </div>
+    <div class="card">
+      <div class="art-label">Article 18</div>
+      <p class="body-text">La contribution de chacun au paiement des diverses charges auxquelles il est assujetti est <strong>due même en l'absence de toute occupation et tout usage</strong>.</p>
+    </div>
+  </div>
+</div>
+
+<!-- ══════════════════════════════════
+     CHAPITRE VIII — ASSURANCES
+══════════════════════════════════ -->
+<div class="chapter" id="ch8">
+  <div class="chapter-header">
+    <span class="ch-num">Chapitre VIII</span>
+    <h2 class="ch-title"><em>Assurances</em></h2>
+  </div>
+  <div class="card">
+    <div class="art-label">Article 19</div>
+    <p class="body-text">Le syndicat des copropriétaires est tenu de <strong>souscrire obligatoirement une assurance</strong> couvrant notamment les incendies et explosions. Toutefois, le syndicat peut souscrire toute police d'assurance jugée nécessaire.</p>
+  </div>
+</div>
+
+<!-- ══════════════════════════════════
+     CHAPITRE IX — ADMINISTRATION
+══════════════════════════════════ -->
+<div class="chapter" id="ch9">
+  <div class="chapter-header">
+    <span class="ch-num">Chapitre IX</span>
+    <h2 class="ch-title">Administration des <em>parties communes</em></h2>
+  </div>
+
+  <span class="section-label">Section I · Le syndicat des copropriétaires</span>
+  <div class="card">
+    <div class="art-label">Article 20 — Constitution – Objet – Compétence</div>
+    <p class="body-text" style="margin-bottom:10px">Conformément à l'article 13 de la Loi 18.00, le syndicat est le <strong>représentant légal de la copropriété</strong>. Les différents copropriétaires sont obligatoirement et de plein droit groupés dans un syndicat.</p>
+    <p class="body-text" style="margin-bottom:10px">Le syndicat des copropriétaires a pour mission la conservation de l'immeuble, l'administration, la gestion et l'exécution des dispositions du présent règlement de copropriété. Il est <strong>responsable des dommages causés</strong> aux copropriétaires ou aux tiers par le défaut d'entretien des parties communes.</p>
+    <p class="body-text">Il a qualité pour ester en justice tant en demandeur qu'en défendeur, même contre certains de ses membres.</p>
+  </div>
+
+  <span class="section-label" style="margin-top:24px;display:block">Section II · L'Assemblée générale — Organisation et attributions</span>
+  <div class="card">
+    <div class="art-label">Article 21 — Assemblée générale</div>
+    <ul class="r" style="margin-bottom:14px">
+      <li><span class="d">—</span>L'assemblée générale tient sa première réunion à l'initiative d'un ou plusieurs copropriétaires et procède à l'établissement du règlement de copropriété et à l'élection des organes de gestion</li>
+      <li><span class="d">—</span>L'assemblée générale ordinaire se réunit <strong>au moins une fois par an</strong>, conformément aux articles du 16bis2 au 16bis10 de la loi précitée</li>
+      <li><span class="d">—</span>Elle élit parmi ses membres son président pour en diriger les travaux et désigne un secrétaire pour dresser le procès-verbal de la réunion</li>
+      <li><span class="d">—</span>Il n'est pas permis au syndic ou son adjoint de <strong>présider la séance</strong> de l'assemblée soit directement ou par son représentant</li>
+      <li><span class="d">—</span>L'assemblée générale extraordinaire peut être tenue à la demande du syndic ou <strong>1/3 des copropriétaires</strong> (art 16bis3 de la loi)</li>
+      <li><span class="d">—</span>L'assemblée générale prend des décisions à exécuter par le syndic ou, le cas échéant, le conseil syndical</li>
+    </ul>
+    <div class="art-sub" style="margin-top:0">L'assemblée générale est chargée de :</div>
+    <div class="grid2">
+      <ul class="r">
+        <li><span class="d">—</span>La prise de décisions assurant la sécurité, la maintenance, la conservation et la jouissance de l'immeuble</li>
+        <li><span class="d">—</span>La gestion des parties communes en vue de la sécurité des usagers</li>
+        <li><span class="d">—</span>La désignation, la révocation et la rémunération du syndic et de son adjoint</li>
+        <li><span class="d">—</span>La désignation du conseil syndical, s'il y a lieu</li>
+        <li><span class="d">—</span>L'autorisation du syndic ou des tiers d'ester en justice</li>
+      </ul>
+      <ul class="r">
+        <li><span class="d">—</span>L'octroi au syndic ou aux tiers le mandat de prendre certaines mesures</li>
+        <li><span class="d">—</span>L'approbation du budget du syndicat, la fixation des charges et le plafond des dépenses</li>
+        <li><span class="d">—</span>L'examen et l'approbation des comptes présentés par le syndic</li>
+        <li><span class="d">—</span>L'approbation du montant des charges et leur répartition</li>
+        <li><span class="d">—</span>Généralement toutes questions intéressant la copropriété</li>
+      </ul>
+    </div>
+  </div>
+
+  <span class="section-label" style="margin-top:24px;display:block">Section III · Le syndic</span>
+  <div class="card">
+    <div class="art-label">Article 22 — Attributions du syndic</div>
+    <div class="grid2">
+      <ul class="r">
+        <li><span class="d">—</span>L'exécution des dispositions du règlement de copropriété</li>
+        <li><span class="d">—</span>La préparation de l'ordre du jour des réunions de l'assemblée générale</li>
+        <li><span class="d">—</span>La concrétisation des décisions de l'assemblée générale</li>
+        <li><span class="d">—</span>Veiller au bon usage des parties communes : entretien, garde des entrées et équipements communs</li>
+        <li><span class="d">—</span>Les réparations urgentes</li>
+        <li><span class="d">—</span>La préparation du budget prévisionnel du syndicat en vue de son examen par l'assemblée générale</li>
+        <li><span class="d">—</span>L'établissement régulier du budget et la tenue d'une comptabilité faisant apparaître la situation de la trésorerie</li>
+      </ul>
+      <ul class="r">
+        <li><span class="d">—</span>Le recouvrement des charges des copropriétaires contre récépissé</li>
+        <li><span class="d">—</span>Aviser les copropriétaires de la situation de la trésorerie du syndicat <strong>tous les trois mois</strong></li>
+        <li><span class="d">—</span>La tenue des archives et des registres relatifs à l'immeuble et au syndicat</li>
+        <li><span class="d">—</span>Faciliter à tous les copropriétaires l'accès à ces documents avant la tenue de l'assemblée générale</li>
+        <li><span class="d">—</span>Entreprendre des démarches administratives qui lui sont reconnues et celles qui lui sont déléguées</li>
+        <li><span class="d">—</span>Représenter le syndicat en justice sur ordre spécial de l'assemblée générale</li>
+      </ul>
+    </div>
+  </div>
+
+  <div class="card">
+    <div class="art-label">Article 23 — Passation des pouvoirs</div>
+    <p class="body-text">À l'expiration de sa mission, le syndic sortant, ou son adjoint, est tenu, dans un délai maximum de <strong>15 jours</strong> à partir de la nomination du nouveau syndic, de remettre à celui-ci tous les documents, archives, registres, la situation de la trésorerie et tous les biens du syndicat y compris les liquidités.</p>
+    <div class="note" style="margin-top:12px"><strong>Fait à Casablanca, le 22 Avril 2025.</strong></div>
+  </div>
+</div>
+
 <div class="divider"></div>
-<div style="text-align:center;padding:16px 0">
+
+<!-- BUREAU DE L'ASSOCIATION (ADDENDUM MISSIMI LIVING) -->
+<div style="margin-bottom:40px">
+  <div style="display:flex;align-items:center;gap:12px;margin-bottom:12px">
+    <div style="width:24px;height:1px;background:var(--gold)"></div>
+    <span style="font-size:10px;letter-spacing:.25em;text-transform:uppercase;color:var(--gold)">Gouvernance Missimi Living</span>
+  </div>
+  <h2 style="font-family:'Cormorant Garamond',serif;font-size:clamp(24px,3.5vw,38px);font-weight:300;line-height:1.1;margin-bottom:6px">Bureau de <em style="font-style:italic;color:var(--gold)">l'Association</em></h2>
+  <p style="font-family:'Noto Kufi Arabic',sans-serif;font-size:15px;color:var(--muted);direction:rtl;margin-bottom:28px;font-weight:300">مكتب الجمعية</p>
+
+  <div class="grid3">
+    <div class="role-card pres">
+      <div class="role-icon">👑</div>
+      <div class="role-name">Président(e)</div>
+      <p class="role-desc">Représente l'association, préside les assemblées générales et coordonne les actions collectives.</p>
+    </div>
+    <div class="role-card">
+      <div class="role-icon">🤝</div>
+      <div class="role-name">Vice-Président(e)</div>
+      <p class="role-desc">Assiste le(la) Président(e) et assure son intérim en cas d'absence ou d'empêchement.</p>
+    </div>
+    <div class="role-card">
+      <div class="role-icon">📋</div>
+      <div class="role-name">Secrétaire</div>
+      <p class="role-desc">Rédige les procès-verbaux, gère la correspondance et assure les archives de l'association.</p>
+    </div>
+    <div class="role-card">
+      <div class="role-icon">📝</div>
+      <div class="role-name">Vice-Secrétaire</div>
+      <p class="role-desc">Seconde le(la) Secrétaire dans ses missions et assure la continuité en cas d'absence.</p>
+    </div>
+    <div class="role-card">
+      <div class="role-icon">💰</div>
+      <div class="role-name">Trésorier(ère)</div>
+      <p class="role-desc">Gère les finances, tient la comptabilité et présente les comptes à l'assemblée générale.</p>
+    </div>
+    <div class="role-card">
+      <div class="role-icon">🏦</div>
+      <div class="role-name">Vice-Trésorier(ère)</div>
+      <p class="role-desc">Assiste le(la) Trésorier(ère) dans la gestion financière et assure son remplacement si nécessaire.</p>
+    </div>
+  </div>
+</div>
+
+<div class="divider"></div>
+
+<div style="text-align:center;padding:16px 0;display:flex;justify-content:center;gap:12px;flex-wrap:wrap">
   <a href="syndic-v3.html" class="btn-g">Soumettre une réclamation →</a>
-  <a href="reglement-ar.html" class="btn-o" style="margin-left:12px">النسخة العربية 🇲🇦</a>
-  <a href="association.html" class="btn-o" style="margin-left:12px">L'Association</a>
-</div></div>
+  <a href="reglement-ar.html" class="btn-o">النسخة العربية 🇲🇦</a>
+  <a href="association.html" class="btn-o">L'Association</a>
+</div>
+
+</div><!-- end .main -->
+
 <footer>
   <div class="ftl">MISSIMI <span>LIVING</span></div>
   <div class="ftc">© 2026 Missimi Living · Casablanca</div>
@@ -167,6 +643,12 @@ footer{background:var(--navy);padding:32px 60px;display:flex;align-items:center;
     <a href="syndic-v3.html">Espace Résident</a>
   </div>
 </footer>
+
+<div style="position:fixed;bottom:28px;left:28px;z-index:200;display:flex;gap:8px">
+  <button style="padding:9px 18px;border-radius:20px;font-size:12px;font-weight:600;cursor:pointer;border:none;background:rgba(255,255,255,.15);color:white;backdrop-filter:blur(8px);font-family:'DM Sans',sans-serif">Français ✓</button>
+  <button style="padding:9px 18px;border-radius:20px;font-size:12px;font-weight:600;cursor:pointer;border:none;background:var(--gold);color:var(--navy);font-family:'Noto Kufi Arabic',sans-serif" onclick="location.href='reglement-ar.html'">العربية 🇲🇦</button>
+</div>
+
 <script>
 function toggleMenu(){
   const l=document.getElementById('navLinks'),b=document.getElementById('burger');
@@ -178,10 +660,6 @@ document.querySelectorAll('#navLinks a').forEach(a=>a.addEventListener('click',(
   const b=document.getElementById('burger');b.classList.remove('open');b.textContent='☰';
 }));
 </script>
-<div style="position:fixed;bottom:28px;left:28px;z-index:200;display:flex;gap:8px">
-  <button style="padding:9px 18px;border-radius:20px;font-size:12px;font-weight:600;cursor:pointer;border:none;background:rgba(255,255,255,.15);color:white;backdrop-filter:blur(8px);font-family:'DM Sans',sans-serif">Français ✓</button>
-  <button style="padding:9px 18px;border-radius:20px;font-size:12px;font-weight:600;cursor:pointer;border:none;background:var(--gold);color:var(--navy);font-family:'Noto Kufi Arabic',sans-serif" onclick="location.href='reglement-ar.html'">العربية 🇲🇦</button>
-</div>
 <script src="music.js"></script>
 </body>
 </html>

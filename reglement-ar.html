@@ -3,302 +3,690 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>النظام الداخلي — ميسيمي ليفينج</title>
-<link href="https://fonts.googleapis.com/css2?family=Noto+Kufi+Arabic:wght@300;400;500;600;700&family=Noto+Naskh+Arabic:wght@400;500;600&display=swap" rel="stylesheet">
+<title>نظام الملكية المشتركة — ميسيمي ليفينج</title>
 <style>
 :root{--gold:#b8975a;--gold-light:#d4b483;--navy:#0d1b2a;--cream:#faf8f4;--warm:#f5f0e8;--border:#e3ddd4;--text:#1a1208;--muted:#6b5f4e;--radius:4px;--radius-md:8px;--radius-lg:16px;}
 *,*::before,*::after{margin:0;padding:0;box-sizing:border-box;}html{scroll-behavior:smooth;}
-body{font-family:"Noto Naskh Arabic",serif;background:var(--cream);color:var(--text);direction:rtl;}
-::-webkit-scrollbar{width:3px;}::-webkit-scrollbar-thumb{background:var(--gold);}
-nav{position:fixed;top:0;left:0;right:0;z-index:100;padding:14px 60px;background:rgba(13,27,42,.97);backdrop-filter:blur(20px);box-shadow:0 1px 0 rgba(184,151,90,.2);display:flex;align-items:center;justify-content:space-between;direction:rtl;}
+body{font-family:"Noto Kufi Arabic","DM Sans",sans-serif;background:var(--cream);color:var(--text);direction:rtl;}
+
+/* NAV */
+nav{position:fixed;top:0;left:0;right:0;z-index:100;padding:14px 60px;background:rgba(13,27,42,.97);backdrop-filter:blur(20px);box-shadow:0 1px 0 rgba(184,151,90,.2);display:flex;align-items:center;justify-content:space-between;flex-direction:row-reverse;}
 .nav-logo{display:flex;flex-direction:column;line-height:1;text-decoration:none;}
-.nl-main{font-family:"Noto Kufi Arabic",sans-serif;font-size:18px;font-weight:600;color:white;}
-.nl-sub{font-size:9px;color:var(--gold);margin-top:2px;font-family:"Noto Kufi Arabic",sans-serif;}
-.nav-links{display:flex;gap:20px;align-items:center;flex-direction:row-reverse;}
-.nav-links a{font-size:12px;font-weight:500;color:rgba(255,255,255,.6);text-decoration:none;transition:color .2s;font-family:"Noto Kufi Arabic",sans-serif;}
+.nl-main{font-family:"Cormorant Garamond",serif;font-size:20px;font-weight:500;color:white;letter-spacing:.12em;}
+.nl-sub{font-size:9px;letter-spacing:.15em;color:var(--gold);text-transform:uppercase;margin-top:2px;direction:ltr;}
+.nav-links{display:flex;gap:22px;align-items:center;flex-direction:row-reverse;}
+.nav-links a{font-size:12px;font-weight:500;color:rgba(255,255,255,.6);text-decoration:none;transition:color .2s;}
 .nav-links a:hover,.nav-links a.active{color:var(--gold);}
-.nav-cta{background:var(--gold)!important;color:var(--navy)!important;padding:8px 14px;border-radius:var(--radius);}
+.nav-cta{background:var(--gold)!important;color:var(--navy)!important;padding:8px 16px;border-radius:var(--radius);}
 .burger{display:none;background:none;border:1px solid rgba(255,255,255,.3);color:white;font-size:16px;padding:5px 10px;border-radius:4px;cursor:pointer;}
+
+/* HERO */
 .page-hero{background:var(--navy);padding:120px 60px 64px;position:relative;overflow:hidden;}
 .ph-pattern{position:absolute;inset:0;background-image:repeating-linear-gradient(45deg,transparent,transparent 40px,rgba(184,151,90,.03) 40px,rgba(184,151,90,.03) 80px);}
 .ph-glow{position:absolute;top:0;left:0;width:400px;height:300px;background:radial-gradient(ellipse,rgba(184,151,90,.1),transparent 70%);}
-.ph-content{position:relative;z-index:2;}
-.ph-eyebrow{display:flex;align-items:center;gap:14px;margin-bottom:16px;flex-direction:row-reverse;justify-content:flex-end;}
+.ph-content{position:relative;z-index:2;text-align:right;}
+.ph-eyebrow{display:flex;align-items:center;gap:14px;margin-bottom:16px;justify-content:flex-end;}
 .pe-line{width:28px;height:1px;background:var(--gold);}
-.pe-text{font-size:11px;color:var(--gold);font-weight:500;font-family:"Noto Kufi Arabic",sans-serif;}
-.ph-title{font-family:"Noto Kufi Arabic",sans-serif;font-size:clamp(34px,5vw,58px);font-weight:300;color:white;line-height:1.35;margin-bottom:8px;}
+.pe-text{font-size:10px;letter-spacing:.15em;color:var(--gold);font-weight:500;}
+.ph-title{font-family:"Noto Kufi Arabic",sans-serif;font-size:clamp(32px,5vw,56px);font-weight:400;color:white;line-height:1.2;margin-bottom:8px;}
 .ph-title em{font-style:normal;color:var(--gold);}
-.ph-sub-fr{font-size:13px;color:rgba(255,255,255,.3);direction:ltr;text-align:right;margin:8px 0;font-family:sans-serif;}
-.ph-sub{font-size:15px;color:rgba(255,255,255,.55);max-width:640px;line-height:2;}
+.ph-sub{font-size:14px;color:rgba(255,255,255,.5);max-width:620px;line-height:2;font-weight:300;margin-right:0;margin-left:auto;}
+.ph-badge{display:inline-flex;align-items:center;gap:10px;background:rgba(184,151,90,.12);border:1px solid rgba(184,151,90,.3);border-radius:20px;padding:6px 18px;margin-top:20px;flex-wrap:wrap;justify-content:flex-end;}
+.ph-badge span{font-size:11px;color:var(--gold);}
+.ph-badge .sep{opacity:.3;}
+
+/* MAIN */
 .main{padding:60px 60px;max-width:1100px;margin:0 auto;}
-.card{background:white;border:1px solid var(--border);border-radius:var(--radius-lg);padding:24px;transition:all .2s;}
-.card:hover{border-color:var(--gold);box-shadow:0 4px 20px rgba(184,151,90,.08);}
-.card-dark{background:var(--navy);border:1px solid rgba(184,151,90,.3);border-radius:var(--radius-lg);padding:24px;}
+
+/* CHAPITRES */
+.chapter{margin-bottom:52px;}
+.chapter-header{display:flex;align-items:center;gap:16px;margin-bottom:24px;padding-bottom:14px;border-bottom:1px solid var(--border);flex-direction:row-reverse;justify-content:flex-end;}
+.ch-num{font-size:10px;letter-spacing:.15em;color:var(--gold);white-space:nowrap;font-weight:700;}
+.ch-title{font-family:"Noto Kufi Arabic",sans-serif;font-size:clamp(18px,3vw,26px);font-weight:500;color:var(--text);}
+.ch-title em{font-style:normal;color:var(--gold);}
+.section-label{font-size:11px;color:var(--muted);margin-bottom:14px;padding-right:2px;font-style:italic;display:block;text-align:right;}
+
+/* CARDS */
+.card{background:white;border:1px solid var(--border);border-radius:var(--radius-lg);padding:24px;transition:all .2s;margin-bottom:12px;}
+.card:last-child{margin-bottom:0;}
+.card:hover{border-color:rgba(184,151,90,.4);box-shadow:0 4px 20px rgba(184,151,90,.08);}
+.card-dark{background:var(--navy);border:1px solid rgba(184,151,90,.25);border-radius:var(--radius-lg);padding:24px;margin-bottom:12px;}
+.card-gold{background:linear-gradient(135deg,rgba(184,151,90,.07),rgba(184,151,90,.02));border:1px solid rgba(184,151,90,.28);border-radius:var(--radius-lg);padding:24px;margin-bottom:12px;}
+
+/* LABELS */
+.art-label{font-size:11px;color:var(--gold);margin-bottom:8px;font-weight:700;}
+.art-sub{font-size:13px;font-weight:700;color:var(--text);margin-top:18px;margin-bottom:10px;border-right:3px solid var(--gold);padding-right:10px;}
+
+/* TEXTES */
+.body-text{font-size:13.5px;color:var(--muted);line-height:2;}
+.official-quote{font-size:13px;color:var(--muted);line-height:2;font-style:italic;border-right:2px solid rgba(184,151,90,.45);padding-right:16px;margin-bottom:12px;}
+.note{background:rgba(184,151,90,.06);border:1px solid rgba(184,151,90,.2);border-radius:var(--radius-md);padding:12px 16px;font-size:13px;color:var(--muted);line-height:1.85;margin-top:12px;}
+.note strong{color:var(--text);}
+
+/* GRIDS */
 .grid2{display:grid;grid-template-columns:1fr 1fr;gap:16px;}
-.divider{height:1px;background:var(--border);margin:40px 0;}
-.gl{font-size:10px;color:var(--gold);margin-bottom:8px;font-family:"Noto Kufi Arabic",sans-serif;font-weight:600;letter-spacing:.05em;}
-.art-title{font-size:15px;font-weight:600;margin-bottom:12px;font-family:"Noto Kufi Arabic",sans-serif;}
-.art-list{list-style:none;display:flex;flex-direction:column;gap:7px;}
-.art-list li{font-size:13px;color:var(--muted);padding-right:18px;position:relative;line-height:1.75;}
-.art-list li::before{content:"—";position:absolute;right:0;color:var(--gold);}
-.art-list li strong{color:var(--text);font-weight:600;}
-.art-list-dark li{color:rgba(255,255,255,.65);}
-.art-list-dark li strong{color:white;}
-.preambule-box{background:var(--navy);border-radius:var(--radius-lg);padding:28px 32px;margin-bottom:32px;}
-.btn-g{background:var(--gold);color:var(--navy);padding:12px 24px;border-radius:var(--radius);font-size:13px;font-weight:600;text-decoration:none;display:inline-flex;align-items:center;gap:8px;transition:all .2s;font-family:"Noto Kufi Arabic",sans-serif;}
+.grid3{display:grid;grid-template-columns:repeat(3,1fr);gap:16px;}
+
+/* LISTES */
+ul.r{list-style:none;display:flex;flex-direction:column;gap:8px;}
+ul.r li{font-size:13px;color:var(--muted);padding-right:20px;position:relative;line-height:1.85;}
+ul.r li .d{position:absolute;right:0;color:var(--gold);font-weight:700;}
+ul.r li strong{color:var(--text);}
+
+/* SOMMAIRE */
+.toc{background:var(--warm);border:1px solid var(--border);border-radius:var(--radius-lg);padding:22px 26px;margin-bottom:44px;}
+.toc-title{font-size:11px;color:var(--gold);margin-bottom:16px;font-weight:700;}
+.toc-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:6px;}
+.toc-item{display:flex;align-items:center;gap:8px;text-decoration:none;padding:7px 10px;border-radius:6px;transition:background .2s;flex-direction:row-reverse;justify-content:flex-end;}
+.toc-item:hover{background:rgba(184,151,90,.08);}
+.toc-num{font-size:10px;color:var(--gold);font-weight:700;min-width:20px;text-align:right;}
+.toc-txt{font-size:12px;color:var(--muted);}
+
+/* DIVIDER */
+.divider{height:1px;background:var(--border);margin:44px 0;}
+
+/* DANGER */
+.danger-box{background:#fff5f5;border:1px solid #fecaca;border-radius:var(--radius-md);padding:16px 20px;margin-top:14px;}
+.danger-title{font-size:11px;font-weight:700;color:#b91c1c;margin-bottom:10px;display:flex;align-items:center;gap:8px;flex-wrap:wrap;flex-direction:row-reverse;justify-content:flex-end;}
+.danger-text{font-size:13px;color:#7f1d1d;line-height:2;margin-bottom:10px;}
+.danger-foot{font-size:12px;color:#991b1b;line-height:1.85;padding:10px 14px;background:rgba(185,28,28,.05);border-radius:6px;}
+.tag-red{background:rgba(185,28,28,.1);border:1px solid rgba(185,28,28,.3);color:#b91c1c;font-size:10px;font-weight:700;padding:2px 10px;border-radius:10px;}
+
+/* BUREAU */
+.role-card{background:white;border:1px solid var(--border);border-radius:var(--radius-lg);padding:20px;transition:all .2s;text-align:center;}
+.role-card:hover{border-color:var(--gold);box-shadow:0 4px 20px rgba(184,151,90,.1);}
+.role-card.pres{border-top:3px solid var(--gold);}
+.role-icon{font-size:30px;margin-bottom:10px;}
+.role-name{font-size:12px;color:var(--gold);margin-bottom:8px;font-weight:700;}
+.role-desc{font-size:13px;color:var(--muted);line-height:1.75;}
+
+/* BOUTONS */
+.btn-g{background:var(--gold);color:var(--navy);padding:12px 26px;border-radius:var(--radius);font-size:12px;font-weight:700;text-decoration:none;display:inline-flex;align-items:center;gap:8px;transition:all .2s;}
 .btn-g:hover{background:var(--gold-light);transform:translateY(-1px);}
-.btn-o{border:1px solid var(--border);color:var(--text);padding:12px 24px;border-radius:var(--radius);font-size:13px;font-weight:500;text-decoration:none;display:inline-flex;align-items:center;gap:8px;transition:all .2s;font-family:"Noto Kufi Arabic",sans-serif;}
+.btn-o{border:1px solid var(--border);color:var(--text);padding:12px 26px;border-radius:var(--radius);font-size:12px;font-weight:500;text-decoration:none;display:inline-flex;align-items:center;gap:8px;transition:all .2s;}
 .btn-o:hover{border-color:var(--gold);color:var(--gold);}
-footer{background:var(--navy);padding:32px 60px;display:flex;align-items:center;justify-content:space-between;margin-top:80px;direction:rtl;}
-.ftl{font-family:"Noto Kufi Arabic",sans-serif;font-size:17px;color:white;font-weight:500;}
+
+/* FOOTER */
+footer{background:var(--navy);padding:32px 60px;display:flex;align-items:center;justify-content:space-between;margin-top:80px;flex-direction:row-reverse;}
+.ftl{font-family:"Cormorant Garamond",serif;font-size:17px;color:white;letter-spacing:.1em;}
 .ftl span{color:var(--gold);}
-.ftc{font-size:11px;color:rgba(255,255,255,.25);font-family:"Noto Kufi Arabic",sans-serif;}
-.ftlinks{display:flex;gap:16px;flex-direction:row-reverse;}
-.ftlinks a{font-size:12px;color:rgba(255,255,255,.35);text-decoration:none;transition:color .2s;font-family:"Noto Kufi Arabic",sans-serif;}
+.ftc{font-size:11px;color:rgba(255,255,255,.25);}
+.ftlinks{display:flex;gap:18px;flex-direction:row-reverse;}
+.ftlinks a{font-size:12px;color:rgba(255,255,255,.35);text-decoration:none;transition:color .2s;}
 .ftlinks a:hover{color:var(--gold);}
-.lang-switch{position:fixed;bottom:28px;right:28px;z-index:200;display:flex;gap:8px;}
-.ls-btn{padding:9px 18px;border-radius:20px;font-size:12px;font-weight:600;cursor:pointer;border:none;transition:all .2s;font-family:"Noto Kufi Arabic",sans-serif;}
-.ls-ar{background:var(--gold);color:var(--navy);}
-.ls-fr{background:rgba(255,255,255,.15);color:white;backdrop-filter:blur(8px);}
-.ls-fr:hover{background:rgba(255,255,255,.25);}
+
+/* MUSIC */
+#muteBtn{position:fixed;bottom:28px;left:28px;z-index:300;height:44px;border-radius:22px;border:1px solid rgba(184,151,90,.4);background:rgba(13,27,42,.88);backdrop-filter:blur(12px);color:white;font-size:15px;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:7px;padding:0 16px;transition:all .3s;box-shadow:0 4px 20px rgba(0,0,0,.3);font-family:"DM Sans",sans-serif;}
+#muteBtn:hover{background:rgba(184,151,90,.18);border-color:#b8975a;transform:translateY(-2px);}
+#muteBtn.playing .music-label{color:#b8975a;}
+@keyframes musicPulse{0%,100%{opacity:1;}50%{opacity:.4;}}
+#muteBtn.playing .music-icon{animation:musicPulse 2s ease-in-out infinite;}
+#muteBtn .music-label{font-size:10px;letter-spacing:.08em;color:rgba(255,255,255,.45);white-space:nowrap;}
+
+/* RESPONSIVE */
 @media(max-width:900px){
   nav{padding:12px 16px;}
   .nav-links{display:none;flex-direction:column;position:fixed;top:0;left:0;right:0;bottom:0;background:rgba(13,27,42,.98);z-index:200;justify-content:center;align-items:center;gap:24px;}
   .nav-links.open{display:flex;}
+  .nav-links a{font-size:15px;}
   .burger{display:block;position:relative;z-index:300;}
   .burger.open{position:fixed;top:12px;left:16px;}
   .page-hero{padding:100px 20px 48px;}
   .main{padding:40px 20px;}
-  .grid2{grid-template-columns:1fr;}
+  .grid2,.grid3,.toc-grid{grid-template-columns:1fr;}
   footer{flex-direction:column;gap:12px;text-align:center;padding:24px 16px;}
   .ftlinks{flex-wrap:wrap;justify-content:center;}
 }
 </style>
+<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,500;0,600;1,300;1,400&family=DM+Sans:wght@300;400;500;600&family=Noto+Kufi+Arabic:wght@300;400;500;600&display=swap" rel="stylesheet">
 </head>
 <body>
 
+<button id="muteBtn" onclick="toggleMusic(event)" title="Chopin — Nocturne Op.9">
+  <span class="music-icon">🔇</span>
+  <span class="music-label">Chopin Op.9</span>
+</button>
+
+<!-- NAV -->
 <nav>
   <a href="index.html" class="nav-logo">
-    <span class="nl-main">ميسيمي ليفينج</span>
-    <span class="nl-sub">Missimi Living · Casablanca</span>
+    <span class="nl-main">MISSIMI</span>
+    <span class="nl-sub">Living · Casablanca</span>
   </a>
   <div class="nav-links" id="navLinks">
     <a href="index.html">الرئيسية</a>
     <a href="projet.html">المشروع</a>
     <a href="association.html">الجمعية</a>
-    <a href="association-ar.html">النظام الأساسي</a>
-    <a href="reglement-ar.html" class="active">النظام الداخلي</a>
+    <a href="reglement-ar.html" class="active">نظام الملكية</a>
     <a href="contact.html">اتصل بنا</a>
-    <a href="syndic-v3.html" class="nav-cta">فضاء السكان</a>
+    <a href="syndic-v3.html" class="nav-cta">فضاء الساكن</a>
   </div>
   <button class="burger" id="burger" onclick="toggleMenu()">&#9776;</button>
 </nav>
 
+<!-- HERO -->
 <div class="page-hero">
-  <div class="ph-pattern"></div>
-  <div class="ph-glow"></div>
+  <div class="ph-pattern"></div><div class="ph-glow"></div>
   <div class="ph-content">
-    <div class="ph-eyebrow"><div class="pe-line"></div><span class="pe-text">جمعية سكان ميسيمي ليفينج</span></div>
-    <h1 class="ph-title">النظام الداخلي<br><em>للمجمع السكني</em></h1>
-    <div class="ph-sub-fr">Règlement Intérieur — Résidence Missimi Living</div>
-    <p class="ph-sub">قواعد حسن الجوار والتعايش المشترك داخل مجمع ميسيمي ليفينج. نلتزم بها جميعًا من أجل إطار عيش هانئ ومريح للجميع.</p>
+    <div class="ph-eyebrow"><div class="pe-line"></div><span class="pe-text">مجموعة ميسيمي — الدار البيضاء</span></div>
+    <h1 class="ph-title">نظام <em>الملكية المشتركة</em></h1>
+    <p class="ph-sub">الوثيقة الرسمية المنظِّمة لحقوق والتزامات الملاك وقواعد العيش المشترك داخل مجموعة ميسيمي ليفينج، وفق القانون 18.00 والقانون 106-12.</p>
+    <div class="ph-badge">
+      <span>📄 المرجع: 59508/64</span>
+      <span class="sep">|</span>
+      <span>العقار: ميسيمي-15</span>
+      <span class="sep">|</span>
+      <span>حُرِّر بالدار البيضاء في 22 أبريل 2025</span>
+    </div>
   </div>
 </div>
 
 <div class="main">
 
-  <!-- PRÉAMBULE -->
-  <div class="preambule-box">
-    <div style="font-size:10px;letter-spacing:.1em;text-transform:uppercase;color:var(--gold);margin-bottom:10px;font-family:'Noto Kufi Arabic',sans-serif;font-weight:600">تمهيد</div>
-    <p style="font-size:14px;color:rgba(255,255,255,.75);line-height:2.1">يهدف هذا النظام الداخلي إلى ضمان الاشتغال الجيد للمجمع السكني ميسيمي ليفينج وضمان راحة وطمأنينة جميع ساكنيه. يسري على <strong style="color:white">جميع السكان — ملاكًا ومستأجرين وزوارهم</strong>. كل ساكن يلتزم باحترامه وإلزام محيطه به.</p>
+<!-- SOMMAIRE -->
+<div class="toc">
+  <div class="toc-title">📋 الفهرس — 9 فصول · 23 مادة</div>
+  <div class="toc-grid">
+    <a href="#ch1" class="toc-item"><span class="toc-num">I</span><span class="toc-txt">الموضوع</span></a>
+    <a href="#ch2" class="toc-item"><span class="toc-num">II</span><span class="toc-txt">الحقوق في الأجزاء المشتركة</span></a>
+    <a href="#ch3" class="toc-item"><span class="toc-num">III</span><span class="toc-txt">التفويت – البراءة</span></a>
+    <a href="#ch4" class="toc-item"><span class="toc-num">IV</span><span class="toc-txt">الأجزاء الخاصة والمشتركة</span></a>
+    <a href="#ch5" class="toc-item"><span class="toc-num">V</span><span class="toc-txt">الحقوق والالتزامات</span></a>
+    <a href="#ch6" class="toc-item"><span class="toc-num">VI</span><span class="toc-txt">الموظفون والأعباء</span></a>
+    <a href="#ch7" class="toc-item"><span class="toc-num">VII</span><span class="toc-txt">حسابات الأعباء</span></a>
+    <a href="#ch8" class="toc-item"><span class="toc-num">VIII</span><span class="toc-txt">التأمينات</span></a>
+    <a href="#ch9" class="toc-item"><span class="toc-num">IX</span><span class="toc-txt">إدارة الأجزاء المشتركة</span></a>
+  </div>
+</div>
+
+<!-- ══════════════════════════════════
+     الفصل الأول — الموضوع
+══════════════════════════════════ -->
+<div class="chapter" id="ch1">
+  <div class="chapter-header">
+    <span class="ch-num">الفصل الأول</span>
+    <h2 class="ch-title"><em>الموضوع</em></h2>
+  </div>
+  <div class="card">
+    <div class="art-label">المادة 1</div>
+    <p class="body-text" style="margin-bottom:12px">يهدف هذا النظام إلى تحديد شروط ممارسة حقوق والتزامات الملاك المشتركين المنبثقة عن <strong>القانون 18.00</strong> المتعلق بنظام الملكية المشتركة للعقارات المبنية، كما تم تعديله وتتميمه بـ<strong>القانون 106-12</strong>، ولا سيما:</p>
+    <ul class="r">
+      <li><span class="d">—</span>تنظيم إدارة العمارة</li>
+      <li><span class="d">—</span>تحديد شروط تحسين تسيير وصيانة هذه العمارة وتأمينها وترميمها</li>
+    </ul>
+    <div class="note">يشكّل هذا النظام والتعديلات التي قد تطرأ عليه القاعدة المشتركة التي يتعين على جميع الملاك المشتركين الالتزام بها.</div>
+  </div>
+  <div class="card">
+    <div class="art-label">المادة 2</div>
+    <p class="body-text">في جميع العقود الناقلة أو المُقرِّرة لملكية قطعة أو أكثر، يجب الإشارة إلى هذا النظام وأن الملاك الجدد اطلعوا عليه وملزمون بتنفيذه.</p>
+    <p style="font-size:12px;color:var(--gold);margin-top:10px;font-style:italic">يُسلَّم نسخة من هذا النظام موقّعة من طرف المهندس المساح الطبوغرافي إلزامياً لكل مالك مشترك.</p>
+  </div>
+</div>
+
+<!-- ══════════════════════════════════
+     الفصل الثاني — الحقوق في الأجزاء المشتركة
+══════════════════════════════════ -->
+<div class="chapter" id="ch2">
+  <div class="chapter-header">
+    <span class="ch-num">الفصل الثاني</span>
+    <h2 class="ch-title">حقوق الملاك المشتركين في <em>الأجزاء المشتركة</em></h2>
+  </div>
+  <div class="card">
+    <div class="art-label">المادة 3</div>
+    <p class="body-text">يمتلك كل مالك مشترك، إلى جانب ملكيته الخاصة، حقوقاً في الملكية المشتركة على الأجزاء المشتركة وفق <strong>الحصص</strong> المبيّنة في الجدول المرفق بهذا النظام.</p>
+  </div>
+</div>
+
+<!-- ══════════════════════════════════
+     الفصل الثالث — التفويت / البراءة
+══════════════════════════════════ -->
+<div class="chapter" id="ch3">
+  <div class="chapter-header">
+    <span class="ch-num">الفصل الثالث</span>
+    <h2 class="ch-title"><em>التفويت</em> – البراءة</h2>
+  </div>
+  <div class="grid2">
+    <div class="card">
+      <div class="art-label">المادة 4</div>
+      <p class="body-text">تفويت قطع العمارة حر. <strong>غير أنه يمكن إرساء حق الأولوية</strong> وفق أحكام الفصل 39 من القانون 18.00، كما تم تعديله وتتميمه بالقانون 106-12.</p>
+    </div>
+    <div class="card">
+      <div class="art-label">المادة 5</div>
+      <p class="body-text">يلتزم المُفوَّت إليه بمطالبة المُفوِّت، قبل الاقتناء، بـ<strong>براءة جميع الحسابات التقديرية</strong> وحصص أعباء الملكية المشتركة صادرة عن نقابة الملاك المشتركين.</p>
+      <p style="font-size:12.5px;color:var(--muted);margin-top:8px;line-height:1.85">في حالة عدم الحصول عليها، تُطبَّق أحكام الفصلين 42 و43 من القانون المذكور.</p>
+    </div>
+  </div>
+</div>
+
+<!-- ══════════════════════════════════
+     الفصل الرابع — الأجزاء الخاصة والمشتركة
+══════════════════════════════════ -->
+<div class="chapter" id="ch4">
+  <div class="chapter-header">
+    <span class="ch-num">الفصل الرابع</span>
+    <h2 class="ch-title">الأجزاء <em>الخاصة</em> – الأجزاء المشتركة</h2>
   </div>
 
-  <!-- ARTICLES GRID -->
-  <div class="grid2" style="margin-bottom:36px">
-
-    <!-- م 1 -->
-    <div class="card">
-      <div class="gl">المادة الأولى</div>
-      <div class="art-title">الانخراط في الجمعية والاشتراكات</div>
-      <ul class="art-list">
-        <li>لكل ساكن الحق في الانخراط بحرية في الجمعية</li>
-        <li>يُحدد مبلغ الاشتراك السنوي من قبل الجمع العام</li>
-        <li>الأعضاء المنتظمون في الأداء يشاركون في التصويت والقرارات</li>
-        <li>الانخراط مفتوح للملاك والمستأجرين على حد سواء</li>
+  <div class="card">
+    <div class="art-label">المادة 6 — الأجزاء الخاصة</div>
+    <p class="body-text" style="margin-bottom:14px">الأجزاء الخاصة مخصصة للاستعمال الحصري والخاص للملاك المشتركين. وتشمل على الخصوص:</p>
+    <div class="grid2">
+      <ul class="r">
+        <li><span class="d">—</span>الأقسام الداخلية مع أبوابها</li>
+        <li><span class="d">—</span>البلاط والأرضيات وعموم تغطيات الأرضية والسقف</li>
+        <li><span class="d">—</span>الأبواب الرئيسية والنوافذ والمصاريع والمظلات وأطر النوافذ</li>
+        <li><span class="d">—</span>تجهيزات المطابخ والخزائن والأرفف</li>
+        <li><span class="d">—</span>أدراج الشُّرَف والبلكونات والتراسات واللوجيا</li>
+      </ul>
+      <ul class="r">
+        <li><span class="d">—</span>المنشآت الصحية: دورات المياه والحمامات والمراحيض</li>
+        <li><span class="d">—</span>منشآت الماء الساخن والتكييف</li>
+        <li><span class="d">—</span>الأقفال والحنفيات والملحقات التابعة لها</li>
+        <li><span class="d">—</span>كل ما يتعلق بالديكور: المرايا والدهان والنجارة…</li>
+        <li><span class="d">—</span>وبصفة عامة كل ما يوجد داخل الشقق والمحلات</li>
       </ul>
     </div>
+  </div>
 
-    <!-- م 2 -->
-    <div class="card">
-      <div class="gl">المادة الثانية</div>
-      <div class="art-title">الأجزاء المشتركة</div>
-      <ul class="art-list">
-        <li>المحافظة على النظافة في جميع الفضاءات المشتركة</li>
-        <li>عدم تخزين الأشياء في الممرات والبهو</li>
-        <li>احترام مواقيت استخدام التجهيزات المشتركة</li>
-        <li>الإبلاغ عن أي تلف عبر منصة ريدتك</li>
+  <div class="card">
+    <div class="art-label">المادة 7 — الأجزاء المشتركة</div>
+    <p class="body-text" style="margin-bottom:14px">الأجزاء المشتركة مخصصة للاستعمال أو المنفعة المشتركة لجميع الملاك. وتشمل على الخصوص:</p>
+    <div class="grid2">
+      <ul class="r">
+        <li><span class="d">✓</span>الأرضية (ما عدا الحالات المنصوص عليها)</li>
+        <li><span class="d">✓</span>القبو إذا لم يكن مخصصاً للاستعمال الخاص</li>
+        <li><span class="d">✓</span>الأسطح والشرفات المخصصة للاستعمال المشترك</li>
+        <li><span class="d">✓</span>جميع القنوات الباطنية خارج الأجزاء الخاصة</li>
+        <li><span class="d">✓</span>هيكل البناية: الأساسات والهيكل الخرساني والأعمدة</li>
+        <li><span class="d">✓</span>المعدات المشتركة لصيانة الفضاءات الحرة</li>
+        <li><span class="d">✓</span>الواجهات: الزخارف والبرجولات والهيكل وأسقف البلكونات</li>
+        <li><span class="d">✓</span>التهوية: القنوات ومداخن الدخان وأنابيب التهوية</li>
+        <li><span class="d">✓</span>المساحات الخضراء والرواق وسلالم العمارات والأروقة</li>
+        <li><span class="d">✓</span>الممرات والساحات والمسالك وأماكن العبور المشتركة</li>
+      </ul>
+      <ul class="r">
+        <li><span class="d">✓</span>القنوات: الأعمدة الصاعدة والنازلة للماء والكهرباء</li>
+        <li><span class="d">✓</span>العدادات العامة للماء والكهرباء والتجهيزات المشتركة</li>
+        <li><span class="d">✓</span>منشآت الإنارة داخل العمارة والممرات الخارجية</li>
+        <li><span class="d">✓</span>شبكة توزيع التلفزيون: الهوائي الجماعي والقنوات</li>
+        <li><span class="d">✓</span>محلات القمامة ومستلزماتها</li>
+        <li><span class="d">✓</span>أجهزة ومنشآت الوقاية من الحرائق</li>
+        <li><span class="d">✓</span>مكتب المدير والحارس والملحقات والمحلات المشتركة</li>
+        <li><span class="d">✓</span>منشأة الهاتف</li>
       </ul>
     </div>
+  </div>
 
-    <!-- م 3 -->
-    <div class="card">
-      <div class="gl">المادة الثالثة</div>
-      <div class="art-title">الهدوء ومنع الإزعاج</div>
-      <ul class="art-list">
-        <li><strong>الصمت إلزامي</strong> من الساعة 22:00 إلى 8:00 في أيام العمل</li>
-        <li>الصمت من الساعة 23:00 إلى 9:00 في عطل نهاية الأسبوع</li>
-        <li>تجنب الضوضاء المفرطة في جميع الأوقات</li>
-        <li>الأشغال مسموح بها من 9:00-12:00 و15:00-18:00 في أيام العمل</li>
-      </ul>
-    </div>
+  <div class="card">
+    <div class="art-label">المادة 8 — الجدران الفاصلة</div>
+    <p class="body-text">تُعدّ فاصلةً مشتركةً الجدرانُ والأقسامُ غير الحاملة الفاصلة بين قطعتين خاصتين متجاورتين (الفصل 4 مكرر من القانون المذكور). ويؤكد المالك أن الجدران والأقسام الفاصلة بين القطع الخاصة المتجاورة المتوقعة في العمارة موضوع هذا النظام <strong>ليست جدراناً حاملة</strong>.</p>
+  </div>
+</div>
 
-    <!-- م 4 -->
-    <div class="card">
-      <div class="gl">المادة الرابعة</div>
-      <div class="art-title">الأمن والولوج</div>
-      <ul class="art-list">
-        <li>عدم السماح بدخول أشخاص مجهولين دون تعريف</li>
-        <li>إغلاق أبواب الدخول بشكل منتظم</li>
-        <li>الإبلاغ عن أي نشاط مشبوه لعناصر الأمن</li>
-        <li>احترام تعليمات الإخلاء في حالات الطوارئ</li>
-      </ul>
-    </div>
+<!-- ══════════════════════════════════
+     الفصل الخامس — الحقوق والالتزامات
+══════════════════════════════════ -->
+<div class="chapter" id="ch5">
+  <div class="chapter-header">
+    <span class="ch-num">الفصل الخامس</span>
+    <h2 class="ch-title">حقوق والتزامات الملاك المشتركين <em>والساكنين</em></h2>
+  </div>
 
-    <!-- م 5 -->
-    <div class="card">
-      <div class="gl">المادة الخامسة</div>
-      <div class="art-title">موقف السيارات تحت الأرض</div>
-      <ul class="art-list">
-        <li>الوقوف فقط في المكان المخصص لكل ساكن</li>
-        <li><strong>السرعة محدودة بـ 10 كلم/ساعة</strong> داخل الموقف</li>
-        <li>حظر تخزين المواد القابلة للاشتعال</li>
-        <li>إغلاق حاجز الدخول بعد المرور</li>
-      </ul>
-    </div>
+  <!-- المادة 9 -->
+  <div class="card">
+    <div class="art-label">المادة 9 — استعمال الأجزاء المشتركة</div>
+    <ul class="r">
+      <li><span class="d">—</span>يحق لكل مالك مشترك استعمال الأجزاء المشتركة بحرية، بشرط <strong>احترام غرضها</strong> وعدم المساس بحقوق الملاك الآخرين</li>
+      <li><span class="d">—</span>يجب أن تبقى جميع الأجزاء المشتركة — الممرات والردهات والمداخل والأدراج — <strong>خالية في جميع الأوقات</strong></li>
+      <li><span class="d">—</span>يُحظر <strong>إيداع أو تخزين أو ترك أي شيء</strong> في الأجزاء المشتركة</li>
+      <li><span class="d">—</span>لا يُسمح بأي عمل تنظيف (نفض السجاد، الفراش، الأثاث…) في الأدراج والأروقة والردهات</li>
+      <li><span class="d">—</span>الممرات مخصصة حصراً للمشاة — <strong>يُحظر تماماً دخول أو توقف أي مركبة</strong></li>
+      <li><span class="d">—</span>يتعين على الملاك المشتركين الالتزام بقواعد النظافة والصحة، وتجنب تلويث أو إتلاف الفضاءات الخضراء والحدائق</li>
+      <li><span class="d">—</span>لا يُسمح بتركيب أي هوائي أو طبق لاقط للتلفزيون على واجهات العمارة</li>
+    </ul>
+  </div>
 
-    <!-- م 6 -->
-    <div class="card">
-      <div class="gl">المادة السادسة</div>
-      <div class="art-title">النفايات والبيئة</div>
-      <ul class="art-list">
-        <li>استخدام حاويات الفرز المناسبة</li>
-        <li>عدم إلقاء المهملات خارج المناطق المخصصة لها</li>
-        <li>احترام مواقيت جمع النفايات</li>
-        <li>الحفاظ على المساحات الخضراء والحديقة المركزية</li>
-      </ul>
-    </div>
+  <!-- المادة 10 -->
+  <div class="card">
+    <div class="art-label">المادة 10 — استعمال الأجزاء الخاصة</div>
 
-    <!-- م 7 -->
-    <div class="card">
-      <div class="gl">المادة السابعة</div>
-      <div class="art-title">العلاقة مع السنديك</div>
-      <ul class="art-list">
-        <li>كل شكاية تمر عبر منصة <strong>ريدتك</strong></li>
-        <li>الجمعية تتكفل بالمتابعة الجماعية للمطالب</li>
-        <li>اجتماعات ربعية إلزامية بين السنديك والجمعية</li>
-        <li>عرض الحسابات في كل جمع عام سنوي</li>
-      </ul>
-    </div>
+    <div class="art-sub">أحكام عامة</div>
+    <ul class="r">
+      <li><span class="d">—</span>لكل مالك مشترك الحق في التمتع بمحلاته والتصرف فيها بشرط <strong>عدم الإضرار بحقوق الآخرين</strong></li>
+      <li><span class="d">—</span>كل مالك مشترك مسؤول عن أخطائه وإهماله، وفق أحكام الظهير المشكّل لمدونة الالتزامات والعقود</li>
+    </ul>
 
-    <!-- م 8 — ASCENSEURS -->
-    <div class="card">
-      <div class="gl">المادة الثامنة</div>
-      <div class="art-title">المصاعد</div>
-      <ul class="art-list">
-        <li>المصعد مخصص للأشخاص — <strong>ممنوع الدراجات والسكوتيرات والأمتعة الكبيرة</strong></li>
-        <li>عدم تجاوز <strong>الطاقة الاستيعابية المعلَّقة</strong></li>
-        <li>ممنوع التدخين أو تناول الطعام داخل المصعد</li>
-        <li>في حالة العطل : استخدام الهاتف الداخلي وعدم اقتحام الأبواب</li>
-        <li>منع الأطفال من اللعب وحدهم داخل المصعد</li>
-        <li>كل تلف ناتج عن سوء الاستخدام <strong>يتحمله مرتكبه</strong></li>
-        <li>الإبلاغ الفوري عن أي عطل عبر ريدتك أو الأمن</li>
-      </ul>
-    </div>
+    <div class="art-sub">شروط الإقامة</div>
+    <ul class="r">
+      <li><span class="d">—</span>يتعين على كل ساكن الحرص على ألا تُخلّ <strong>هدوء العمارة</strong> في أي وقت بفعله أو فعل أسرته أو زواره أو الأشخاص الذين يسأل عنهم</li>
+      <li><span class="d">—</span>يُحظر على كل ساكن <strong>إحداث أي ضوضاء مزعجة</strong> للجيران مهما كان نوعها</li>
+      <li><span class="d">—</span>لا يمكن أن تنصبّ الإيجارات بشكل حصري على الأجزاء المشتركة</li>
+    </ul>
 
-    <!-- م 9 — ANIMAUX -->
-    <div class="card" style="grid-column:1/-1">
-      <div class="gl">المادة التاسعة</div>
-      <div class="art-title">الحيوانات الأليفة</div>
-      <ul class="art-list" style="margin-bottom:16px">
-        <li>الحيوانات الأليفة <strong>مسموح بها</strong> في إطار احترام الجيران التام</li>
-        <li>كل حيوان يجب أن يكون <strong>مقيدًا بسلسلة</strong> في جميع الأجزاء المشتركة</li>
-        <li><strong>التقاط الفضلات إلزامي</strong> — رميها في <strong>الحاويات المخصصة</strong> فقط، لا في الحديقة أو الممرات</li>
-        <li><strong>النباح المفرط</strong> المزعج للجيران محظور لا سيما في الليل</li>
-        <li>الحيوانات <strong>ممنوعة من المصعد</strong> دون موافقة المستخدمين الآخرين</li>
-        <li>عند تكرار الشكايات، يحق للسنديك طلب <strong>إزالة الحيوان</strong> من المجمع</li>
-      </ul>
-      <div style="background:#fee2e2;border:1px solid #fecaca;border-radius:var(--radius-md);padding:14px 18px">
-        <div style="font-size:11px;font-weight:700;color:#b91c1c;margin-bottom:10px;display:flex;align-items:center;gap:8px;font-family:'Noto Kufi Arabic',sans-serif;flex-direction:row-reverse;justify-content:flex-end">
-          <span style="background:#b91c1c;color:white;font-size:10px;padding:2px 10px;border-radius:10px;font-family:'Noto Kufi Arabic',sans-serif">المرسوم رقم 2.18.456</span>
-          الكلاب الخطيرة — حظر مطلق 🚫
+    <div class="art-sub">🐾 الحيوانات الأليفة</div>
+    <p class="official-quote">جميع الحيوانات الصاخبة أو المقذرة أو الخطيرة محظورة. غير أنه يُسمح بالقطط والكلاب، لكن تبقى الأضرار والتدميرات التي يمكن أن تسببها على عاتق أصحابها. وعليهم الحرص على أن لا تُخلّ حيواناتهم بهدوء العمارة. ويجب حملها على الأيدي داخل الأجزاء المشتركة.</p>
+    <ul class="r" style="margin-bottom:14px">
+      <li><span class="d">—</span>يجب إبقاء كل حيوان على <strong>مقود</strong> في جميع الأجزاء المشتركة</li>
+      <li><span class="d">—</span><strong>الالتقاط الفوري والإلزامي</strong> للفضلات — توضع حصراً في حاويات النفايات المخصصة، ويُمنع رميها في الحديقة أو الممرات</li>
+      <li><span class="d">—</span><strong>النباح أو الأصوات المفرطة</strong> المزعجة للجيران محظورة، لا سيما ليلاً (22:00–8:00)</li>
+      <li><span class="d">—</span>الحيوانات <strong>ممنوعة من المصعد</strong> إلا بموافقة المستخدمين الحاضرين</li>
+      <li><span class="d">—</span>في حالة شكاوى متكررة، يحق للمدير المطالبة بـ<strong>إخراج الحيوان</strong> من المجموعة السكنية</li>
+    </ul>
+    <div class="danger-box">
+      <div class="danger-title">🚫 الكلاب الخطيرة — حظر مطلق <span class="tag-red">مرسوم رقم 2.18.456</span></div>
+      <p class="danger-text">يُحظر حظراً مطلقاً <strong>اقتناء أو إدخال أو تجوال أي كلب</strong> ينتمي إلى السلالات التالية داخل المجموعة السكنية ميسيمي ليفينج:</p>
+      <div class="grid2" style="gap:8px;margin-bottom:10px">
+        <div style="background:rgba(185,28,28,.06);border-radius:6px;padding:10px 14px">
+          <div style="font-size:11px;font-weight:700;color:#b91c1c;margin-bottom:6px;">الفئة 1 — الهجوم</div>
+          <ul style="list-style:none;display:flex;flex-direction:column;gap:5px">
+            <li style="font-size:12px;color:#7f1d1d;padding-right:14px;position:relative"><span style="position:absolute;right:0;color:#b91c1c">•</span>بيتبول (أمريكان ستافوردشير)</li>
+            <li style="font-size:12px;color:#7f1d1d;padding-right:14px;position:relative"><span style="position:absolute;right:0;color:#b91c1c">•</span>بوربول</li>
+            <li style="font-size:12px;color:#7f1d1d;padding-right:14px;position:relative"><span style="position:absolute;right:0;color:#b91c1c">•</span>توسا إينو</li>
+            <li style="font-size:12px;color:#7f1d1d;padding-right:14px;position:relative"><span style="position:absolute;right:0;color:#b91c1c">•</span>فيلا برازيليرو</li>
+            <li style="font-size:12px;color:#7f1d1d;padding-right:14px;position:relative"><span style="position:absolute;right:0;color:#b91c1c">•</span>دوغ أرجنتيني</li>
+          </ul>
         </div>
-        <p style="font-size:13px;color:#7f1d1d;line-height:1.9;margin-bottom:10px">تطبيقًا لأحكام <strong>المرسوم رقم 2.18.456</strong> المتعلق بالكلاب الخطيرة بالمغرب، <strong>يُحظر حظرًا قاطعًا ومطلقًا</strong> اقتناء أو إدخال أو تنقل أي كلب من الفصائل التالية داخل مجمع ميسيمي ليفينج :</p>
-        <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:10px">
-          <div style="background:rgba(185,28,28,.08);border-radius:6px;padding:10px 14px">
-            <div style="font-size:11px;font-weight:700;color:#b91c1c;margin-bottom:6px;font-family:'Noto Kufi Arabic',sans-serif">الفئة الأولى — هجوم</div>
-            <ul style="list-style:none;display:flex;flex-direction:column;gap:4px">
-              <li style="font-size:12px;color:#7f1d1d;padding-right:14px;position:relative"><span style="position:absolute;right:0;color:#b91c1c">•</span>البيتبول (أمريكان ستافوردشير)</li>
-              <li style="font-size:12px;color:#7f1d1d;padding-right:14px;position:relative"><span style="position:absolute;right:0;color:#b91c1c">•</span>البوربول (Boerboel)</li>
-              <li style="font-size:12px;color:#7f1d1d;padding-right:14px;position:relative"><span style="position:absolute;right:0;color:#b91c1c">•</span>توسا إينو (Tosa Inu)</li>
-              <li style="font-size:12px;color:#7f1d1d;padding-right:14px;position:relative"><span style="position:absolute;right:0;color:#b91c1c">•</span>فيلا برازيليرو (Fila Brasileiro)</li>
-              <li style="font-size:12px;color:#7f1d1d;padding-right:14px;position:relative"><span style="position:absolute;right:0;color:#b91c1c">•</span>الدوغ الأرجنتيني</li>
-            </ul>
-          </div>
-          <div style="background:rgba(185,28,28,.08);border-radius:6px;padding:10px 14px">
-            <div style="font-size:11px;font-weight:700;color:#b91c1c;margin-bottom:6px;font-family:'Noto Kufi Arabic',sans-serif">الفئة الثانية — حراسة ودفاع</div>
-            <ul style="list-style:none;display:flex;flex-direction:column;gap:4px">
-              <li style="font-size:12px;color:#7f1d1d;padding-right:14px;position:relative"><span style="position:absolute;right:0;color:#b91c1c">•</span>الروتفايلر (Rottweiler)</li>
-              <li style="font-size:12px;color:#7f1d1d;padding-right:14px;position:relative"><span style="position:absolute;right:0;color:#b91c1c">•</span>الدوبرمان (Dobermann)</li>
-              <li style="font-size:12px;color:#7f1d1d;padding-right:14px;position:relative"><span style="position:absolute;right:0;color:#b91c1c">•</span>ماستيف — دوغ دو بوردو</li>
-              <li style="font-size:12px;color:#7f1d1d;padding-right:14px;position:relative"><span style="position:absolute;right:0;color:#b91c1c">•</span>أمريكان ستافوردشير تيرير</li>
-              <li style="font-size:12px;color:#7f1d1d;padding-right:14px;position:relative"><span style="position:absolute;right:0;color:#b91c1c">•</span>وكل كلب يُبدي عدوانية موثقة</li>
-            </ul>
-          </div>
-        </div>
-        <div style="font-size:12px;color:#991b1b;line-height:1.8;padding:10px 14px;background:rgba(185,28,28,.06);border-radius:6px;font-family:'Noto Kufi Arabic',sans-serif">
-          ⚠️ كل مخالفة تستوجب <strong>إزالة الحيوان فورًا</strong> من المجمع دون إشعار مسبق، ويتعرض صاحبه للإبلاغ عنه لدى <strong>السلطات المختصة</strong> طبقًا للتشريعات المغربية الجاري بها العمل.
+        <div style="background:rgba(185,28,28,.06);border-radius:6px;padding:10px 14px">
+          <div style="font-size:11px;font-weight:700;color:#b91c1c;margin-bottom:6px;">الفئة 2 — الحراسة والدفاع</div>
+          <ul style="list-style:none;display:flex;flex-direction:column;gap:5px">
+            <li style="font-size:12px;color:#7f1d1d;padding-right:14px;position:relative"><span style="position:absolute;right:0;color:#b91c1c">•</span>روتوايلر</li>
+            <li style="font-size:12px;color:#7f1d1d;padding-right:14px;position:relative"><span style="position:absolute;right:0;color:#b91c1c">•</span>أمريكان ستافوردشير تيرير</li>
+            <li style="font-size:12px;color:#7f1d1d;padding-right:14px;position:relative"><span style="position:absolute;right:0;color:#b91c1c">•</span>ماستيف (دوغ دو بوردو)</li>
+            <li style="font-size:12px;color:#7f1d1d;padding-right:14px;position:relative"><span style="position:absolute;right:0;color:#b91c1c">•</span>دوبيرمان</li>
+            <li style="font-size:12px;color:#7f1d1d;padding-right:14px;position:relative"><span style="position:absolute;right:0;color:#b91c1c">•</span>كل كلب يُثبت سلوكاً عدوانياً موثقاً</li>
+          </ul>
         </div>
       </div>
+      <div class="danger-foot">⚠️ يتعرض كل مخالف لـ<strong>طرد الحيوان فوراً</strong> من المجموعة السكنية دون إشعار مسبق، مع إمكانية <strong>الإبلاغ عنه للجهات المختصة</strong> وفق التشريعات المغربية المعمول بها.</div>
     </div>
 
-    <!-- م 10 -->
-    <div class="card-dark">
-      <div class="gl" style="color:var(--gold)">المادة العاشرة</div>
-      <div class="art-title" style="color:var(--gold)">العقوبات والوساطة</div>
-      <ul class="art-list art-list-dark">
-        <li>إنذار ودي لكل مخالفة أولى</li>
-        <li>عند التكرار، يُحال الأمر للسنديك من قبل الجمعية</li>
-        <li>الوساطة دائمًا مفضَّلة قبل أي لجوء قانوني</li>
-        <li>الحوار والاحترام المتبادل هما أساس مجتمعنا</li>
+    <div class="art-sub">🛗 استخدام المصاعد</div>
+    <ul class="r">
+      <li><span class="d">—</span>المصعد مخصص للأشخاص فقط — <strong>يُمنع إدخال الدراجات أو الأشياء الضخمة</strong></li>
+      <li><span class="d">—</span>عدم تجاوز <strong>الحمولة القصوى المُعلَّقة</strong> داخل الكابينة</li>
+      <li><span class="d">—</span>يُحظر <strong>التدخين أو الأكل أو الشرب</strong> داخل الكابينة</li>
+      <li><span class="d">—</span>في حالة العطل، استخدام <strong>الهاتف الداخلي</strong> وعدم إجبار الأبواب</li>
+      <li><span class="d">—</span>منع الأطفال من اللعب بمفردهم داخل المصعد</li>
+      <li><span class="d">—</span>أي تلف يُلقي بالمسؤولية المالية الكاملة على مرتكبه</li>
+      <li><span class="d">—</span>الإبلاغ عن أي عطل فوراً عبر منصة <strong>ريدتيك</strong> أو فريق الأمن</li>
+    </ul>
+
+    <div class="art-sub">استخدام النوافذ والبلكونات</div>
+    <ul class="r">
+      <li><span class="d">—</span>يُمنع تعليق الغسيل أو أي شيء آخر على البلكونات والنوافذ، التي يجب أن تبقى <strong>في حالة نظافة تامة</strong></li>
+      <li><span class="d">—</span>يُسمح بالزينة الزهرية والنباتية</li>
+      <li><span class="d">—</span>يُمنع <strong>نفض أو تفريش</strong> السجاد والملابس من النوافذ والبلكونات</li>
+    </ul>
+
+    <div class="art-sub">الواجهات والإشهار</div>
+    <ul class="r">
+      <li><span class="d">—</span>لا يجوز إقامة أي شيء على الواجهات من شأنه الإضرار بالساكنين أو مخالفة الأنظمة المعمول بها</li>
+      <li><span class="d">—</span>يُحظر تركيب أي لافتة أو إعلان على الواجهات <strong>دون الموافقة المسبقة لنقابة الملاك المشتركين</strong></li>
+    </ul>
+
+    <div class="art-sub">لوحات التعريف</div>
+    <p class="body-text">يمكن للملاك المشتركين والمستأجرين تركيب لوحة تحمل أسماءهم على الباب المؤدي إلى شقتهم، على أن تكون مواصفاتها وأبعادها ومادتها <strong>معتمدة من النقابة</strong>.</p>
+
+    <div class="art-sub">أجهزة الصوت</div>
+    <ul class="r">
+      <li><span class="d">—</span>يجب استخدام أجهزة الاستقبال وإعادة الإنتاج الصوتي <strong>باعتدال</strong>، بحيث لا يُسمع أي صوت خارج المحلات التي تعمل فيها</li>
+    </ul>
+
+    <div class="art-sub">الأشغال والتعديلات</div>
+    <ul class="r">
+      <li><span class="d">—</span>يتحمل الملاك المشتركون دون تعويض تنفيذ أشغال الإصلاح أو التعديلات الضرورية للأجزاء المشتركة</li>
+      <li><span class="d">—</span>يجب على الملاك المشتركين السماح بالدخول لإجراء الإصلاحات المتعلقة بالقنوات والأنابيب المشتركة</li>
+      <li><span class="d">—</span>في حالة إحداث تدهورات جراء الأشغال، يجب إعادة الأماكن إلى حالتها <strong>على نفقة الملكية المشتركة</strong></li>
+      <li><span class="d">—</span><strong>يُحظر</strong> كل عمل يمس الهيكل الكبير، وكل تعديل على الأبواب الرئيسية والأقسام، وكل تدخل على المظهر الخارجي للبناية</li>
+    </ul>
+
+    <div class="art-sub">🅿️ مواقف السيارات</div>
+    <ul class="r">
+      <li><span class="d">—</span>مواقف السيارات مخصصة حصراً لـ<strong>ركن السيارات</strong></li>
+      <li><span class="d">—</span>يُمنع تخزين أي وعاء يحتوي على <strong>وقود أو مواد قابلة للاشتعال</strong></li>
+      <li><span class="d">—</span>يُحظر <strong>غسل السيارات</strong> وإعاقة مناطق المرور والمداخل</li>
+      <li><span class="d">—</span>استخدام <strong>الأبواق</strong> ممنوع منعاً باتاً</li>
+    </ul>
+  </div>
+</div>
+
+<!-- ══════════════════════════════════
+     الفصل السادس — الموظفون والأعباء
+══════════════════════════════════ -->
+<div class="chapter" id="ch6">
+  <div class="chapter-header">
+    <span class="ch-num">الفصل السادس</span>
+    <h2 class="ch-title">موظفو الخدمة <em>والأعباء</em></h2>
+  </div>
+  <div class="grid2" style="margin-bottom:0">
+    <div class="card">
+      <div class="art-label">المادة 11</div>
+      <p class="body-text">يتعين على الحراس <strong>إبلاغ المدير فوراً ودون تأخير</strong> بأي حادث يقع في العمارة وبأي أضرار يطلعون عليها، حتى يمكن اتخاذ جميع التدابير اللازمة على الفور.</p>
+    </div>
+    <div class="card">
+      <div class="art-label">المادة 12</div>
+      <p class="body-text">في حالة استقالة الحارس أو طرده أو مغادرته الطوعية، تتولى نقابة الملاك المشتركين توفير بديل وافتتاح مسطرة الإخلاء القضائية وفق أحكام <strong>الفصل 20 من القانون المذكور</strong>.</p>
+    </div>
+  </div>
+  <div class="card" style="margin-top:12px">
+    <div class="art-label">المادة 13 — تشمل الأعباء المشتركة</div>
+    <p class="body-text" style="margin-bottom:14px">جميع الأعباء المتعلقة بالحفاظ على الأجزاء المشتركة وصيانتها وإدارتها، و<strong>صيانة التجهيزات الجماعية والخدمات المشتركة</strong>، ولا سيما:</p>
+    <div class="grid2">
+      <ul class="r">
+        <li><span class="d">—</span>المساهمات والضرائب والأعباء المفروضة على الأشياء أو الأجزاء المشتركة</li>
+        <li><span class="d">—</span>التأمينات: الحرائق والانفجارات وأضرار المياه والمسؤولية المدنية وحوادث العمل</li>
+        <li><span class="d">—</span>مصاريف الصيانة والإصلاحات الكبرى وتهيئة جميع الأجزاء المشتركة</li>
+        <li><span class="d">—</span>مصاريف تسيير وإدارة المدير</li>
+      </ul>
+      <ul class="r">
+        <li><span class="d">—</span>استهلاك الماء لتنظيف الأجزاء المشتركة والسقي</li>
+        <li><span class="d">—</span>استهلاك الكهرباء لإنارة الأجزاء المشتركة</li>
+        <li><span class="d">—</span>رواتب الموظفين</li>
+        <li><span class="d">—</span>اقتناء وإصلاح واستبدال أدوات ومنتجات التنظيف</li>
+        <li><span class="d">—</span>تهيئة مسالك الولوج الخاصة بذوي الاحتياجات الخاصة</li>
+        <li><span class="d">—</span>تهيئة الأماكن بمناسبة عيد الأضحى المبارك</li>
       </ul>
     </div>
-
-  </div>
-
-  <div class="divider"></div>
-  <div style="text-align:center;padding:16px 0;display:flex;gap:12px;justify-content:center;flex-wrap:wrap">
-    <a href="syndic-v3.html" class="btn-g">تقديم شكاية ←</a>
-    <a href="reglement.html" class="btn-o">النسخة الفرنسية</a>
-    <a href="association-ar.html" class="btn-o">النظام الأساسي</a>
+    <div class="note" style="margin-top:14px">هذا البيان شامل وليس على سبيل الحصر.</div>
   </div>
 </div>
 
-<!-- LANG SWITCH -->
-<div class="lang-switch">
-  <button class="ls-btn ls-ar">العربية ✓</button>
-  <button class="ls-btn ls-fr" onclick="location.href='reglement.html'">Français</button>
+<!-- ══════════════════════════════════
+     الفصل السابع — حسابات الأعباء
+══════════════════════════════════ -->
+<div class="chapter" id="ch7">
+  <div class="chapter-header">
+    <span class="ch-num">الفصل السابع</span>
+    <h2 class="ch-title">حسابات <em>الأعباء</em></h2>
+  </div>
+  <div class="card-gold">
+    <div class="art-label">المادة 14 — تحديد الأعباء</div>
+    <p class="body-text" style="margin-bottom:10px">تُقدَّر مختلف أعباء النفقات السنوية بصورة مؤقتة بالمبلغ المحدد وفق الحالات.</p>
+    <p class="body-text">توزَّع الأعباء المشتركة المشار إليها أعلاه على الملاك المشتركين <strong>بالتناسب مع حصصهم</strong> في الأجزاء المشتركة. وتتحمل الأعباء المتعلقة بأجزاء مشتركة محفوظة لاستعمال مالك أو أكثر وفق القاعدة ذاتها.</p>
+  </div>
+  <div class="grid2" style="margin-top:0">
+    <div class="card">
+      <div class="art-label">المادة 15</div>
+      <p class="body-text">تُختتم حسابات الأعباء المشتركة <strong>سنوياً</strong> وتُعرض على مصادقة الجمعية العامة. يُبلَّغ بها الملاك المشتركون مسبقاً من طرف المدير.</p>
+    </div>
+    <div class="card">
+      <div class="art-label">المادة 16</div>
+      <p class="body-text">يلتزم الملاك المشتركون بإيصال حصتهم من الأعباء للنقابة <strong>بشيك بنكي</strong> أو بتحويل، في أجل أقصاه شهر من انطلاق التحصيل أو من قرار الجمعية العامة.</p>
+    </div>
+    <div class="card">
+      <div class="art-label">المادة 17</div>
+      <p class="body-text">الملاك المشتركون الذين يُضاعفون الأعباء بفعلهم <strong>يتحملون وحدهم المصاريف والنفقات</strong> الناجمة عن ذلك.</p>
+    </div>
+    <div class="card">
+      <div class="art-label">المادة 18</div>
+      <p class="body-text">مساهمة كل مالك في دفع الأعباء المفروضة عليه <strong>واجبة حتى في غياب أي شغل أو استعمال</strong>.</p>
+    </div>
+  </div>
 </div>
+
+<!-- ══════════════════════════════════
+     الفصل الثامن — التأمينات
+══════════════════════════════════ -->
+<div class="chapter" id="ch8">
+  <div class="chapter-header">
+    <span class="ch-num">الفصل الثامن</span>
+    <h2 class="ch-title"><em>التأمينات</em></h2>
+  </div>
+  <div class="card">
+    <div class="art-label">المادة 19</div>
+    <p class="body-text">تلتزم نقابة الملاك المشتركين بـ<strong>إبرام تأمين إلزامي</strong> يغطي على الخصوص الحرائق والانفجارات. غير أن النقابة يمكنها إبرام أي وثيقة تأمين تراها ضرورية.</p>
+  </div>
+</div>
+
+<!-- ══════════════════════════════════
+     الفصل التاسع — الإدارة
+══════════════════════════════════ -->
+<div class="chapter" id="ch9">
+  <div class="chapter-header">
+    <span class="ch-num">الفصل التاسع</span>
+    <h2 class="ch-title">إدارة <em>الأجزاء المشتركة</em></h2>
+  </div>
+
+  <span class="section-label">القسم الأول · نقابة الملاك المشتركين</span>
+  <div class="card">
+    <div class="art-label">المادة 20 — التأسيس – الموضوع – الاختصاص</div>
+    <p class="body-text" style="margin-bottom:10px">وفق الفصل 13 من القانون 18.00، النقابة هي <strong>الممثل القانوني للملكية المشتركة</strong>. ويُدمج مختلف الملاك المشتركين بقوة القانون في نقابة واحدة.</p>
+    <p class="body-text" style="margin-bottom:10px">تتمثل مهمة نقابة الملاك في الحفاظ على العمارة والإدارة والتسيير وتنفيذ أحكام هذا النظام. وهي <strong>مسؤولة عن الأضرار</strong> التي تلحق بالملاك المشتركين أو بالغير جراء إهمال صيانة الأجزاء المشتركة.</p>
+    <p class="body-text">لها الأهلية للتقاضي سواء كمدّعية أو مدّعى عليها، حتى في مواجهة بعض أعضائها.</p>
+  </div>
+
+  <span class="section-label" style="margin-top:24px;display:block">القسم الثاني · الجمعية العامة — التنظيم والصلاحيات</span>
+  <div class="card">
+    <div class="art-label">المادة 21 — الجمعية العامة</div>
+    <ul class="r" style="margin-bottom:14px">
+      <li><span class="d">—</span>تنعقد الجمعية العامة في اجتماعها الأول بمبادرة من مالك مشترك أو أكثر وتتولى وضع النظام وانتخاب أجهزة التسيير</li>
+      <li><span class="d">—</span>تنعقد الجمعية العامة العادية <strong>مرة واحدة على الأقل في السنة</strong> وفق الفصول من 16 مكرر 2 إلى 16 مكرر 10 من القانون المذكور</li>
+      <li><span class="d">—</span>تنتخب من بين أعضائها رئيساً لقيادة الأشغال وتعيّن كاتباً لتحرير محضر الاجتماع</li>
+      <li><span class="d">—</span>لا يُسمح للمدير أو نائبه بـ<strong>ترؤّس الجلسة</strong> سواء بشكل مباشر أو بواسطة ممثّله</li>
+      <li><span class="d">—</span>يمكن انعقاد الجمعية العامة الاستثنائية بطلب من المدير أو <strong>ثلث الملاك المشتركين</strong> (الفصل 16 مكرر 3)</li>
+      <li><span class="d">—</span>تتخذ الجمعية العامة قرارات تُنفّذها المدير أو المجلس النقابي عند الاقتضاء</li>
+    </ul>
+    <div class="art-sub" style="margin-top:0">تتولى الجمعية العامة:</div>
+    <div class="grid2">
+      <ul class="r">
+        <li><span class="d">—</span>اتخاذ القرارات الكفيلة بضمان سلامة وصيانة وحفاظ العمارة والتمتع بها</li>
+        <li><span class="d">—</span>تسيير الأجزاء المشتركة لضمان سلامة المستخدمين</li>
+        <li><span class="d">—</span>تعيين وعزل وتأجير المدير ونائبه</li>
+        <li><span class="d">—</span>تعيين المجلس النقابي عند الاقتضاء</li>
+        <li><span class="d">—</span>الإذن للمدير أو الغير بالتقاضي</li>
+      </ul>
+      <ul class="r">
+        <li><span class="d">—</span>تفويض المدير أو الغير صلاحية اتخاذ بعض التدابير</li>
+        <li><span class="d">—</span>المصادقة على ميزانية النقابة وتحديد الأعباء وسقف النفقات</li>
+        <li><span class="d">—</span>فحص والمصادقة على الحسابات المقدَّمة من المدير</li>
+        <li><span class="d">—</span>المصادقة على مبلغ الأعباء وتوزيعها</li>
+        <li><span class="d">—</span>وبصفة عامة كل المسائل المتعلقة بالملكية المشتركة</li>
+      </ul>
+    </div>
+  </div>
+
+  <span class="section-label" style="margin-top:24px;display:block">القسم الثالث · المدير (السنديك)</span>
+  <div class="card">
+    <div class="art-label">المادة 22 — صلاحيات المدير</div>
+    <div class="grid2">
+      <ul class="r">
+        <li><span class="d">—</span>تنفيذ أحكام نظام الملكية المشتركة</li>
+        <li><span class="d">—</span>إعداد جدول أعمال اجتماعات الجمعية العامة</li>
+        <li><span class="d">—</span>تجسيد قرارات الجمعية العامة</li>
+        <li><span class="d">—</span>السهر على حسن استعمال الأجزاء المشتركة: الصيانة وحراسة المداخل والتجهيزات</li>
+        <li><span class="d">—</span>الإصلاحات المستعجلة</li>
+        <li><span class="d">—</span>إعداد الميزانية التقديرية للنقابة قصد عرضها على الجمعية العامة</li>
+        <li><span class="d">—</span>الوضع المنتظم للميزانية ومسك محاسبة تُظهر وضعية الخزينة</li>
+      </ul>
+      <ul class="r">
+        <li><span class="d">—</span>تحصيل أعباء الملاك المشتركين مقابل وصل</li>
+        <li><span class="d">—</span>إبلاغ الملاك المشتركين بوضعية خزينة النقابة <strong>كل ثلاثة أشهر</strong></li>
+        <li><span class="d">—</span>مسك الأرشيف والسجلات المتعلقة بالعمارة والنقابة</li>
+        <li><span class="d">—</span>تيسير اطلاع الملاك المشتركين على هذه الوثائق قبل انعقاد الجمعية العامة</li>
+        <li><span class="d">—</span>القيام بالإجراءات الإدارية المعترف بها له والمفوَّضة إليه</li>
+        <li><span class="d">—</span>تمثيل النقابة أمام القضاء بأمر خاص من الجمعية العامة</li>
+      </ul>
+    </div>
+  </div>
+
+  <div class="card">
+    <div class="art-label">المادة 23 — تسليم المهام</div>
+    <p class="body-text">عند انتهاء مهمته، يلتزم المدير المنتهية ولايته أو نائبه في أجل أقصاه <strong>15 يوماً</strong> من تعيين المدير الجديد، بتسليمه جميع الوثائق والأرشيف والسجلات ووضعية الخزينة وجميع أموال النقابة بما فيها السيولة.</p>
+    <div class="note" style="margin-top:12px"><strong>حُرِّر بالدار البيضاء في 22 أبريل 2025.</strong></div>
+  </div>
+</div>
+
+<div class="divider"></div>
+
+<!-- مكتب الجمعية (إضافة ميسيمي ليفينج) -->
+<div style="margin-bottom:40px">
+  <div style="display:flex;align-items:center;gap:12px;margin-bottom:12px;flex-direction:row-reverse;justify-content:flex-end">
+    <div style="width:24px;height:1px;background:var(--gold)"></div>
+    <span style="font-size:10px;letter-spacing:.12em;color:var(--gold);font-weight:700">حوكمة ميسيمي ليفينج</span>
+  </div>
+  <h2 style="font-family:'Noto Kufi Arabic',sans-serif;font-size:clamp(22px,3.5vw,36px);font-weight:500;line-height:1.2;margin-bottom:6px;text-align:right">مكتب <em style="font-style:normal;color:var(--gold)">الجمعية</em></h2>
+  <p style="font-family:'Cormorant Garamond',serif;font-size:15px;color:var(--muted);direction:ltr;margin-bottom:28px;font-weight:300;text-align:right">Bureau de l'Association</p>
+
+  <div class="grid3">
+    <div class="role-card pres">
+      <div class="role-icon">👑</div>
+      <div class="role-name">الرئيس / الرئيسة</div>
+      <p class="role-desc">يمثل الجمعية ويترأس الجموع العامة وينسق الأعمال الجماعية.</p>
+    </div>
+    <div class="role-card">
+      <div class="role-icon">🤝</div>
+      <div class="role-name">نائب الرئيس / نائبة الرئيسة</div>
+      <p class="role-desc">يساعد الرئيس ويتولى مهامه في حالة الغياب أو العذر.</p>
+    </div>
+    <div class="role-card">
+      <div class="role-icon">📋</div>
+      <div class="role-name">الكاتب / الكاتبة</div>
+      <p class="role-desc">يحرّر محاضر الاجتماعات ويدير المراسلات ويحفظ أرشيف الجمعية.</p>
+    </div>
+    <div class="role-card">
+      <div class="role-icon">📝</div>
+      <div class="role-name">نائب الكاتب / نائبة الكاتبة</div>
+      <p class="role-desc">يساعد الكاتب في مهامه ويضمن الاستمرارية في حالة الغياب.</p>
+    </div>
+    <div class="role-card">
+      <div class="role-icon">💰</div>
+      <div class="role-name">أمين الخزينة / أمينة الخزينة</div>
+      <p class="role-desc">يدير الشؤون المالية ويمسك المحاسبة ويعرض الحسابات في الجمعية العامة.</p>
+    </div>
+    <div class="role-card">
+      <div class="role-icon">🏦</div>
+      <div class="role-name">نائب أمين الخزينة</div>
+      <p class="role-desc">يساعد أمين الخزينة في الإدارة المالية ويتولى مهامه عند الحاجة.</p>
+    </div>
+  </div>
+</div>
+
+<div class="divider"></div>
+
+<div style="text-align:center;padding:16px 0;display:flex;justify-content:center;gap:12px;flex-wrap:wrap">
+  <a href="syndic-v3.html" class="btn-g">← تقديم شكوى</a>
+  <a href="reglement.html" class="btn-o">La version française 🇫🇷</a>
+  <a href="association.html" class="btn-o">الجمعية</a>
+</div>
+
+</div><!-- end .main -->
 
 <footer>
-  <div class="ftl">ميسيمي <span>ليفينج</span></div>
+  <div class="ftl">MISSIMI <span>LIVING</span></div>
   <div class="ftc">© 2026 Missimi Living · الدار البيضاء</div>
   <div class="ftlinks">
     <a href="index.html">الرئيسية</a>
+    <a href="projet.html">المشروع</a>
     <a href="association.html">الجمعية</a>
-    <a href="reglement.html">النظام الداخلي</a>
-    <a href="syndic-v3.html">فضاء السكان</a>
+    <a href="reglement-ar.html">النظام</a>
+    <a href="syndic-v3.html">فضاء الساكن</a>
   </div>
 </footer>
+
+<div style="position:fixed;bottom:28px;right:28px;z-index:200;display:flex;gap:8px">
+  <button style="padding:9px 18px;border-radius:20px;font-size:12px;font-weight:600;cursor:pointer;border:none;background:rgba(255,255,255,.15);color:white;backdrop-filter:blur(8px);font-family:'DM Sans',sans-serif" onclick="location.href='reglement.html'">Français 🇫🇷</button>
+  <button style="padding:9px 18px;border-radius:20px;font-size:12px;font-weight:600;cursor:pointer;border:none;background:var(--gold);color:var(--navy);font-family:'Noto Kufi Arabic',sans-serif">العربية ✓</button>
+</div>
 
 <script>
 function toggleMenu(){
@@ -311,5 +699,6 @@ document.querySelectorAll('#navLinks a').forEach(a=>a.addEventListener('click',(
   const b=document.getElementById('burger');b.classList.remove('open');b.textContent='☰';
 }));
 </script>
+<script src="music.js"></script>
 </body>
 </html>
