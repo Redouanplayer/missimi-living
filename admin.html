@@ -188,6 +188,26 @@ tr:hover td{background:#fafafa;}
 
 /* TABLE améliorée */
 .tbl-col-7{min-width:80px;}
+
+/* ABONNEMENT */
+.abo-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-bottom:14px;}
+.abo-btn{padding:12px 8px;border:1.5px solid var(--border);border-radius:var(--radius-md);background:var(--bg);cursor:pointer;text-align:center;transition:all .2s;font-family:"Plus Jakarta Sans",sans-serif;}
+.abo-btn:hover,.abo-btn.active{border-color:var(--blue);background:var(--blue-bg);}
+.abo-btn.active .ab-label{color:var(--blue);}
+.ab-icon{font-size:18px;display:block;margin-bottom:4px;}
+.ab-label{font-size:11px;font-weight:700;color:var(--muted);display:block;margin-bottom:2px;}
+.ab-dur{font-size:10px;color:var(--muted);}
+.exp-preview{background:var(--blue-bg);border:1px solid var(--blue-border);border-radius:var(--radius);padding:8px 12px;font-size:12px;color:var(--blue);margin-bottom:14px;display:flex;align-items:center;gap:6px;}
+
+/* EXPIRATION DANS LA TABLE */
+.exp-ok{color:var(--green);font-size:11px;font-weight:600;}
+.exp-warn{color:var(--orange,#ea580c);font-size:11px;font-weight:600;}
+.exp-dead{color:var(--red);font-size:11px;font-weight:600;}
+
+/* BADGE ABONNEMENT */
+.b-mensuel{background:#eff6ff;color:#1d4ed8;}
+.b-trimestriel{background:#f0fdf4;color:#15803d;}
+.b-annuel{background:#faf5ff;color:#7c3aed;}
 </style>
 </head>
 <body>
@@ -335,6 +355,28 @@ tr:hover td{background:#fafafa;}
               </div>
             </div>
 
+            <div class="sec-label">Abonnement</div>
+            <div class="abo-grid">
+              <button type="button" class="abo-btn active" data-abo="mensuel">
+                <span class="ab-icon">📅</span>
+                <span class="ab-label">Mensuel</span>
+                <span class="ab-dur">30 jours</span>
+              </button>
+              <button type="button" class="abo-btn" data-abo="trimestriel">
+                <span class="ab-icon">📆</span>
+                <span class="ab-label">Trimestriel</span>
+                <span class="ab-dur">90 jours</span>
+              </button>
+              <button type="button" class="abo-btn" data-abo="annuel">
+                <span class="ab-icon">🗓️</span>
+                <span class="ab-label">Annuel</span>
+                <span class="ab-dur">365 jours</span>
+              </button>
+            </div>
+            <div class="exp-preview" id="expPreview">
+              📅 Expiration : <strong id="expPreviewDate">—</strong>
+            </div>
+
             <div class="form-err" id="formErr"></div>
             <button class="sub-btn" id="submitBtn">
               <span id="submitIco">🚀</span>
@@ -358,6 +400,8 @@ tr:hover td{background:#fafafa;}
           <div class="info-grid">
             <div class="info-item"><div class="ii-lbl">Espace</div><div class="ii-val" id="rNom">—</div></div>
             <div class="info-item"><div class="ii-lbl">Secteur</div><div class="ii-val" id="rSecteur">—</div></div>
+            <div class="info-item"><div class="ii-lbl">Abonnement</div><div class="ii-val" id="rAbo">—</div></div>
+            <div class="info-item"><div class="ii-lbl">Expire le</div><div class="ii-val" id="rExp" style="color:#ea580c">—</div></div>
             <div class="info-item"><div class="ii-lbl">Email</div><div class="ii-val" id="rEmail">—</div></div>
             <div class="info-item"><div class="ii-lbl">Mot de passe</div><div class="ii-val" id="rPwd">—</div></div>
           </div>
@@ -387,10 +431,9 @@ tr:hover td{background:#fafafa;}
               <tr>
                 <th>Code</th>
                 <th>Espace</th>
-                <th>Secteur</th>
-                <th>Unités</th>
+                <th>Abonnement</th>
+                <th>Expiration</th>
                 <th>Statut</th>
-                <th>Date</th>
                 <th>Actions</th>
               </tr>
             </thead>
@@ -477,6 +520,17 @@ window.addEventListener('load', function() {
       currentSector = btn.dataset.sector;
     });
   });
+
+  // Boutons abonnement
+  document.querySelectorAll('.abo-btn').forEach(function(btn) {
+    btn.addEventListener('click', function() {
+      document.querySelectorAll('.abo-btn').forEach(function(b) { b.classList.remove('active'); });
+      btn.classList.add('active');
+      currentAbo = btn.dataset.abo;
+      updateExpPreview();
+    });
+  });
+  updateExpPreview();
 
   // Vérifier session existante
   db.auth.getSession().then(function(res) {
@@ -575,13 +629,14 @@ function doCreate() {
   function step2() {
     document.getElementById('submitTxt').textContent = 'Création de la résidence...';
     db.rpc('create_and_link_admin', {
-      p_email:      email,
-      p_nom_admin:  adminNom,
-      p_nom_espace: nom,
-      p_adresse:    adresse,
-      p_ville:      ville,
-      p_nb_apparts: unites,
-      p_secteur:    currentSector
+      p_email:       email,
+      p_nom_admin:   adminNom,
+      p_nom_espace:  nom,
+      p_adresse:     adresse,
+      p_ville:       ville,
+      p_nb_apparts:  unites,
+      p_secteur:     currentSector,
+      p_abonnement:  currentAbo
     }).then(function(res) {
       btn.disabled = false;
       document.getElementById('submitIco').textContent = '🚀';
@@ -664,6 +719,14 @@ function showResult(d, pwd, adminNom) {
   document.getElementById('rCode').textContent    = d.code;
   document.getElementById('rNom').textContent     = d.espace;
   document.getElementById('rSecteur').textContent = d.secteur;
+  // Afficher abonnement et expiration dans le résultat
+  var rAboEl = document.getElementById('rAbo');
+  var rExpEl = document.getElementById('rExp');
+  if (rAboEl) rAboEl.textContent = d.abonnement || currentAbo;
+  if (rExpEl && d.date_expiration) {
+    var expDate = new Date(d.date_expiration);
+    rExpEl.textContent = expDate.toLocaleDateString('fr-FR', { day:'2-digit', month:'long', year:'numeric' });
+  }
   document.getElementById('rEmail').textContent   = d.admin_email;
   document.getElementById('rPwd').textContent     = pwd;
   document.getElementById('emailBody').innerHTML  =
@@ -696,7 +759,7 @@ function loadClients() {
   var tbody = document.getElementById('clientsBody');
   tbody.innerHTML = '<tr><td colspan="7" class="empty">Chargement...</td></tr>';
   db.from('residences')
-    .select('id,code_residence,nom,secteur,nb_apparts,actif,created_at,admin_id')
+    .select('id,code_residence,nom,secteur,nb_apparts,actif,created_at,admin_id,abonnement,date_expiration,statut_notif')
     .order('created_at', { ascending: false })
     .then(function(res) {
       var data = res.data;
@@ -708,7 +771,19 @@ function loadClients() {
         var date  = r.created_at ? new Date(r.created_at).toLocaleDateString('fr-FR') : '—';
         var badge = r.actif
           ? '<span class="badge b-on">● Actif</span>'
-          : '<span class="badge b-off">● Inactif</span>';
+          : '<span class="badge b-off">● Suspendu</span>';
+        var aboBadge = r.abonnement
+          ? '<span class="badge b-' + r.abonnement + '">' + r.abonnement + '</span>'
+          : '<span style="color:var(--muted);font-size:12px">—</span>';
+        var expClass = 'exp-ok', expTxt = '—';
+        if (r.date_expiration) {
+          var expDate = new Date(r.date_expiration);
+          var today   = new Date(); today.setHours(0,0,0,0);
+          var diff    = Math.round((expDate - today) / 86400000);
+          if (diff < 0)       { expClass = 'exp-dead'; expTxt = '🔴 Expiré'; }
+          else if (diff <= 10) { expClass = 'exp-warn'; expTxt = '🟠 J-' + diff; }
+          else                 { expClass = 'exp-ok';   expTxt = '🟢 ' + expDate.toLocaleDateString('fr-FR', {day:'2-digit',month:'2-digit',year:'2-digit'}); }
+        }
         var menuId = 'menu-' + r.id;
         return '<tr>' +
           '<td class="code-td">' + (r.code_residence || '—') + '</td>' +
@@ -732,6 +807,16 @@ function loadClients() {
           '</tr>';
       }).join('');
     });
+}
+
+function updateExpPreview() {
+  var durations = { mensuel: 30, trimestriel: 90, annuel: 365 };
+  var days = durations[currentAbo] || 30;
+  var exp  = new Date();
+  exp.setDate(exp.getDate() + days);
+  var dateStr = exp.toLocaleDateString('fr-FR', { day:'2-digit', month:'long', year:'numeric' });
+  var el = document.getElementById('expPreviewDate');
+  if (el) el.textContent = dateStr + ' (' + days + ' jours)';
 }
 
 function closeMenus() {
@@ -912,6 +997,41 @@ function loadDashboard() {
     var mb = Math.max(count * 0.3, 0.01);
     setStorageBar('stor', mb, 1024, Math.min((mb/1024)*100, 100));
   });
+}
+
+function showRenewModal(id, nom, currentAboVal) {
+  showModal('🔄', 'Renouveler l'abonnement',
+    'Choisissez le nouveau type d'abonnement pour <strong>' + nom + '</strong> :' +
+    '<div style="display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-top:14px">' +
+      '<button onclick="setRenewAbo('mensuel',this)" class="abo-btn ' + (currentAboVal==='mensuel'?'active':'') + '" style="cursor:pointer" data-abo="mensuel"><span class="ab-icon">📅</span><span class="ab-label">Mensuel</span><span class="ab-dur">30j</span></button>' +
+      '<button onclick="setRenewAbo('trimestriel',this)" class="abo-btn ' + (currentAboVal==='trimestriel'?'active':'') + '" style="cursor:pointer" data-abo="trimestriel"><span class="ab-icon">📆</span><span class="ab-label">Trimestriel</span><span class="ab-dur">90j</span></button>' +
+      '<button onclick="setRenewAbo('annuel',this)" class="abo-btn ' + (currentAboVal==='annuel'?'active':'') + '" style="cursor:pointer" data-abo="annuel"><span class="ab-icon">🗓️</span><span class="ab-label">Annuel</span><span class="ab-dur">365j</span></button>' +
+    '</div>',
+    'Renouveler', 'mbtn-info',
+    function() { renouvelerClient(id, nom); }
+  );
+  window._renewId  = id;
+  window._renewAbo = currentAboVal;
+}
+
+function setRenewAbo(abo, btn) {
+  document.querySelectorAll('#modalOverlay .abo-btn').forEach(function(b){ b.classList.remove('active'); });
+  btn.classList.add('active');
+  window._renewAbo = abo;
+}
+
+function renouvelerClient(id, nom) {
+  var abo = window._renewAbo || 'mensuel';
+  toast('⏳ Renouvellement en cours...');
+  db.rpc('renouveler_abonnement', { p_id: id, p_abonnement: abo })
+    .then(function(res) {
+      if (res.error || !res.data || !res.data.success) {
+        toast('❌ ' + (res.error?.message || res.data?.error || 'Erreur'));
+        return;
+      }
+      toast('🔄 ' + nom + ' — ' + res.data.message);
+      loadClients(); loadStats();
+    });
 }
 
 function setStorageBar(prefix, usedMB, limitMB, pct) {

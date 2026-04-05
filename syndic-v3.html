@@ -333,49 +333,15 @@
     </div>
     <div id="loginForm">
       <div class="fg"><label class="lbl">Email</label><input type="email" id="loginEmail" placeholder="votre@email.com"></div>
-      <div class="fg" style="margin-bottom:6px">
+      <div class="fg" style="margin-bottom:20px">
         <label class="lbl">Mot de passe</label>
         <div style="position:relative">
           <input type="password" id="loginPwd" placeholder="••••••••" style="padding-right:44px">
           <button type="button" onclick="togglePwd('loginPwd',this)" style="position:absolute;right:12px;top:50%;transform:translateY(-50%);background:none;border:none;cursor:pointer;font-size:16px;color:var(--muted);padding:0;line-height:1">👁</button>
         </div>
       </div>
-      <!-- LIEN MOT DE PASSE OUBLIÉ -->
-      <div style="text-align:right;margin-bottom:16px;">
-        <a href="#" onclick="openForgotModal();return false;"
-           style="font-size:12px;color:var(--blue);text-decoration:none;font-weight:500;">
-          Mot de passe oublié ?
-        </a>
-      </div>
       <div class="alert alert-error" id="loginErr"></div>
       <button class="btn btn-primary" id="loginBtn" onclick="doLogin()">Se connecter →</button>
-
-<!-- ======================================
-     MODAL MOT DE PASSE OUBLIÉ
-====================================== -->
-<div id="forgotModal" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,0.5);z-index:500;align-items:center;justify-content:center;padding:20px;">
-  <div style="background:white;border-radius:14px;width:100%;max-width:380px;padding:32px 28px;box-shadow:0 20px 60px rgba(0,0,0,.2);animation:slideUp 0.2s ease;">
-    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:16px;">
-      <div>
-        <div style="font-size:17px;font-weight:700;color:var(--text);margin-bottom:3px;">Mot de passe oublié ?</div>
-        <div style="font-size:12px;color:var(--muted);">Nous vous enverrons un lien de réinitialisation</div>
-      </div>
-      <button onclick="closeForgotModal()" style="width:30px;height:30px;border-radius:50%;border:1px solid var(--border);background:var(--bg);cursor:pointer;font-size:16px;display:flex;align-items:center;justify-content:center;flex-shrink:0;">×</button>
-    </div>
-    <label class="lbl">Votre adresse email</label>
-    <input type="email" id="forgotEmail" placeholder="votre@email.com"
-      style="width:100%;padding:10px 14px;border:1px solid var(--border2);border-radius:var(--radius-sm);font-size:14px;font-family:'DM Sans',sans-serif;margin-bottom:12px;outline:none;box-sizing:border-box;">
-    <div id="forgotMsg" style="display:none;font-size:13px;padding:10px 14px;border-radius:var(--radius-sm);margin-bottom:12px;border:1px solid;line-height:1.5;"></div>
-    <button id="forgotBtn" onclick="sendResetEmail()"
-      style="width:100%;padding:11px;background:var(--blue);color:white;border:none;border-radius:var(--radius-sm);font-size:14px;font-weight:600;cursor:pointer;font-family:'DM Sans',sans-serif;transition:background .2s;margin-bottom:8px;">
-      Envoyer le lien de réinitialisation →
-    </button>
-    <button onclick="closeForgotModal()"
-      style="width:100%;padding:9px;background:none;border:none;color:var(--muted);font-size:13px;cursor:pointer;font-family:'DM Sans',sans-serif;">
-      Annuler
-    </button>
-  </div>
-</div>
     </div>
     <div id="registerForm" style="display:none">
 
@@ -808,37 +774,23 @@ async function doLogin() {
     btn.disabled = false; btn.textContent = 'Se connecter →';
     return;
   }
-// Vérifier si la résidence est active (admin — supporte plusieurs admins)
-if (currentRole === 'admin') {
-  // Chercher la résidence via la table residence_admins
-  const { data: adminRow } = await db
-    .from('residence_admins')
-    .select('residence_id, residences(actif, nom, code_residence)')
-    .eq('user_id', currentUser.id)
-    .single();
-
-  // Fallback : ancienne méthode avec admin_id direct
-  let res = adminRow?.residences || null;
-  if (!res) {
-    const { data: resDirect } = await db
-      .from('residences')
-      .select('actif,nom,code_residence')
-      .eq('admin_id', currentUser.id)
-      .single();
-    res = resDirect;
+  // Vérifier si la résidence est active (admin seulement)
+  if (currentRole === 'admin') {
+    const { data: res } = await db.from('residences').select('actif,nom,code_residence,abonnement,date_expiration').eq('admin_id', currentUser.id).single();
+    if (res && !res.actif) {
+      await db.auth.signOut();
+      var expMsg = '';
+      if (res.date_expiration) {
+        var expDate = new Date(res.date_expiration);
+        expMsg = ' (expiré le ' + expDate.toLocaleDateString('fr-FR', {day:'2-digit',month:'long',year:'numeric'}) + ')';
+      }
+      showErr(document.getElementById('loginErr'),
+        '⛔ Votre licence a expiré' + expMsg + '. Contactez RedTech pour renouveler votre abonnement.');
+      btn.disabled = false; btn.textContent = 'Se connecter →';
+      return;
+    }
+    if (res) { currentUserMeta.residence_nom = res.nom; currentUserMeta.residence_code = res.code_residence || currentUserMeta.residence_code; }
   }
-
-  if (res && !res.actif) {
-    await db.auth.signOut();
-    showErr(document.getElementById('loginErr'), '⛔ Votre accès a été suspendu. Contactez RedTech.');
-    btn.disabled = false; btn.textContent = 'Se connecter →';
-    return;
-  }
-  if (res) {
-    currentUserMeta.residence_nom = res.nom;
-    currentUserMeta.residence_code = res.code_residence || currentUserMeta.residence_code;
-  }
-}
   showApp();
 }
 
@@ -1902,70 +1854,6 @@ function togglePwd(inputId, btn) {
 }
 
 init();
-
-// ========================
-// MOT DE PASSE OUBLIÉ
-// ========================
-function openForgotModal() {
-  const modal = document.getElementById('forgotModal');
-  modal.style.display = 'flex';
-  document.getElementById('forgotEmail').value = '';
-  document.getElementById('forgotMsg').style.display = 'none';
-  document.getElementById('forgotBtn').disabled = false;
-  document.getElementById('forgotBtn').textContent = 'Envoyer le lien de réinitialisation →';
-  const loginEmail = document.getElementById('loginEmail').value;
-  if (loginEmail) document.getElementById('forgotEmail').value = loginEmail;
-}
-
-function closeForgotModal() {
-  document.getElementById('forgotModal').style.display = 'none';
-}
-
-document.addEventListener('click', function(e) {
-  const modal = document.getElementById('forgotModal');
-  if (modal && e.target === modal) closeForgotModal();
-});
-
-async function sendResetEmail() {
-  const email = document.getElementById('forgotEmail').value.trim();
-  const btn   = document.getElementById('forgotBtn');
-
-  if (!email || !email.includes('@')) {
-    showForgotMsg('Veuillez saisir une adresse email valide.', 'error');
-    return;
-  }
-
-  btn.disabled = true;
-  btn.textContent = 'Envoi en cours...';
-
-  try {
-    const { error } = await db.auth.resetPasswordForEmail(email, {
-      redirectTo: window.location.origin + '/reset-password.html'
-    });
-
-    if (error) {
-      showForgotMsg('Erreur : ' + error.message, 'error');
-      btn.disabled = false;
-      btn.textContent = 'Envoyer le lien de réinitialisation →';
-    } else {
-      showForgotMsg('✅ Email envoyé ! Vérifiez votre boîte mail (et vos spams). Le lien expire dans 24h.', 'success');
-      btn.textContent = 'Email envoyé ✓';
-    }
-  } catch(e) {
-    showForgotMsg('Une erreur est survenue. Réessayez.', 'error');
-    btn.disabled = false;
-    btn.textContent = 'Envoyer le lien de réinitialisation →';
-  }
-}
-
-function showForgotMsg(text, type) {
-  const el = document.getElementById('forgotMsg');
-  el.style.display  = 'block';
-  el.style.background  = type === 'error' ? 'var(--red-bg)'    : 'var(--green-bg)';
-  el.style.color       = type === 'error' ? 'var(--red-text)'  : 'var(--green-text)';
-  el.style.borderColor = type === 'error' ? 'var(--red-border)': 'var(--green-border)';
-  el.textContent = text;
-}
 
 </script>
 </body>
