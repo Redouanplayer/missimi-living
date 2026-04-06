@@ -539,6 +539,19 @@ window.addEventListener('load', function() {
   });
   updateExpPreview();
 
+  // Modal listeners
+  document.getElementById('modalCancel').addEventListener('click', function() {
+    document.getElementById('modalOverlay').classList.remove('open');
+    pendingAction = null;
+  });
+  document.getElementById('modalOverlay').addEventListener('click', function(e) {
+    if (e.target === this) { this.classList.remove('open'); pendingAction = null; }
+  });
+  document.getElementById('modalConfirm').addEventListener('click', function() {
+    document.getElementById('modalOverlay').classList.remove('open');
+    if (pendingAction) { pendingAction(); pendingAction = null; }
+  });
+
   // Vérifier session existante
   db.auth.getSession().then(function(res) {
     var user = res.data && res.data.session && res.data.session.user;
@@ -854,17 +867,8 @@ function showModal(icon, title, desc, btnLabel, btnClass, action) {
   document.getElementById('modalOverlay').classList.add('open');
 }
 
-document.getElementById('modalCancel').addEventListener('click', function() {
-  document.getElementById('modalOverlay').classList.remove('open');
-  pendingAction = null;
-});
-document.getElementById('modalOverlay').addEventListener('click', function(e) {
-  if (e.target === this) { this.classList.remove('open'); pendingAction = null; }
-});
-document.getElementById('modalConfirm').addEventListener('click', function() {
-  document.getElementById('modalOverlay').classList.remove('open');
-  if (pendingAction) { pendingAction(); pendingAction = null; }
-});
+// ── Modal listeners — dans window.load (déjà initialisé plus haut) ──
+// Ces listeners sont attachés dans window.load ci-dessous
 
 // ── ACTIONS ──────────────────────────────────────────
 function confirmSuspend(id, nom) {
