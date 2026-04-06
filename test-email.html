@@ -1,0 +1,118 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>RedTech — Test Email</title>
+<style>
+  body{font-family:sans-serif;background:#f0f2f5;display:flex;align-items:center;justify-content:center;min-height:100vh;margin:0;}
+  .card{background:white;border-radius:12px;padding:32px;max-width:440px;width:100%;box-shadow:0 4px 20px rgba(0,0,0,.1);}
+  h2{margin:0 0 6px;font-size:18px;}
+  p{font-size:13px;color:#64748b;margin:0 0 24px;}
+  .fg{margin-bottom:14px;}
+  label{font-size:12px;font-weight:600;color:#64748b;display:block;margin-bottom:5px;}
+  input,select{width:100%;padding:10px 12px;border:1.5px solid #e2e8f0;border-radius:8px;font-size:13px;box-sizing:border-box;font-family:sans-serif;}
+  input:focus,select:focus{outline:none;border-color:#e63946;}
+  button{width:100%;padding:12px;background:#e63946;color:white;border:none;border-radius:8px;font-size:14px;font-weight:700;cursor:pointer;margin-top:4px;}
+  button:disabled{background:#94a3b8;cursor:not-allowed;}
+  .result{margin-top:16px;padding:12px 16px;border-radius:8px;font-size:13px;display:none;}
+  .ok{background:#dcfce7;border:1px solid #bbf7d0;color:#15803d;}
+  .err{background:#fee2e2;border:1px solid #fecaca;color:#b91c1c;}
+  .logo{font-size:20px;font-weight:800;margin-bottom:20px;}
+  .logo span{color:#e63946;}
+</style>
+</head>
+<body>
+<div class="card">
+  <div class="logo">Red<span>Tech</span></div>
+  <h2>Test notification email</h2>
+  <p>Teste l'Edge Function Resend directement depuis le navigateur.</p>
+
+  <div class="fg">
+    <label>Type d'email</label>
+    <select id="type">
+      <option value="expiration_warning">⏰ Avertissement J-10</option>
+      <option value="suspension">⛔ Suspension</option>
+    </select>
+  </div>
+
+  <div class="fg">
+    <label>Email destinataire</label>
+    <input type="email" id="email" value="idberka@live.com">
+  </div>
+
+  <div class="fg">
+    <label>Nom de la résidence</label>
+    <input type="text" id="nom" value="Missimi Living">
+  </div>
+
+  <div class="fg">
+    <label>Abonnement</label>
+    <select id="abonnement">
+      <option value="mensuel">Mensuel</option>
+      <option value="trimestriel">Trimestriel</option>
+      <option value="annuel">Annuel</option>
+    </select>
+  </div>
+
+  <button id="sendBtn" onclick="sendTest()">🚀 Envoyer l'email de test</button>
+
+  <div class="result" id="result"></div>
+</div>
+
+<script>
+async function sendTest() {
+  var btn    = document.getElementById('sendBtn');
+  var result = document.getElementById('result');
+  var type   = document.getElementById('type').value;
+  var email  = document.getElementById('email').value;
+  var nom    = document.getElementById('nom').value;
+  var abo    = document.getElementById('abonnement').value;
+
+  btn.disabled    = true;
+  btn.textContent = '⏳ Envoi en cours...';
+  result.style.display = 'none';
+
+  // Date dans 10 jours
+  var expDate = new Date();
+  expDate.setDate(expDate.getDate() + 10);
+  var expStr = expDate.toISOString().split('T')[0];
+
+  try {
+    var resp = await fetch(
+      'https://nwusjraxjfirsonbndfy.supabase.co/functions/v1/clever-handler',
+      {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          type:             type,
+          email:            email,
+          nom:              nom,
+          abonnement:       abo,
+          date_expiration:  expStr,
+          jours_restants:   10
+        })
+      }
+    );
+
+    var data = await resp.json();
+
+    if (resp.ok && data.success) {
+      result.className     = 'result ok';
+      result.innerHTML     = '✅ Email envoyé avec succès !<br><small>ID : ' + (data.id || '—') + '</small>';
+    } else {
+      result.className     = 'result err';
+      result.innerHTML     = '❌ Erreur : ' + JSON.stringify(data.error || data);
+    }
+  } catch(e) {
+    result.className   = 'result err';
+    result.innerHTML   = '❌ Erreur réseau : ' + e.message;
+  }
+
+  result.style.display = 'block';
+  btn.disabled         = false;
+  btn.textContent      = '🚀 Envoyer l\'email de test';
+}
+</script>
+</body>
+</html>
