@@ -1011,12 +1011,12 @@ function loadDashboard() {
 }
 
 function showRenewModal(id, nom, currentAboVal) {
-  showModal('🔄', 'Renouveler l'abonnement',
-    'Choisissez le nouveau type d'abonnement pour <strong>' + nom + '</strong> :' +
+  showModal('🔄', 'Renouveler l\'abonnement',
+    'Choisissez le type d\'abonnement pour <strong>' + nom + '</strong> :' +
     '<div style="display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-top:14px">' +
-      '<button onclick="setRenewAbo('mensuel',this)" class="abo-btn ' + (currentAboVal==='mensuel'?'active':'') + '" style="cursor:pointer" data-abo="mensuel"><span class="ab-icon">📅</span><span class="ab-label">Mensuel</span><span class="ab-dur">30j</span></button>' +
-      '<button onclick="setRenewAbo('trimestriel',this)" class="abo-btn ' + (currentAboVal==='trimestriel'?'active':'') + '" style="cursor:pointer" data-abo="trimestriel"><span class="ab-icon">📆</span><span class="ab-label">Trimestriel</span><span class="ab-dur">90j</span></button>' +
-      '<button onclick="setRenewAbo('annuel',this)" class="abo-btn ' + (currentAboVal==='annuel'?'active':'') + '" style="cursor:pointer" data-abo="annuel"><span class="ab-icon">🗓️</span><span class="ab-label">Annuel</span><span class="ab-dur">365j</span></button>' +
+      '<button onclick="setRenewAbo(\'mensuel\',this)" class="abo-btn ' + (currentAboVal==='mensuel'?'active':'') + '" style="cursor:pointer" data-abo="mensuel"><span class="ab-icon">📅</span><span class="ab-label">Mensuel</span><span class="ab-dur">30j</span></button>' +
+      '<button onclick="setRenewAbo(\'trimestriel\',this)" class="abo-btn ' + (currentAboVal==='trimestriel'?'active':'') + '" style="cursor:pointer" data-abo="trimestriel"><span class="ab-icon">📆</span><span class="ab-label">Trimestriel</span><span class="ab-dur">90j</span></button>' +
+      '<button onclick="setRenewAbo(\'annuel\',this)" class="abo-btn ' + (currentAboVal==='annuel'?'active':'') + '" style="cursor:pointer" data-abo="annuel"><span class="ab-icon">🗓️</span><span class="ab-label">Annuel</span><span class="ab-dur">365j</span></button>' +
     '</div>',
     'Renouveler', 'mbtn-info',
     function() { renouvelerClient(id, nom); }
