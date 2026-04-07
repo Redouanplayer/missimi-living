@@ -1033,15 +1033,48 @@ function setRenewAbo(abo, btn) {
 
 function renouvelerClient(id, nom) {
   var abo = window._renewAbo || 'mensuel';
+  var btn = document.getElementById('modalConfirm');
+  if (btn) { btn.disabled = true; btn.textContent = '⏳ En cours...'; }
   toast('⏳ Renouvellement en cours...');
+
   db.rpc('renouveler_abonnement', { p_id: id, p_abonnement: abo })
     .then(function(res) {
-      if (res.error || !res.data || !res.data.success) {
-        toast('❌ ' + (res.error?.message || res.data?.error || 'Erreur'));
+      if (btn) { btn.disabled = false; btn.textContent = 'Renouveler'; }
+
+      if (res.error) {
+        toast('❌ ' + res.error.message);
         return;
       }
-      toast('🔄 ' + nom + ' — ' + res.data.message);
+
+      // Fallback si RPC pas dispo — UPDATE direct
+      if (!res.data || !res.data.success) {
+        var durations = { mensuel: 30, trimestriel: 90, annuel: 365 };
+        var days = durations[abo] || 30;
+        var newExp = new Date();
+        newExp.setDate(newExp.getDate() + days);
+        var expStr = newExp.toISOString().split('T')[0];
+
+        db.from('residences').update({
+          actif:           true,
+          abonnement:      abo,
+          date_debut:      new Date().toISOString().split('T')[0],
+          date_expiration: expStr,
+          statut_notif:    'pending'
+        }).eq('id', id).then(function(r) {
+          if (r.error) { toast('❌ ' + r.error.message); return; }
+          var fmt = newExp.toLocaleDateString('fr-FR', {day:'2-digit',month:'long',year:'numeric'});
+          toast('✅ ' + nom + ' renouvelé — expire le ' + fmt);
+          loadClients(); loadStats();
+        });
+        return;
+      }
+
+      toast('✅ ' + nom + ' — ' + res.data.message);
       loadClients(); loadStats();
+    })
+    .catch(function(e) {
+      if (btn) { btn.disabled = false; btn.textContent = 'Renouveler'; }
+      toast('❌ ' + e.message);
     });
 }
 
