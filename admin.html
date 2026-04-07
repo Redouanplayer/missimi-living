@@ -208,8 +208,31 @@ tr:hover td{background:#fafafa;}
 .b-mensuel{background:#eff6ff;color:#1d4ed8;}
 .b-trimestriel{background:#f0fdf4;color:#15803d;}
 .b-annuel{background:#faf5ff;color:#7c3aed;}
+
+/* NAVBAR TABS */
+.nav-tabs{display:flex;gap:4px;padding:0 28px;background:var(--navy);border-top:1px solid rgba(255,255,255,.08);}
+.nav-tab{padding:12px 20px;font-size:13px;font-weight:600;color:rgba(255,255,255,.45);cursor:pointer;border-bottom:2px solid transparent;transition:all .2s;display:flex;align-items:center;gap:7px;font-family:"Plus Jakarta Sans",sans-serif;background:none;border-left:none;border-right:none;border-top:none;}
+.nav-tab:hover{color:rgba(255,255,255,.8);}
+.nav-tab.active{color:white;border-bottom-color:var(--red);}
+.nav-tab .tab-badge{background:var(--red);color:white;font-size:10px;font-weight:700;padding:1px 6px;border-radius:10px;min-width:18px;text-align:center;}
+/* TAB PANELS */
+.tab-panel{display:none;}
+.tab-panel.active{display:block;}
+.abo-filter{padding:6px 14px;border-radius:20px;font-size:12px;font-weight:600;cursor:pointer;border:1px solid var(--border);background:var(--bg);font-family:"Plus Jakarta Sans",sans-serif;color:var(--muted);transition:all .2s;}
+.abo-filter:hover{border-color:var(--red);color:var(--red);}
+.abo-filter.active{background:var(--navy);color:white;border-color:var(--navy);}
+.days-ok{color:var(--green);font-weight:700;font-size:12px;}
+.days-warn{color:var(--orange,#ea580c);font-weight:700;font-size:12px;}
+.days-dead{color:var(--red);font-weight:700;font-size:12px;}
+.notif-btn{padding:5px 12px;border-radius:5px;font-size:11px;font-weight:600;cursor:pointer;border:none;font-family:"Plus Jakarta Sans",sans-serif;transition:all .2s;}
+.nb-warn{background:var(--orange-bg);color:var(--orange,#ea580c);}
+.nb-info{background:var(--blue-bg);color:var(--blue);}
+.nb-red{background:var(--red-bg);color:var(--red);}
+.notif-status{font-size:11px;font-weight:600;padding:3px 8px;border-radius:10px;}
+.ns-pending{background:#f1f5f9;color:#64748b;}
+.ns-notified{background:var(--blue-bg);color:var(--blue);}
+.ns-renewed{background:var(--green-bg);color:var(--green);}
 </style>
-</head>
 <body>
 
 <!-- ══ LOGIN ══════════════════════════════════════════ -->
@@ -255,8 +278,16 @@ tr:hover td{background:#fafafa;}
     </div>
   </div>
 
+  <!-- NAVBAR TABS -->
+  <div class="nav-tabs">
+    <button class="nav-tab active" onclick="switchTab('clients',this)">📋 Clients</button>
+    <button class="nav-tab" onclick="switchTab('abonnements',this)">💳 Abonnements <span class="tab-badge" id="tabAboBadge">0</span></button>
+    <button class="nav-tab" onclick="switchTab('notifications',this)">📧 Notifications</button>
+  </div>
+
   <div class="main">
 
+    <div class="tab-panel active" id="panel-clients">
     <div class="stats-row">
       <div class="stat"><div class="stat-num s-red" id="statTotal">—</div><div class="stat-lbl">Espaces créés</div></div>
       <div class="stat"><div class="stat-num s-green" id="statActive">—</div><div class="stat-lbl">Actifs</div></div>
@@ -445,6 +476,116 @@ tr:hover td{background:#fafafa;}
       </div>
 
     </div>
+    </div><!-- fin panel-clients -->
+
+    <!-- ══ PANEL ABONNEMENTS ══════════════════════════ -->
+    <div class="tab-panel" id="panel-abonnements">
+
+      <!-- Filtres -->
+      <div style="display:flex;gap:8px;margin-bottom:20px;flex-wrap:wrap;align-items:center">
+        <span style="font-size:13px;font-weight:600;color:var(--muted)">Filtrer :</span>
+        <button class="abo-filter active" data-filter="all"    onclick="filterAbo('all',this)">Tous</button>
+        <button class="abo-filter"        data-filter="active" onclick="filterAbo('active',this)">🟢 Actifs</button>
+        <button class="abo-filter"        data-filter="warn"   onclick="filterAbo('warn',this)">🟠 Expire bientôt</button>
+        <button class="abo-filter"        data-filter="dead"   onclick="filterAbo('dead',this)">🔴 Expirés</button>
+        <button class="abo-filter"        data-filter="off"    onclick="filterAbo('off',this)">⛔ Suspendus</button>
+        <button onclick="loadAbonnements()" style="margin-left:auto;background:var(--bg);border:1px solid var(--border);padding:6px 14px;border-radius:6px;font-size:12px;font-weight:600;cursor:pointer;font-family:'Plus Jakarta Sans',sans-serif;color:var(--muted)">↻ Actualiser</button>
+      </div>
+
+      <!-- Stats rapides -->
+      <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:10px;margin-bottom:20px">
+        <div class="stat" style="padding:14px 16px"><div class="stat-num" style="font-size:22px;color:var(--green)" id="aboStatActif">—</div><div class="stat-lbl">Actifs</div></div>
+        <div class="stat" style="padding:14px 16px"><div class="stat-num" style="font-size:22px;color:var(--orange,#ea580c)" id="aboStatWarn">—</div><div class="stat-lbl">Expire ≤ 10j</div></div>
+        <div class="stat" style="padding:14px 16px"><div class="stat-num" style="font-size:22px;color:var(--red)" id="aboStatDead">—</div><div class="stat-lbl">Expirés</div></div>
+        <div class="stat" style="padding:14px 16px"><div class="stat-num" style="font-size:22px;color:var(--muted)" id="aboStatOff">—</div><div class="stat-lbl">Suspendus</div></div>
+      </div>
+
+      <!-- Table abonnements -->
+      <div class="card">
+        <div class="card-hd">
+          <div class="card-icon ci-blue">💳</div>
+          <div><div class="card-title">Gestion des abonnements</div><div class="card-sub">Suivi et renouvellement</div></div>
+        </div>
+        <div style="overflow-x:auto">
+          <table>
+            <thead>
+              <tr>
+                <th>Code</th>
+                <th>Espace</th>
+                <th>Abonnement</th>
+                <th>Début</th>
+                <th>Expiration</th>
+                <th>Jours restants</th>
+                <th>Statut</th>
+                <th>Action</th>
+              </tr>
+            </thead>
+            <tbody id="aboBody">
+              <tr><td colspan="8" class="empty">Chargement...</td></tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+
+    <!-- ══ PANEL NOTIFICATIONS ════════════════════════ -->
+    <div class="tab-panel" id="panel-notifications">
+
+      <!-- Actions globales -->
+      <div style="display:flex;gap:10px;margin-bottom:20px;flex-wrap:wrap">
+        <div class="card" style="flex:1;min-width:200px">
+          <div class="card-body" style="text-align:center;padding:20px">
+            <div style="font-size:32px;margin-bottom:8px">⏰</div>
+            <div style="font-size:13px;font-weight:700;margin-bottom:4px">Rappels J-10</div>
+            <div style="font-size:12px;color:var(--muted);margin-bottom:14px">Envoyer à tous les clients expirant dans 10 jours</div>
+            <button onclick="sendBulkNotif('j10')" class="sub-btn" style="margin:0;padding:10px 20px;font-size:12px">📧 Envoyer J-10</button>
+          </div>
+        </div>
+        <div class="card" style="flex:1;min-width:200px">
+          <div class="card-body" style="text-align:center;padding:20px">
+            <div style="font-size:32px;margin-bottom:8px">🔄</div>
+            <div style="font-size:13px;font-weight:700;margin-bottom:4px">Relances J+3</div>
+            <div style="font-size:12px;color:var(--muted);margin-bottom:14px">Relancer les clients suspendus depuis 3 jours</div>
+            <button onclick="sendBulkNotif('relance')" class="sub-btn" style="margin:0;padding:10px 20px;font-size:12px;background:var(--orange,#ea580c)">📧 Envoyer relances</button>
+          </div>
+        </div>
+        <div class="card" style="flex:1;min-width:200px">
+          <div class="card-body" style="text-align:center;padding:20px">
+            <div style="font-size:32px;margin-bottom:8px">⛔</div>
+            <div style="font-size:13px;font-weight:700;margin-bottom:4px">Suspensions</div>
+            <div style="font-size:12px;color:var(--muted);margin-bottom:14px">Suspendre tous les comptes expirés maintenant</div>
+            <button onclick="runSuspensions()" class="sub-btn" style="margin:0;padding:10px 20px;font-size:12px;background:var(--red)">⚡ Lancer suspensions</button>
+          </div>
+        </div>
+      </div>
+
+      <!-- Liste clients avec actions notif individuelles -->
+      <div class="card">
+        <div class="card-hd">
+          <div class="card-icon ci-orange" style="background:var(--orange-bg)">📧</div>
+          <div><div class="card-title">Notifications individuelles</div><div class="card-sub">Envoyer par client</div></div>
+          <button onclick="loadNotifications()" style="background:var(--bg);border:1px solid var(--border);padding:5px 12px;border-radius:6px;font-size:11px;font-weight:600;cursor:pointer;font-family:'Plus Jakarta Sans',sans-serif;color:var(--muted)">↻</button>
+        </div>
+        <div style="overflow-x:auto">
+          <table>
+            <thead>
+              <tr>
+                <th>Code</th>
+                <th>Espace</th>
+                <th>Email admin</th>
+                <th>Expiration</th>
+                <th>Statut notif</th>
+                <th>Envoyer</th>
+              </tr>
+            </thead>
+            <tbody id="notifBody">
+              <tr><td colspan="6" class="empty">Chargement...</td></tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+
   </div>
 </div>
 
@@ -1075,6 +1216,283 @@ function renouvelerClient(id, nom) {
     .catch(function(e) {
       if (btn) { btn.disabled = false; btn.textContent = 'Renouveler'; }
       toast('❌ ' + e.message);
+    });
+}
+
+// ── NAVIGATION ONGLETS ───────────────────────────────
+function switchTab(tab, btn) {
+  document.querySelectorAll('.nav-tab').forEach(function(b) { b.classList.remove('active'); });
+  document.querySelectorAll('.tab-panel').forEach(function(p) { p.classList.remove('active'); });
+  btn.classList.add('active');
+  document.getElementById('panel-' + tab).classList.add('active');
+  if (tab === 'abonnements')   loadAbonnements();
+  if (tab === 'notifications') loadNotifications();
+}
+
+// ── ABONNEMENTS ──────────────────────────────────────
+var aboData = [], aboFilter = 'all';
+
+function filterAbo(f, btn) {
+  aboFilter = f;
+  document.querySelectorAll('.abo-filter').forEach(function(b) { b.classList.remove('active'); });
+  btn.classList.add('active');
+  renderAbo();
+}
+
+function loadAbonnements() {
+  db.from('residences')
+    .select('id,code_residence,nom,secteur,abonnement,date_debut,date_expiration,actif,statut_notif,email_admin')
+    .order('date_expiration', { ascending: true })
+    .then(function(res) {
+      aboData = res.data || [];
+      updateAboStats();
+      renderAbo();
+    });
+}
+
+function updateAboStats() {
+  var today = new Date(); today.setHours(0,0,0,0);
+  var actif = 0, warn = 0, dead = 0, off = 0;
+  aboData.forEach(function(r) {
+    if (!r.actif) { off++; return; }
+    if (!r.date_expiration) { actif++; return; }
+    var diff = Math.round((new Date(r.date_expiration) - today) / 86400000);
+    if (diff < 0) dead++;
+    else if (diff <= 10) warn++;
+    else actif++;
+  });
+  document.getElementById('aboStatActif').textContent = actif;
+  document.getElementById('aboStatWarn').textContent  = warn;
+  document.getElementById('aboStatDead').textContent  = dead;
+  document.getElementById('aboStatOff').textContent   = off;
+  // Badge navbar
+  var badge = document.getElementById('tabAboBadge');
+  if (badge) badge.textContent = warn + dead;
+}
+
+function renderAbo() {
+  var today = new Date(); today.setHours(0,0,0,0);
+  var tbody = document.getElementById('aboBody');
+  var filtered = aboData.filter(function(r) {
+    if (aboFilter === 'all') return true;
+    if (!r.date_expiration) return aboFilter === 'active';
+    var diff = Math.round((new Date(r.date_expiration) - today) / 86400000);
+    if (aboFilter === 'active')  return r.actif && diff > 10;
+    if (aboFilter === 'warn')    return r.actif && diff >= 0 && diff <= 10;
+    if (aboFilter === 'dead')    return r.actif && diff < 0;
+    if (aboFilter === 'off')     return !r.actif;
+    return true;
+  });
+
+  if (!filtered.length) {
+    tbody.innerHTML = '<tr><td colspan="8" class="empty">Aucun client dans cette catégorie</td></tr>';
+    return;
+  }
+
+  tbody.innerHTML = filtered.map(function(r) {
+    var diff = '—', dClass = '', badge = '';
+    if (r.date_expiration) {
+      var d = Math.round((new Date(r.date_expiration) - today) / 86400000);
+      if (d < 0)        { diff = d + 'j';  dClass = 'days-dead'; }
+      else if (d <= 10) { diff = 'J-' + d; dClass = 'days-warn'; }
+      else              { diff = d + 'j';  dClass = 'days-ok'; }
+    }
+    var aboBadge = r.abonnement
+      ? '<span class="badge b-' + r.abonnement + '">' + r.abonnement + '</span>' : '—';
+    var statut = r.actif
+      ? '<span class="badge b-on">● Actif</span>'
+      : '<span class="badge b-off">⛔ Suspendu</span>';
+    var debut = r.date_debut
+      ? new Date(r.date_debut).toLocaleDateString('fr-FR',{day:'2-digit',month:'2-digit',year:'2-digit'}) : '—';
+    var exp = r.date_expiration
+      ? new Date(r.date_expiration).toLocaleDateString('fr-FR',{day:'2-digit',month:'2-digit',year:'2-digit'}) : '—';
+
+    return '<tr>' +
+      '<td class="code-td">' + (r.code_residence || '—') + '</td>' +
+      '<td style="font-weight:600">' + r.nom + '</td>' +
+      '<td>' + aboBadge + '</td>' +
+      '<td style="font-size:12px;color:var(--muted)">' + debut + '</td>' +
+      '<td style="font-size:12px">' + exp + '</td>' +
+      '<td class="' + dClass + '">' + diff + '</td>' +
+      '<td>' + statut + '</td>' +
+      '<td><button class="act-btn" style="color:var(--blue);border-color:var(--blue-border)" onclick="showRenewModal(\'' + r.id + '\',\'' + r.nom.replace(/'/g,"\\'") + '\',\'' + (r.abonnement||'mensuel') + '\')">🔄 Renouveler</button></td>' +
+      '</tr>';
+  }).join('');
+}
+
+// ── NOTIFICATIONS ─────────────────────────────────────
+function loadNotifications() {
+  db.from('residences')
+    .select('id,code_residence,nom,email_admin,date_expiration,statut_notif,actif,abonnement')
+    .order('date_expiration', { ascending: true })
+    .then(function(res) {
+      var data = res.data || [];
+      var today = new Date(); today.setHours(0,0,0,0);
+      var tbody = document.getElementById('notifBody');
+
+      if (!data.length) {
+        tbody.innerHTML = '<tr><td colspan="6" class="empty">Aucun client</td></tr>';
+        return;
+      }
+
+      tbody.innerHTML = data.map(function(r) {
+        var exp = r.date_expiration
+          ? new Date(r.date_expiration).toLocaleDateString('fr-FR',{day:'2-digit',month:'long',year:'numeric'}) : '—';
+        var diff = r.date_expiration
+          ? Math.round((new Date(r.date_expiration) - today) / 86400000) : null;
+        var expDisplay = diff !== null
+          ? (diff < 0 ? '<span class="days-dead">🔴 Expiré</span>'
+          : diff <= 10 ? '<span class="days-warn">🟠 J-' + diff + '</span>'
+          : '<span class="days-ok">🟢 ' + exp + '</span>') : '—';
+
+        var ns = r.statut_notif || 'pending';
+        var nsBadge = '<span class="notif-status ns-' + ns + '">' +
+          (ns === 'pending' ? '⏳ En attente' : ns === 'notified' ? '📧 Notifié' : '✅ Renouvelé') +
+          '</span>';
+
+        var actions = '';
+        if (!r.actif) {
+          actions = '<button class="notif-btn nb-red" onclick="sendNotif(\'' + r.id + '\',\'relance\')">🔄 Relance</button>';
+        } else if (diff !== null && diff <= 10 && diff >= 0) {
+          actions = '<button class="notif-btn nb-warn" onclick="sendNotif(\'' + r.id + '\',\'j10\')">⏰ J-10</button>';
+        } else if (diff !== null && diff < 0) {
+          actions = '<button class="notif-btn nb-red" onclick="sendNotif(\'' + r.id + '\',\'suspension\')">⛔ Suspension</button>';
+        } else {
+          actions = '<span style="font-size:11px;color:var(--muted)">—</span>';
+        }
+
+        return '<tr>' +
+          '<td class="code-td">' + (r.code_residence || '—') + '</td>' +
+          '<td style="font-weight:600">' + r.nom + '</td>' +
+          '<td style="font-size:12px;color:var(--muted)">' + (r.email_admin || '—') + '</td>' +
+          '<td>' + expDisplay + '</td>' +
+          '<td>' + nsBadge + '</td>' +
+          '<td>' + actions + '</td>' +
+          '</tr>';
+      }).join('');
+    });
+}
+
+// Envoyer une notification individuelle
+function sendNotif(id, type) {
+  db.from('residences').select('nom,email_admin,abonnement,date_expiration').eq('id', id).single()
+    .then(function(res) {
+      var r = res.data;
+      if (!r || !r.email_admin) { toast('❌ Email admin manquant'); return; }
+
+      var today = new Date();
+      var diff = r.date_expiration
+        ? Math.round((new Date(r.date_expiration) - today) / 86400000) : 10;
+
+      var payload = {
+        type:            type === 'j10' ? 'expiration_warning' : type === 'relance' ? 'expiration_warning' : 'suspension',
+        email:           r.email_admin,
+        nom:             r.nom,
+        abonnement:      r.abonnement || 'mensuel',
+        date_expiration: r.date_expiration,
+        jours_restants:  Math.max(diff, 0)
+      };
+
+      toast('📧 Envoi en cours...');
+      fetch('https://nwusjraxjfirsonbndfy.supabase.co/functions/v1/clever-handler', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', 'x-internal-key': 'redtech-2026-secret' },
+        body: JSON.stringify(payload)
+      })
+      .then(function(resp) { return resp.json(); })
+      .then(function(data) {
+        if (data.success) {
+          toast('✅ Email envoyé à ' + r.email_admin);
+          // Marquer comme notifié
+          db.from('residences').update({ statut_notif: 'notified' }).eq('id', id)
+            .then(function() { loadNotifications(); });
+        } else {
+          toast('❌ ' + JSON.stringify(data.error || data));
+        }
+      })
+      .catch(function(e) { toast('❌ ' + e.message); });
+    });
+}
+
+// Envoi groupé
+function sendBulkNotif(type) {
+  var today = new Date(); today.setHours(0,0,0,0);
+  db.from('residences')
+    .select('id,nom,email_admin,abonnement,date_expiration,actif')
+    .then(function(res) {
+      var targets = (res.data || []).filter(function(r) {
+        if (!r.email_admin) return false;
+        var diff = r.date_expiration
+          ? Math.round((new Date(r.date_expiration) - today) / 86400000) : null;
+        if (type === 'j10')    return r.actif && diff !== null && diff >= 0 && diff <= 10;
+        if (type === 'relance') return !r.actif && diff !== null && diff < -3;
+        return false;
+      });
+
+      if (!targets.length) { toast('ℹ️ Aucun client concerné'); return; }
+
+      toast('📧 Envoi à ' + targets.length + ' client(s)...');
+      var sent = 0;
+      targets.forEach(function(r) {
+        var diff = Math.round((new Date(r.date_expiration) - today) / 86400000);
+        fetch('https://nwusjraxjfirsonbndfy.supabase.co/functions/v1/clever-handler', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json', 'x-internal-key': 'redtech-2026-secret' },
+          body: JSON.stringify({
+            type:            type === 'j10' ? 'expiration_warning' : 'expiration_warning',
+            email:           r.email_admin,
+            nom:             r.nom,
+            abonnement:      r.abonnement || 'mensuel',
+            date_expiration: r.date_expiration,
+            jours_restants:  Math.max(diff, 0)
+          })
+        }).then(function() {
+          sent++;
+          if (sent === targets.length) {
+            toast('✅ ' + sent + ' email(s) envoyés');
+            loadNotifications();
+          }
+        });
+      });
+    });
+}
+
+// Lancer suspensions manuellement
+function runSuspensions() {
+  var today = new Date(); today.setHours(0,0,0,0);
+  db.from('residences')
+    .select('id,nom,email_admin,abonnement,date_expiration')
+    .eq('actif', true)
+    .then(function(res) {
+      var expired = (res.data || []).filter(function(r) {
+        if (!r.date_expiration) return false;
+        return new Date(r.date_expiration) < today;
+      });
+
+      if (!expired.length) { toast('ℹ️ Aucun compte expiré'); return; }
+
+      toast('⏳ Suspension de ' + expired.length + ' compte(s)...');
+      var done = 0;
+      expired.forEach(function(r) {
+        db.from('residences').update({ actif: false }).eq('id', r.id).then(function() {
+          // Envoyer email suspension
+          if (r.email_admin) {
+            fetch('https://nwusjraxjfirsonbndfy.supabase.co/functions/v1/clever-handler', {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json', 'x-internal-key': 'redtech-2026-secret' },
+              body: JSON.stringify({
+                type: 'suspension', email: r.email_admin, nom: r.nom,
+                abonnement: r.abonnement || 'mensuel', date_expiration: r.date_expiration
+              })
+            });
+          }
+          done++;
+          if (done === expired.length) {
+            toast('⛔ ' + done + ' compte(s) suspendu(s)');
+            loadStats(); loadNotifications();
+          }
+        });
+      });
     });
 }
 
