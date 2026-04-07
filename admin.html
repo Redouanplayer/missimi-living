@@ -287,6 +287,7 @@ tr:hover td{background:#fafafa;}
     <button class="nav-tab active" onclick="switchTab('clients',this)">📋 Clients</button>
     <button class="nav-tab" onclick="switchTab('abonnements',this)">💳 Abonnements <span class="tab-badge" id="tabAboBadge">0</span></button>
     <button class="nav-tab" onclick="switchTab('notifications',this)">📧 Notifications</button>
+    <button class="nav-tab" onclick="switchTab('actualites',this)">📰 Actualités <span class="tab-badge" id="tabActuBadge" style="background:var(--green);display:none">0</span></button>
   </div>
 
   <div class="main">
@@ -590,6 +591,78 @@ tr:hover td{background:#fafafa;}
       </div>
     </div>
 
+    <!-- ══ PANEL ACTUALITÉS ══════════════════════════ -->
+    <div class="tab-panel" id="panel-actualites">
+
+      <!-- Formulaire création -->
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:20px;align-items:start">
+
+        <div class="card">
+          <div class="card-hd">
+            <div class="card-icon" style="background:#f0fdf4">✍️</div>
+            <div><div class="card-title">Nouvelle actualité</div><div class="card-sub">Publier sur le site</div></div>
+          </div>
+          <div class="card-body">
+            <div class="fg">
+              <label>Titre *</label>
+              <input type="text" id="actuTitre" placeholder="Ex : Travaux ascenseur bâtiment 3">
+            </div>
+            <div class="fg">
+              <label>Contenu *</label>
+              <textarea id="actuContenu" rows="6" style="width:100%;padding:10px 14px;border:1.5px solid var(--border);border-radius:var(--radius-md);font-family:'Plus Jakarta Sans',sans-serif;font-size:13px;resize:vertical;outline:none;" placeholder="Rédigez votre actualité ici..."></textarea>
+            </div>
+            <div class="fg">
+              <label>URL de l'image (optionnel)</label>
+              <input type="url" id="actuImage" placeholder="https://exemple.com/image.jpg">
+            </div>
+            <div style="display:flex;gap:10px;margin-top:4px">
+              <button class="sub-btn" id="actuPublishBtn" style="flex:1" onclick="saveActu(true)">
+                🚀 Publier maintenant
+              </button>
+              <button class="sub-btn" id="actuDraftBtn" style="flex:1;background:var(--muted)" onclick="saveActu(false)">
+                💾 Brouillon
+              </button>
+            </div>
+            <div style="display:none;margin-top:10px;padding:10px 14px;background:var(--green-bg);border:1px solid var(--green-border);border-radius:var(--radius);font-size:13px;color:var(--green)" id="actuSuccess"></div>
+          </div>
+        </div>
+
+        <!-- Aperçu -->
+        <div class="card" id="actuPreviewCard" style="display:none">
+          <div class="card-hd">
+            <div class="card-icon" style="background:#fef9c3">👁</div>
+            <div><div class="card-title">Aperçu</div></div>
+          </div>
+          <div class="card-body" id="actuPreviewBody"></div>
+        </div>
+
+      </div>
+
+      <!-- Liste articles -->
+      <div class="card" style="margin-top:20px">
+        <div class="card-hd">
+          <div class="card-icon" style="background:#f0fdf4">📰</div>
+          <div><div class="card-title">Articles publiés</div><div class="card-sub">Gérer les actualités</div></div>
+          <button onclick="loadActualites()" style="background:var(--bg);border:1px solid var(--border);padding:5px 12px;border-radius:6px;font-size:11px;font-weight:600;cursor:pointer;font-family:'Plus Jakarta Sans',sans-serif;color:var(--muted)">↻</button>
+        </div>
+        <div style="overflow-x:auto">
+          <table>
+            <thead>
+              <tr>
+                <th>Titre</th>
+                <th>Statut</th>
+                <th>Date</th>
+                <th>Actions</th>
+              </tr>
+            </thead>
+            <tbody id="actuBody">
+              <tr><td colspan="4" class="empty">Chargement...</td></tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+
   </div>
 </div>
 
@@ -772,6 +845,7 @@ function enterApp(user) {
   loadStats();
   loadClients();
   loadDashboard();
+  initActuPreview();
 }
 
 function doLogin() {
@@ -1279,6 +1353,7 @@ function switchTab(tab, btn) {
   document.getElementById('panel-' + tab).classList.add('active');
   if (tab === 'abonnements')   loadAbonnements();
   if (tab === 'notifications') loadNotifications();
+  if (tab === 'actualites')    loadActualites();
 }
 
 // ── ABONNEMENTS ──────────────────────────────────────
@@ -1546,6 +1621,140 @@ function runSuspensions() {
         });
       });
     });
+}
+
+// ── ACTUALITÉS ───────────────────────────────────────
+function saveActu(publier) {
+  var titre   = document.getElementById('actuTitre').value.trim();
+  var contenu = document.getElementById('actuContenu').value.trim();
+  var image   = document.getElementById('actuImage').value.trim();
+  var success = document.getElementById('actuSuccess');
+
+  if (!titre || !contenu) {
+    success.textContent = '⚠️ Titre et contenu obligatoires';
+    success.style.background = 'var(--red-bg)';
+    success.style.borderColor = 'var(--red-border)';
+    success.style.color = 'var(--red)';
+    success.style.display = 'block';
+    return;
+  }
+
+  var btnP = document.getElementById('actuPublishBtn');
+  var btnD = document.getElementById('actuDraftBtn');
+  btnP.disabled = true; btnD.disabled = true;
+
+  var payload = { titre: titre, contenu: contenu, publie: publier };
+  if (image) payload.image_url = image;
+
+  db.from('actualites').insert(payload).then(function(res) {
+    btnP.disabled = false; btnD.disabled = false;
+    if (res.error) {
+      success.textContent = '❌ ' + res.error.message;
+      success.style.background = 'var(--red-bg)';
+      success.style.borderColor = 'var(--red-border)';
+      success.style.color = 'var(--red)';
+    } else {
+      success.textContent = publier ? '✅ Actualité publiée sur le site !' : '💾 Brouillon enregistré';
+      success.style.background = 'var(--green-bg)';
+      success.style.borderColor = 'var(--green-border)';
+      success.style.color = 'var(--green)';
+      // Reset form
+      document.getElementById('actuTitre').value   = '';
+      document.getElementById('actuContenu').value = '';
+      document.getElementById('actuImage').value   = '';
+      document.getElementById('actuPreviewCard').style.display = 'none';
+      loadActualites();
+    }
+    success.style.display = 'block';
+    setTimeout(function() { success.style.display = 'none'; }, 4000);
+  });
+}
+
+function loadActualites() {
+  var tbody = document.getElementById('actuBody');
+  tbody.innerHTML = '<tr><td colspan="4" class="empty">Chargement...</td></tr>';
+  db.from('actualites')
+    .select('*')
+    .order('created_at', { ascending: false })
+    .then(function(res) {
+      var data = res.data || [];
+      var pubCount = data.filter(function(a) { return a.publie; }).length;
+      var badge = document.getElementById('tabActuBadge');
+      if (badge) {
+        badge.textContent = pubCount;
+        badge.style.display = pubCount ? 'inline' : 'none';
+      }
+      if (!data.length) {
+        tbody.innerHTML = '<tr><td colspan="4" class="empty">Aucune actualité</td></tr>';
+        return;
+      }
+      tbody.innerHTML = data.map(function(a) {
+        var date = new Date(a.created_at).toLocaleDateString('fr-FR', {day:'2-digit',month:'short',year:'numeric'});
+        var statut = a.publie
+          ? '<span class="badge b-on">🟢 Publié</span>'
+          : '<span class="badge b-off" style="background:#f1f5f9;color:#64748b">💾 Brouillon</span>';
+        var btnLabel = a.publie ? 'Dépublier' : 'Publier';
+        return '<tr>' +
+          '<td style="font-weight:600;max-width:280px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">' + a.titre + '</td>' +
+          '<td>' + statut + '</td>' +
+          '<td style="font-size:12px;color:var(--muted)">' + date + '</td>' +
+          '<td style="display:flex;gap:6px">' +
+            '<button class="act-btn" style="color:var(--blue)" data-id="' + a.id + '" data-pub="' + a.publie + '" data-action="toggle">' + btnLabel + '</button>' +
+            '<button class="act-btn" style="color:var(--red)" data-id="' + a.id + '" data-action="delete">Supprimer</button>' +
+          '</td>' +
+        '</tr>';
+      }).join('');
+      // Attacher les events après rendu
+      tbody.querySelectorAll('[data-action="toggle"]').forEach(function(btn) {
+        btn.addEventListener('click', function() {
+          togglePublish(btn.dataset.id, btn.dataset.pub === 'true');
+        });
+      });
+      tbody.querySelectorAll('[data-action="delete"]').forEach(function(btn) {
+        btn.addEventListener('click', function() {
+          deleteActu(btn.dataset.id);
+        });
+      });
+    });
+}
+
+function togglePublish(id, publie) {
+  db.from('actualites').update({ publie: !publie }).eq('id', id).then(function(res) {
+    if (res.error) { toast('❌ ' + res.error.message); return; }
+    toast(publie ? '📥 Article dépublié' : '🚀 Article publié !');
+    loadActualites();
+  });
+}
+
+function deleteActu(id) {
+  if (!confirm('Supprimer cet article définitivement ?')) return;
+  db.from('actualites').delete().eq('id', id).then(function(res) {
+    if (res.error) { toast('❌ ' + res.error.message); return; }
+    toast('🗑 Article supprimé');
+    loadActualites();
+  });
+}
+
+// Aperçu en temps réel
+function initActuPreview() {
+  ['actuTitre','actuContenu','actuImage'].forEach(function(id) {
+    var el = document.getElementById(id);
+    if (el) el.addEventListener('input', updateActuPreview);
+  });
+}
+
+function updateActuPreview() {
+  var titre   = document.getElementById('actuTitre').value.trim();
+  var contenu = document.getElementById('actuContenu').value.trim();
+  var image   = document.getElementById('actuImage').value.trim();
+  var card    = document.getElementById('actuPreviewCard');
+  var body    = document.getElementById('actuPreviewBody');
+  if (!titre && !contenu) { card.style.display = 'none'; return; }
+  card.style.display = 'block';
+  body.innerHTML =
+    (image ? '<img src="' + image + '" style="width:100%;height:140px;object-fit:cover;border-radius:var(--radius-md);margin-bottom:12px" onerror="this.style.display=\'none\'">' : '') +
+    '<div style="font-size:14px;font-weight:700;margin-bottom:8px">' + (titre || '—') + '</div>' +
+    '<div style="font-size:12px;color:var(--muted);line-height:1.7">' + (contenu || '').substring(0,200) + (contenu.length > 200 ? '...' : '') + '</div>';
 }
 
 function setStorageBar(prefix, usedMB, limitMB, pct) {
