@@ -689,20 +689,20 @@ tr:hover td{background:#fafafa;}
     </div>
     <div style="font-size:13px;color:var(--muted);margin-bottom:16px" id="renewDesc">Choisissez le type d'abonnement</div>
     <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-bottom:16px">
-      <button class="renew-abo-btn active" data-abo="mensuel">
-        <span style="font-size:20px;display:block;margin-bottom:4px">📅</span>
-        <span style="font-size:12px;font-weight:700;display:block">Mensuel</span>
-        <span style="font-size:10px;color:var(--muted)">30 jours</span>
+      <button class="renew-abo-btn active" data-abo="mensuel" onclick="selectRenewAbo(this)">
+        <span style="font-size:20px;display:block;margin-bottom:4px;pointer-events:none">📅</span>
+        <span style="font-size:12px;font-weight:700;display:block;pointer-events:none">Mensuel</span>
+        <span style="font-size:10px;color:var(--muted);pointer-events:none">30 jours</span>
       </button>
-      <button class="renew-abo-btn" data-abo="trimestriel">
-        <span style="font-size:20px;display:block;margin-bottom:4px">📆</span>
-        <span style="font-size:12px;font-weight:700;display:block">Trimestriel</span>
-        <span style="font-size:10px;color:var(--muted)">90 jours</span>
+      <button class="renew-abo-btn" data-abo="trimestriel" onclick="selectRenewAbo(this)">
+        <span style="font-size:20px;display:block;margin-bottom:4px;pointer-events:none">📆</span>
+        <span style="font-size:12px;font-weight:700;display:block;pointer-events:none">Trimestriel</span>
+        <span style="font-size:10px;color:var(--muted);pointer-events:none">90 jours</span>
       </button>
-      <button class="renew-abo-btn" data-abo="annuel">
-        <span style="font-size:20px;display:block;margin-bottom:4px">🗓️</span>
-        <span style="font-size:12px;font-weight:700;display:block">Annuel</span>
-        <span style="font-size:10px;color:var(--muted)">365 jours</span>
+      <button class="renew-abo-btn" data-abo="annuel" onclick="selectRenewAbo(this)">
+        <span style="font-size:20px;display:block;margin-bottom:4px;pointer-events:none">🗓️</span>
+        <span style="font-size:12px;font-weight:700;display:block;pointer-events:none">Annuel</span>
+        <span style="font-size:10px;color:var(--muted);pointer-events:none">365 jours</span>
       </button>
     </div>
     <div id="renewExpPreview" style="background:var(--blue-bg);border:1px solid var(--blue-border);border-radius:var(--radius);padding:8px 14px;font-size:12px;color:var(--blue);margin-bottom:16px">
@@ -729,7 +729,7 @@ const SB_SERVICE = 'REMPLACE_PAR_TA_SERVICE_ROLE_KEY';
 const OWNER_EMAILS = ['idberka@live.com', 'redouane.idberka@impbrands.com'];
 
 // ── INIT ─────────────────────────────────────────────
-let db, currentSector = 'residence', lastResult = null;
+let db, currentSector = 'residence', currentAbo = 'mensuel', lastResult = null;
 
 window.addEventListener('load', function() {
 
@@ -818,15 +818,6 @@ window.addEventListener('load', function() {
   document.getElementById('renewConfirm').addEventListener('click', function() {
     if (renewId) renouvelerClient(renewId, renewNom);
   });
-  document.querySelectorAll('.renew-abo-btn').forEach(function(btn) {
-    btn.addEventListener('click', function() {
-      document.querySelectorAll('.renew-abo-btn').forEach(function(b) { b.classList.remove('active'); });
-      btn.classList.add('active');
-      renewAbo = btn.dataset.abo;
-      updateRenewPreview();
-    });
-  });
-
   // Vérifier session existante
   db.auth.getSession().then(function(res) {
     var user = res.data && res.data.session && res.data.session.user;
@@ -1289,6 +1280,13 @@ function loadDashboard() {
 // ── MODAL RENOUVELLEMENT ──────────────────────────────
 var renewId = null, renewAbo = 'mensuel', renewNom = '';
 
+function selectRenewAbo(btn) {
+  document.querySelectorAll('.renew-abo-btn').forEach(function(b) { b.classList.remove('active'); });
+  btn.classList.add('active');
+  renewAbo = btn.dataset.abo;
+  updateRenewPreview();
+}
+
 function showRenewModal(id, nom, currentAbo) {
   renewId  = id;
   renewNom = nom;
@@ -1332,23 +1330,53 @@ function renouvelerClient(id, nom) {
   newExp.setDate(newExp.getDate() + days);
   var expStr = newExp.toISOString().split('T')[0];
 
-  db.from('residences').update({
-    actif:           true,
-    abonnement:      abo,
-    date_debut:      new Date().toISOString().split('T')[0],
-    date_expiration: expStr,
-    statut_notif:    'pending'
-  }).eq('id', id).then(function(res) {
-    if (confirmBtn) { confirmBtn.disabled = false; confirmBtn.textContent = '🔄 Renouveler'; }
-    if (res.error) { toast('❌ ' + res.error.message); return; }
-    var fmt = newExp.toLocaleDateString('fr-FR', { day:'2-digit', month:'long', year:'numeric' });
-    toast('✅ ' + (nom||'Client') + ' renouvelé — expire le ' + fmt);
-    closeRenewModal();
-    loadClients(); loadStats(); loadAbonnements();
-  }).catch(function(e) {
-    if (confirmBtn) { confirmBtn.disabled = false; confirmBtn.textContent = '🔄 Renouveler'; }
-    toast('❌ ' + e.message);
-  });
+  // Récupérer email_admin avant de mettre à jour
+  db.from('residences').select('email_admin').eq('id', id).single()
+    .then(function(res) {
+      var emailAdmin = res.data && res.data.email_admin;
+
+      return db.from('residences').update({
+        actif:           true,
+        abonnement:      abo,
+        date_debut:      new Date().toISOString().split('T')[0],
+        date_expiration: expStr,
+        statut_notif:    'renewed'
+      }).eq('id', id).then(function(upd) {
+        if (confirmBtn) { confirmBtn.disabled = false; confirmBtn.textContent = '🔄 Renouveler'; }
+        if (upd.error) { toast('❌ ' + upd.error.message); return; }
+
+        var fmt = newExp.toLocaleDateString('fr-FR', { day:'2-digit', month:'long', year:'numeric' });
+        toast('✅ ' + (nom||'Client') + ' renouvelé — expire le ' + fmt);
+        closeRenewModal();
+        loadClients(); loadStats(); loadAbonnements();
+
+        // Envoi email de confirmation au client
+        if (emailAdmin) {
+          fetch('https://nwusjraxjfirsonbndfy.supabase.co/functions/v1/clever-handler', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json', 'x-internal-key': 'redtech-2026-secret' },
+            body: JSON.stringify({
+              type:            'renouvellement',
+              email:           emailAdmin,
+              nom:             nom || 'Client',
+              abonnement:      abo,
+              date_expiration: expStr,
+              jours_restants:  days
+            })
+          })
+          .then(function(r) { return r.json(); })
+          .then(function(data) {
+            if (data.success) toast('📧 Email de confirmation envoyé à ' + emailAdmin);
+            else toast('⚠️ Renouvellement OK mais email échoué');
+          })
+          .catch(function() { toast('⚠️ Renouvellement OK mais email échoué'); });
+        }
+      });
+    })
+    .catch(function(e) {
+      if (confirmBtn) { confirmBtn.disabled = false; confirmBtn.textContent = '🔄 Renouveler'; }
+      toast('❌ ' + e.message);
+    });
 }
 
 // ── NAVIGATION ONGLETS ───────────────────────────────
