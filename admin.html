@@ -808,11 +808,15 @@ window.addEventListener('load', function() {
   // Modal renouvellement listeners
   document.getElementById('renewClose').addEventListener('click', closeRenewModal);
   document.getElementById('renewCancel').addEventListener('click', closeRenewModal);
+
+  // Fix bug 2 : listener manquant sur le bouton Actualiser du panel Clients
+  var refreshBtn = document.getElementById('refreshBtn');
+  if (refreshBtn) refreshBtn.addEventListener('click', function() { loadClients(); loadStats(); });
   document.getElementById('renewOverlay').addEventListener('click', function(e) {
     if (e.target === this) closeRenewModal();
   });
   document.getElementById('renewConfirm').addEventListener('click', function() {
-    if (renewId) renouvelerClient(renewId, '');
+    if (renewId) renouvelerClient(renewId, renewNom);
   });
   document.querySelectorAll('.renew-abo-btn').forEach(function(btn) {
     btn.addEventListener('click', function() {
@@ -1283,10 +1287,11 @@ function loadDashboard() {
 }
 
 // ── MODAL RENOUVELLEMENT ──────────────────────────────
-var renewId = null, renewAbo = 'mensuel';
+var renewId = null, renewAbo = 'mensuel', renewNom = '';
 
 function showRenewModal(id, nom, currentAbo) {
   renewId  = id;
+  renewNom = nom;
   renewAbo = currentAbo || 'mensuel';
 
   document.getElementById('renewDesc').textContent = 'Choisissez l\'abonnement pour : ' + nom;
@@ -1313,6 +1318,7 @@ function updateRenewPreview() {
 function closeRenewModal() {
   document.getElementById('renewOverlay').classList.remove('open');
   renewId = null;
+  renewNom = '';
 }
 
 function renouvelerClient(id, nom) {
