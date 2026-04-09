@@ -467,6 +467,7 @@ tr:hover td{background:#fafafa;}
               <tr>
                 <th>Code</th>
                 <th>Espace</th>
+                <th>Email admin</th>
                 <th>Abonnement</th>
                 <th>Expiration</th>
                 <th>Statut</th>
@@ -1042,14 +1043,14 @@ function loadStats() {
 
 function loadClients() {
   var tbody = document.getElementById('clientsBody');
-  tbody.innerHTML = '<tr><td colspan="7" class="empty">Chargement...</td></tr>';
+  tbody.innerHTML = '<tr><td colspan="8" class="empty">Chargement...</td></tr>';
   db.from('residences')
-    .select('id,code_residence,nom,secteur,nb_apparts,actif,created_at,admin_id,abonnement,date_expiration,statut_notif')
+    .select('id,code_residence,nom,secteur,nb_apparts,actif,created_at,admin_id,abonnement,date_expiration,statut_notif,email_admin')
     .order('created_at', { ascending: false })
     .then(function(res) {
       var data = res.data;
       if (!data || !data.length) {
-        tbody.innerHTML = '<tr><td colspan="7" class="empty">Aucun client</td></tr>';
+        tbody.innerHTML = '<tr><td colspan="8" class="empty">Aucun client</td></tr>';
         return;
       }
       tbody.innerHTML = data.map(function(r) {
@@ -1070,9 +1071,13 @@ function loadClients() {
           else                 { expClass = 'exp-ok';   expTxt = '🟢 ' + expDate.toLocaleDateString('fr-FR', {day:'2-digit',month:'2-digit',year:'2-digit'}); }
         }
         var menuId = 'menu-' + r.id;
+        var emailDisplay = r.email_admin
+          ? '<a href="mailto:' + r.email_admin + '" style="color:var(--blue);font-size:12px;text-decoration:none">' + r.email_admin + '</a>'
+          : '<span style="color:var(--muted);font-size:12px">—</span>';
         return '<tr>' +
           '<td class="code-td">' + (r.code_residence || '—') + '</td>' +
           '<td style="font-weight:600">' + r.nom + '</td>' +
+          '<td>' + emailDisplay + '</td>' +
           '<td style="color:var(--muted);font-size:12px">' + (r.secteur || '—') + '</td>' +
           '<td style="font-family:\'DM Mono\',monospace;font-size:12px">' + (r.nb_apparts || '—') + '</td>' +
           '<td>' + badge + '</td>' +
