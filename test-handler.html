@@ -144,20 +144,9 @@ async function runTest() {
   log('Header x-internal-key : ' + INTERNAL_KEY, 'info');
   log('--- Envoi en cours... ---', 'warn');
 
-  // Test 1 : OPTIONS preflight manuel
+  // POST direct — pas de preflight séparé
   try {
-    log('Test OPTIONS preflight...', 'info');
-    var optResp = await fetch(FUNCTION_URL, { method: 'OPTIONS' });
-    log('OPTIONS status : ' + optResp.status, optResp.ok ? 'ok' : 'err');
-    var corsOrigin = optResp.headers.get('access-control-allow-origin');
-    log('CORS Allow-Origin : ' + (corsOrigin || 'MANQUANT ⚠️'), corsOrigin ? 'ok' : 'err');
-  } catch(e) {
-    log('OPTIONS failed : ' + e.message, 'err');
-  }
-
-  // Test 2 : POST réel
-  try {
-    log('Test POST...', 'info');
+    log('Envoi POST...', 'info');
     var resp = await fetch(FUNCTION_URL, {
       method: 'POST',
       headers: {
@@ -178,7 +167,10 @@ async function runTest() {
       if (data.success) {
         log('✅ EMAIL ENVOYÉ ! ID : ' + data.id, 'ok');
       } else {
-        log('❌ Erreur fonction : ' + JSON.stringify(data.error || data), 'err');
+        log('❌ Erreur : ' + JSON.stringify(data.error || data), 'err');
+        if (resp.status === 401) log('→ Vérifiez INTERNAL_KEY dans Supabase Secrets', 'warn');
+        if (resp.status === 400) log('→ Type ou champs manquants dans le payload', 'warn');
+        if (resp.status === 500) log('→ Erreur dans le code TypeScript — voir Logs Supabase', 'warn');
       }
     } catch(e) {
       log('⚠️ Réponse non-JSON : ' + text, 'warn');
@@ -186,8 +178,8 @@ async function runTest() {
 
   } catch(e) {
     log('❌ FETCH FAILED : ' + e.message, 'err');
-    log('→ Cause probable : CORS bloqué ou fonction inaccessible', 'warn');
-    log('→ Vérifiez : Edge Function Settings → "Allow unauthenticated requests" = ON', 'warn');
+    log('→ Le navigateur bloque la requête (CORS ou réseau)', 'warn');
+    log('→ Testez depuis Vercel et non en local (file://)', 'warn');
   }
 
   btn.disabled = false;
