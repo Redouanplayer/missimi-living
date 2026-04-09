@@ -710,7 +710,7 @@ tr:hover td{background:#fafafa;}
     </div>
     <div style="display:flex;gap:10px;justify-content:flex-end">
       <button class="mbtn mbtn-cancel" id="renewCancel" onclick="closeRenewModal()">Annuler</button>
-      <button class="mbtn mbtn-info" id="renewConfirm" onclick="if(renewId) renouvelerClient(renewId, renewNom)">🔄 Renouveler</button>
+      <button class="mbtn mbtn-info" id="renewConfirm" onclick="confirmRenew()">🔄 Renouveler</button>
     </div>
   </div>
 </div>
@@ -815,9 +815,7 @@ window.addEventListener('load', function() {
   document.getElementById('renewOverlay').addEventListener('click', function(e) {
     if (e.target === this) closeRenewModal();
   });
-  document.getElementById('renewConfirm').addEventListener('click', function() {
-    if (renewId) renouvelerClient(renewId, renewNom);
-  });
+  // renewConfirm géré via onclick directement sur le bouton
   // Vérifier session existante
   db.auth.getSession().then(function(res) {
     var user = res.data && res.data.session && res.data.session.user;
@@ -1319,6 +1317,11 @@ function closeRenewModal() {
   renewNom = '';
 }
 
+function confirmRenew() {
+  if (!renewId) { toast('❌ Aucun client sélectionné'); return; }
+  renouvelerClient(renewId, renewNom);
+}
+
 function renouvelerClient(id, nom) {
   var abo = renewAbo || 'mensuel';
   var confirmBtn = document.getElementById('renewConfirm');
@@ -1348,6 +1351,8 @@ function renouvelerClient(id, nom) {
         var fmt = newExp.toLocaleDateString('fr-FR', { day:'2-digit', month:'long', year:'numeric' });
         toast('✅ ' + (nom||'Client') + ' renouvelé — expire le ' + fmt);
         closeRenewModal();
+        // Reset aboData pour forcer rechargement complet
+        aboData = [];
         loadClients(); loadStats(); loadAbonnements();
 
         // Envoi email de confirmation au client
