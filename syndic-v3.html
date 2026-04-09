@@ -938,6 +938,34 @@ async function doRegister() {
   okEl.innerHTML = `✅ Demande envoyée pour <strong>${resData.nom}</strong> (${resData.code_residence}) !<br>Le syndic va vérifier et valider votre inscription.`;
   okEl.style.display='block';
   ['regNom','regEmail','regResidence','regApt','regTel','regPwd','regPwdConfirm'].forEach(id => { const el=document.getElementById(id); if(el) el.value=''; });
+
+  // Notifier l'admin de la résidence par email
+  try {
+    const { data: res } = await db.from('residences')
+      .select('email_admin, nom')
+      .eq('id', resData.id)
+      .single();
+    if (res && res.email_admin) {
+      await fetch('https://nwusjraxjfirsonbndfy.supabase.co/functions/v1/clever-handler', {
+        method: 'POST',
+        headers: {
+          'Content-Type':   'application/json',
+          'x-internal-key': 'redtech-2026-secret',
+          'Authorization':  'Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im53dXNqcmF4amZpcnNvbmJuZGZ5Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzM2ODI5NjcsImV4cCI6MjA4OTI1ODk2N30.wqVBvGwrLv8bJfGuHJTWj1Upao63aTYQMcH-IIN7OGw'
+        },
+        body: JSON.stringify({
+          type:              'nouvelle_inscription',
+          email:             res.email_admin,
+          nom:               res.nom,
+          resident_nom:      nom,
+          resident_email:    email,
+          resident_apt:      apt,
+          resident_tel:      tel,
+          code_residence:    resData.code_residence
+        })
+      });
+    }
+  } catch(e) { console.warn('Notif admin:', e.message); }
 }
 
 async function doLogout() {
@@ -1155,9 +1183,28 @@ async function approveResident(userId, email) {
   if (!confirm('Approuver ' + email + ' ?')) return;
   const { error } = await db.rpc('approve_resident', { user_id: userId });
   if (error) { alert('Erreur : ' + error.message); return; }
-  // Show success toast
-  showToast('✅ ' + email + ' est maintenant approuvé et peut se connecter.', 'success');
+  showToast('✅ ' + email + ' approuvé !', 'success');
   await loadAndRenderAdmin();
+
+  // Email de confirmation au résident
+  try {
+    const resNom = currentUserMeta.residence_nom || 'votre résidence';
+    const resCode = currentUserMeta.residence_code || '';
+    await fetch('https://nwusjraxjfirsonbndfy.supabase.co/functions/v1/clever-handler', {
+      method: 'POST',
+      headers: {
+        'Content-Type':   'application/json',
+        'x-internal-key': 'redtech-2026-secret',
+        'Authorization':  'Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im53dXNqcmF4amZpcnNvbmJuZGZ5Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzM2ODI5NjcsImV4cCI6MjA4OTI1ODk2N30.wqVBvGwrLv8bJfGuHJTWj1Upao63aTYQMcH-IIN7OGw'
+      },
+      body: JSON.stringify({
+        type:           'inscription_approuvee',
+        email:          email,
+        nom:            resNom,
+        code_residence: resCode
+      })
+    });
+  } catch(e) { console.warn('Email approbation:', e.message); }
 }
 
 async function rejectResident(userId, email) {
@@ -1166,6 +1213,24 @@ async function rejectResident(userId, email) {
   if (error) { alert('Erreur : ' + error.message); return; }
   showToast('❌ Demande de ' + email + ' refusée.', 'error');
   await loadAndRenderAdmin();
+
+  // Email de refus au résident
+  try {
+    const resNom = currentUserMeta.residence_nom || 'votre résidence';
+    await fetch('https://nwusjraxjfirsonbndfy.supabase.co/functions/v1/clever-handler', {
+      method: 'POST',
+      headers: {
+        'Content-Type':   'application/json',
+        'x-internal-key': 'redtech-2026-secret',
+        'Authorization':  'Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im53dXNqcmF4amZpcnNvbmJuZGZ5Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzM2ODI5NjcsImV4cCI6MjA4OTI1ODk2N30.wqVBvGwrLv8bJfGuHJTWj1Upao63aTYQMcH-IIN7OGw'
+      },
+      body: JSON.stringify({
+        type:  'inscription_refusee',
+        email: email,
+        nom:   resNom
+      })
+    });
+  } catch(e) { console.warn('Email refus:', e.message); }
 }
 
 function showToast(msg, type) {
