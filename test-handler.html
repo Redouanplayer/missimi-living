@@ -34,12 +34,22 @@ input,select{width:100%;padding:9px 12px;border:1.5px solid #e2e8f0;border-radiu
   <div class="row">
     <div class="fg">
       <label>Type</label>
-      <select id="type">
-        <option value="renouvellement">renouvellement</option>
-        <option value="bienvenue">bienvenue</option>
-        <option value="expiration_warning">expiration_warning</option>
-        <option value="suspension">suspension</option>
-        <option value="activation">activation</option>
+      <select id="type" onchange="updateFields()">
+        <optgroup label="Abonnements">
+          <option value="bienvenue">✅ bienvenue</option>
+          <option value="activation">🎉 activation</option>
+          <option value="renouvellement">🔄 renouvellement</option>
+          <option value="expiration_warning">⏰ expiration_warning</option>
+          <option value="suspension">⛔ suspension</option>
+        </optgroup>
+        <optgroup label="Inscriptions">
+          <option value="nouvelle_inscription">🔔 nouvelle_inscription</option>
+          <option value="inscription_approuvee">✅ inscription_approuvee</option>
+          <option value="inscription_refusee">❌ inscription_refusee</option>
+        </optgroup>
+        <optgroup label="Compte">
+          <option value="reset_password">🔐 reset_password</option>
+        </optgroup>
       </select>
     </div>
     <div class="fg">
@@ -52,7 +62,20 @@ input,select{width:100%;padding:9px 12px;border:1.5px solid #e2e8f0;border-radiu
     </div>
   </div>
 
-  <button class="btn" id="btn" onclick="runTest()">🚀 Tester l'envoi</button>
+  <div id="residentFields" style="display:none;margin-bottom:12px;padding:12px;background:#f0f9ff;border-radius:8px;border:1px solid #bae6fd">
+  <div style="font-size:11px;font-weight:700;color:#0369a1;margin-bottom:8px;text-transform:uppercase;letter-spacing:.06em">Données résident (pour types inscription)</div>
+  <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px">
+    <div><label style="font-size:11px;font-weight:600;color:#64748b;display:block;margin-bottom:3px">Nom résident</label><input type="text" id="residentNom" value="Test Résident" style="width:100%;padding:7px 10px;border:1.5px solid #e2e8f0;border-radius:6px;font-size:12px;box-sizing:border-box"></div>
+    <div><label style="font-size:11px;font-weight:600;color:#64748b;display:block;margin-bottom:3px">Email résident</label><input type="email" id="residentEmail" value="resident@test.com" style="width:100%;padding:7px 10px;border:1.5px solid #e2e8f0;border-radius:6px;font-size:12px;box-sizing:border-box"></div>
+    <div><label style="font-size:11px;font-weight:600;color:#64748b;display:block;margin-bottom:3px">Appartement</label><input type="text" id="residentApt" value="5A" style="width:100%;padding:7px 10px;border:1.5px solid #e2e8f0;border-radius:6px;font-size:12px;box-sizing:border-box"></div>
+    <div><label style="font-size:11px;font-weight:600;color:#64748b;display:block;margin-bottom:3px">Téléphone</label><input type="text" id="residentTel" value="0600000000" style="width:100%;padding:7px 10px;border:1.5px solid #e2e8f0;border-radius:6px;font-size:12px;box-sizing:border-box"></div>
+  </div>
+</div>
+<div id="resetField" style="display:none;margin-bottom:12px;padding:12px;background:#faf5ff;border-radius:8px;border:1px solid #e9d5ff">
+  <div style="font-size:11px;font-weight:700;color:#7c3aed;margin-bottom:6px;text-transform:uppercase;letter-spacing:.06em">Lien reset (pour reset_password)</div>
+  <input type="url" id="resetUrl" value="https://missimi-living.vercel.app/reset-password.html?token=TEST123" style="width:100%;padding:7px 10px;border:1.5px solid #e2e8f0;border-radius:6px;font-size:12px;box-sizing:border-box">
+</div>
+<button class="btn" id="btn" onclick="runTest()">🚀 Tester l'envoi</button>
   <div class="log" id="log">En attente du test...</div>
 </div>
 
@@ -66,6 +89,13 @@ function log(msg, cls) {
   var ts = new Date().toLocaleTimeString('fr-FR');
   el.innerHTML += '\n<span class="' + (cls||'info') + '">[' + ts + '] ' + msg + '</span>';
   el.scrollTop = el.scrollHeight;
+}
+
+function updateFields() {
+  var type = document.getElementById('type').value;
+  var inscTypes = ['nouvelle_inscription','inscription_approuvee','inscription_refusee'];
+  document.getElementById('residentFields').style.display = inscTypes.includes(type) ? 'block' : 'none';
+  document.getElementById('resetField').style.display = type === 'reset_password' ? 'block' : 'none';
 }
 
 async function runTest() {
@@ -84,14 +114,30 @@ async function runTest() {
   exp.setDate(exp.getDate() + 30);
   var expStr = exp.toISOString().split('T')[0];
 
+  var inscTypes = ['nouvelle_inscription','inscription_approuvee','inscription_refusee'];
   var payload = {
-    type: type,
-    email: email,
-    nom: nom,
-    abonnement: abo,
+    type:            type,
+    email:           email,
+    nom:             nom,
+    abonnement:      abo,
     date_expiration: expStr,
-    jours_restants: 30
+    jours_restants:  30,
+    code_residence:  'RE-XX-7899'
   };
+  // Ajouter champs résident si nécessaire
+  if (inscTypes.includes(type)) {
+    payload.resident_nom   = document.getElementById('residentNom').value;
+    payload.resident_email = document.getElementById('residentEmail').value;
+    payload.resident_apt   = document.getElementById('residentApt').value;
+    payload.resident_tel   = document.getElementById('residentTel').value;
+    // Pour inscription_approuvee/refusee, envoyer à l'email résident
+    if (type !== 'nouvelle_inscription') {
+      payload.email = document.getElementById('residentEmail').value;
+    }
+  }
+  if (type === 'reset_password') {
+    payload.reset_url = document.getElementById('resetUrl').value;
+  }
 
   log('URL : ' + FUNCTION_URL, 'info');
   log('Payload : ' + JSON.stringify(payload), 'info');
