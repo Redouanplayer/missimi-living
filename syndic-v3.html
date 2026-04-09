@@ -885,21 +885,39 @@ async function doRegister() {
   // Vérifier que le code résidence existe dans Supabase
   const btn = document.getElementById('registerBtn');
   btn.disabled=true; btn.textContent='Vérification du code...';
+
+  // Utiliser maybeSingle() pour éviter l'erreur 406 si aucun résultat
   const { data: resCheck, error: resCheckErr } = await db
     .from('residences')
     .select('id, nom, secteur, code_residence, actif')
     .eq('code_residence', resCode)
-    .single();
-  if (resCheckErr || !resCheck) {
+    .maybeSingle();
+
+  // Debug : afficher l'erreur exacte si présente
+  if (resCheckErr) {
+    console.error('Erreur Supabase:', resCheckErr);
+    btn.disabled=false; btn.textContent='Demander accès →';
+    // Si erreur RLS/permission, message plus précis
+    if (resCheckErr.code === 'PGRST301' || resCheckErr.message?.includes('permission')) {
+      showErr(errEl, `❌ Erreur de permission. Contactez support@redtech.ma`);
+    } else {
+      showErr(errEl, `❌ Erreur technique : ${resCheckErr.message}`);
+    }
+    return;
+  }
+
+  if (!resCheck) {
     btn.disabled=false; btn.textContent='Demander accès →';
     showErr(errEl, `❌ Code "${resCode}" invalide ou inconnu. Vérifiez le code auprès de votre syndic.`);
     return;
   }
+
   if (!resCheck.actif) {
     btn.disabled=false; btn.textContent='Demander accès →';
     showErr(errEl, `⛔ La résidence "${resCheck.nom}" est suspendue. Contactez votre gestionnaire RedTech.`);
     return;
   }
+
   const resData = resCheck;
   // résidence trouvée — adapter le vocabulaire
   if (resData.secteur) applyVocabulaire(resData.secteur);
