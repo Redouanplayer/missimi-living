@@ -59,6 +59,7 @@ input,select{width:100%;padding:9px 12px;border:1.5px solid #e2e8f0;border-radiu
 <script>
 const FUNCTION_URL = 'https://nwusjraxjfirsonbndfy.supabase.co/functions/v1/clever-handler';
 const INTERNAL_KEY = 'redtech-2026-secret';
+const SB_ANON_KEY  = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im53dXNqcmF4amZpcnNvbmJuZGZ5Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzM2ODI5NjcsImV4cCI6MjA4OTI1ODk2N30.wqVBvGwrLv8bJfGuHJTWj1Upao63aTYQMcH-IIN7OGw';
 
 function log(msg, cls) {
   var el = document.getElementById('log');
@@ -115,7 +116,8 @@ async function runTest() {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
-        'x-internal-key': INTERNAL_KEY
+        'x-internal-key': INTERNAL_KEY,
+        'Authorization': 'Bearer ' + SB_ANON_KEY
       },
       body: JSON.stringify(payload)
     });
