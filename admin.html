@@ -1905,13 +1905,63 @@ function saveSecteur() {
   var saveBtn = document.getElementById('secteurSaveBtn');
   saveBtn.disabled = true; saveBtn.textContent = '⏳...';
 
+  // Étape 1 : mettre à jour la table residences
   db.from('residences').update({ secteur: secteur }).eq('id', id)
     .then(function(res) {
-      saveBtn.disabled = false; saveBtn.textContent = '✅ Enregistrer';
-      if (res.error) { toast('❌ ' + res.error.message); return; }
-      toast('✅ Secteur mis à jour → ' + secteur);
-      closeSecteurModal();
-      loadClients();
+      if (res.error) {
+        saveBtn.disabled = false; saveBtn.textContent = '✅ Enregistrer';
+        toast('❌ ' + res.error.message);
+        return;
+      }
+
+      // Étape 2 : récupérer admin_id de cette résidence
+      db.from('residences').select('admin_id').eq('id', id).single()
+        .then(function(r) {
+          var adminId = r.data && r.data.admin_id;
+
+          // Étape 3 : mettre à jour user_metadata via Edge Function (service key sécurisée côté serveur)
+          if (adminId) {
+            fetch('https://nwusjraxjfirsonbndfy.supabase.co/functions/v1/clever-handler', {
+              method: 'POST',
+              headers: {
+                'Content-Type':   'application/json',
+                'x-internal-key': 'redtech-2026-secret',
+                'Authorization':  'Bearer ' + SB_KEY
+              },
+              body: JSON.stringify({
+                type:          'update_user_metadata',
+                admin_user_id: adminId,
+                metadata:      { secteur: secteur }
+              })
+            })
+            .then(function(resp) { return resp.json(); })
+            .then(function(data) {
+              saveBtn.disabled = false; saveBtn.textContent = '✅ Enregistrer';
+              if (data.success) {
+                toast('✅ Secteur "' + secteur + '" mis à jour — visible immédiatement au client');
+              } else {
+                toast('⚠️ Table OK mais Auth : ' + JSON.stringify(data.error||data).substring(0,60));
+              }
+              closeSecteurModal();
+              loadClients();
+            })
+            .catch(function(e) {
+              saveBtn.disabled = false; saveBtn.textContent = '✅ Enregistrer';
+              toast('⚠️ Table OK, Auth échoué : ' + e.message);
+              closeSecteurModal();
+              loadClients();
+            });
+          } else {
+            saveBtn.disabled = false; saveBtn.textContent = '✅ Enregistrer';
+            toast('✅ Secteur mis à jour → ' + secteur);
+            closeSecteurModal();
+            loadClients();
+          }
+        })
+        .catch(function(e) {
+          saveBtn.disabled = false; saveBtn.textContent = '✅ Enregistrer';
+          toast('❌ ' + e.message);
+        });
     })
     .catch(function(e) {
       saveBtn.disabled = false; saveBtn.textContent = '✅ Enregistrer';
