@@ -717,8 +717,9 @@ async function init() {
     currentUser = session.user;
     currentRole = currentUser.user_metadata?.role || 'resident';
     currentUserMeta = currentUser.user_metadata || {};
-    // Apply sector vocabulary before showing app
     applyVocabulaire(currentUserMeta.secteur||'residence');
+    // Lire secteur depuis residences (source de vérité)
+    await syncSecteurFromResidences();
     showApp();
   } else {
     document.getElementById('loader').style.display = 'none';
@@ -752,6 +753,38 @@ function switchLoginTab(t) {
   }
 }
 
+
+async function syncSecteurFromResidences() {
+  try {
+    if (currentRole === 'admin') {
+      const { data } = await db.from('residences')
+        .select('secteur,nom,code_residence')
+        .eq('admin_id', currentUser.id).single();
+      if (data && data.secteur) {
+        currentUserMeta.secteur        = data.secteur;
+        currentUserMeta.residence_nom  = data.nom;
+        currentUserMeta.residence_code = data.code_residence;
+        applyVocabulaire(data.secteur);
+      }
+    } else if (currentRole === 'resident' || currentRole === 'resident_pending') {
+      const resId = currentUserMeta.residence_id;
+      if (resId) {
+        const { data } = await db.from('residences')
+          .select('secteur,nom,code_residence')
+          .eq('id', resId).single();
+        if (data && data.secteur) {
+          currentUserMeta.secteur        = data.secteur;
+          currentUserMeta.residence_nom  = data.nom;
+          currentUserMeta.residence_code = data.code_residence;
+          applyVocabulaire(data.secteur);
+        }
+      }
+    }
+  } catch(e) {
+    console.warn('syncSecteur:', e.message);
+  }
+}
+
 async function doLogin() {
   const email = document.getElementById('loginEmail').value.trim();
   const pwd = document.getElementById('loginPwd').value;
@@ -776,7 +809,7 @@ async function doLogin() {
   }
   // Vérifier si la résidence est active (admin seulement)
   if (currentRole === 'admin') {
-    const { data: res } = await db.from('residences').select('actif,nom,code_residence,abonnement,date_expiration').eq('admin_id', currentUser.id).single();
+    const { data: res } = await db.from('residences').select('actif,nom,code_residence,abonnement,date_expiration,secteur').eq('admin_id', currentUser.id).single();
     if (res && !res.actif) {
       await db.auth.signOut();
       var expMsg = '';
@@ -789,7 +822,14 @@ async function doLogin() {
       btn.disabled = false; btn.textContent = 'Se connecter →';
       return;
     }
-    if (res) { currentUserMeta.residence_nom = res.nom; currentUserMeta.residence_code = res.code_residence || currentUserMeta.residence_code; }
+    if (res) {
+      currentUserMeta.residence_nom  = res.nom;
+      currentUserMeta.residence_code = res.code_residence || currentUserMeta.residence_code;
+      if (res.secteur) { currentUserMeta.secteur = res.secteur; applyVocabulaire(res.secteur); }
+    }
+  } else {
+    // Résidents : lire secteur depuis residences via residence_id
+    await syncSecteurFromResidences();
   }
   showApp();
 }
@@ -845,26 +885,21 @@ async function doRegister() {
   // Vérifier que le code résidence existe dans Supabase
   const btn = document.getElementById('registerBtn');
   btn.disabled=true; btn.textContent='Vérification du code...';
-  // Vérifier d'abord si le code existe (sans filtre actif)
   const { data: resCheck, error: resCheckErr } = await db
     .from('residences')
     .select('id, nom, secteur, code_residence, actif')
     .eq('code_residence', resCode)
     .single();
-
   if (resCheckErr || !resCheck) {
     btn.disabled=false; btn.textContent='Demander accès →';
     showErr(errEl, `❌ Code "${resCode}" invalide ou inconnu. Vérifiez le code auprès de votre syndic.`);
     return;
   }
-
-  // Code trouvé mais résidence suspendue
   if (!resCheck.actif) {
     btn.disabled=false; btn.textContent='Demander accès →';
-    showErr(errEl, `⛔ La résidence "${resCheck.nom}" est actuellement suspendue. Contactez votre gestionnaire RedTech pour régulariser l'abonnement.`);
+    showErr(errEl, `⛔ La résidence "${resCheck.nom}" est suspendue. Contactez votre gestionnaire RedTech.`);
     return;
   }
-
   const resData = resCheck;
   // résidence trouvée — adapter le vocabulaire
   if (resData.secteur) applyVocabulaire(resData.secteur);
