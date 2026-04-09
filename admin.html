@@ -1319,6 +1319,7 @@ function closeRenewModal() {
 
 function confirmRenew() {
   if (!renewId) { toast('❌ Aucun client sélectionné'); return; }
+  console.log('[DEBUG] renewId=', renewId, 'renewNom=', renewNom, 'renewAbo=', renewAbo);
   renouvelerClient(renewId, renewNom);
 }
 
@@ -1333,55 +1334,57 @@ function renouvelerClient(id, nom) {
   newExp.setDate(newExp.getDate() + days);
   var expStr = newExp.toISOString().split('T')[0];
 
-  // Récupérer email_admin avant de mettre à jour
-  db.from('residences').select('email_admin').eq('id', id).single()
-    .then(function(res) {
-      var emailAdmin = res.data && res.data.email_admin;
+  // ── Étape 1 : Renouveler directement (indépendant de l'email) ──
+  db.from('residences').update({
+    actif:           true,
+    abonnement:      abo,
+    date_debut:      new Date().toISOString().split('T')[0],
+    date_expiration: expStr,
+    statut_notif:    'renewed'
+  }).eq('id', id).then(function(upd) {
+    if (confirmBtn) { confirmBtn.disabled = false; confirmBtn.textContent = '🔄 Renouveler'; }
 
-      return db.from('residences').update({
-        actif:           true,
-        abonnement:      abo,
-        date_debut:      new Date().toISOString().split('T')[0],
-        date_expiration: expStr,
-        statut_notif:    'renewed'
-      }).eq('id', id).then(function(upd) {
-        if (confirmBtn) { confirmBtn.disabled = false; confirmBtn.textContent = '🔄 Renouveler'; }
-        if (upd.error) { toast('❌ ' + upd.error.message); return; }
+    if (upd.error) {
+      toast('❌ Renouvellement échoué : ' + upd.error.message);
+      return;
+    }
 
-        var fmt = newExp.toLocaleDateString('fr-FR', { day:'2-digit', month:'long', year:'numeric' });
-        toast('✅ ' + (nom||'Client') + ' renouvelé — expire le ' + fmt);
-        closeRenewModal();
-        // Reset aboData pour forcer rechargement complet
-        aboData = [];
-        loadClients(); loadStats(); loadAbonnements();
+    var fmt = newExp.toLocaleDateString('fr-FR', { day:'2-digit', month:'long', year:'numeric' });
+    toast('✅ ' + (nom||'Client') + ' renouvelé — expire le ' + fmt);
+    closeRenewModal();
+    aboData = [];
+    loadClients(); loadStats(); loadAbonnements();
 
-        // Envoi email de confirmation au client
-        if (emailAdmin) {
-          fetch('https://nwusjraxjfirsonbndfy.supabase.co/functions/v1/clever-handler', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json', 'x-internal-key': 'redtech-2026-secret', 'Authorization': 'Bearer ' + SB_KEY },
-            body: JSON.stringify({
-              type:            'renouvellement',
-              email:           emailAdmin,
-              nom:             nom || 'Client',
-              abonnement:      abo,
-              date_expiration: expStr,
-              jours_restants:  days
-            })
+    // ── Étape 2 : Email (optionnel, n'impacte pas le renouvellement) ──
+    db.from('residences').select('email_admin').eq('id', id).maybeSingle()
+      .then(function(res) {
+        var emailAdmin = res.data && res.data.email_admin;
+        if (!emailAdmin) { toast('ℹ️ Renouvelé — pas d'email admin configuré'); return; }
+
+        fetch('https://nwusjraxjfirsonbndfy.supabase.co/functions/v1/clever-handler', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json', 'x-internal-key': 'redtech-2026-secret', 'Authorization': 'Bearer ' + SB_KEY },
+          body: JSON.stringify({
+            type:            'renouvellement',
+            email:           emailAdmin,
+            nom:             nom || 'Client',
+            abonnement:      abo,
+            date_expiration: expStr,
+            jours_restants:  days
           })
-          .then(function(r) { return r.json(); })
-          .then(function(data) {
-            if (data.success) toast('📧 Email envoyé à ' + emailAdmin);
-            else toast('❌ Email échoué : ' + JSON.stringify(data.error || data).substring(0,80));
-          })
-          .catch(function(e) { toast('❌ Fetch email : ' + e.message); });
-        }
+        })
+        .then(function(r) { return r.json(); })
+        .then(function(data) {
+          if (data.success) toast('📧 Email envoyé à ' + emailAdmin);
+          else toast('⚠️ Renouvelé mais email échoué : ' + JSON.stringify(data.error||data).substring(0,60));
+        })
+        .catch(function(e) { toast('⚠️ Renouvelé mais email échoué : ' + e.message); });
       });
-    })
-    .catch(function(e) {
-      if (confirmBtn) { confirmBtn.disabled = false; confirmBtn.textContent = '🔄 Renouveler'; }
-      toast('❌ ' + e.message);
-    });
+
+  }).catch(function(e) {
+    if (confirmBtn) { confirmBtn.disabled = false; confirmBtn.textContent = '🔄 Renouveler'; }
+    toast('❌ ' + e.message);
+  });
 }
 
 // ── NAVIGATION ONGLETS ───────────────────────────────
