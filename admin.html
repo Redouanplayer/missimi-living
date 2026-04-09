@@ -1366,10 +1366,10 @@ function renouvelerClient(id, nom) {
           })
           .then(function(r) { return r.json(); })
           .then(function(data) {
-            if (data.success) toast('📧 Email de confirmation envoyé à ' + emailAdmin);
-            else toast('⚠️ Renouvellement OK mais email échoué');
+            if (data.success) toast('📧 Email envoyé à ' + emailAdmin);
+            else toast('❌ Email échoué : ' + JSON.stringify(data.error || data).substring(0,80));
           })
-          .catch(function() { toast('⚠️ Renouvellement OK mais email échoué'); });
+          .catch(function(e) { toast('❌ Fetch email : ' + e.message); });
         }
       });
     })

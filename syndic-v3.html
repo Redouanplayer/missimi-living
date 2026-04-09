@@ -342,7 +342,7 @@
       </div>
       <div class="alert alert-error" id="loginErr"></div>
       <button class="btn btn-primary" id="loginBtn" onclick="doLogin()">Se connecter →</button>
-      <div style="text-align:center;margin-top:14px">
+      <div style="text-align:center;margin-top:12px">
         <button onclick="showForgotModal()" style="background:none;border:none;cursor:pointer;font-size:13px;color:var(--blue,#1d4ed8);font-family:'DM Sans',sans-serif;font-weight:500;text-decoration:underline;padding:0">Mot de passe oublié ?</button>
       </div>
     </div>
@@ -886,88 +886,6 @@ async function doLogout() {
   document.getElementById('appScreen').style.display='none';
   document.getElementById('loginScreen').style.display='flex';
 }
-
-// ── MOT DE PASSE OUBLIÉ ─────────────────────────────────────────────────────
-
-function showForgotModal() {
-  const overlay = document.getElementById('forgotOverlay');
-  const input   = document.getElementById('forgotEmail');
-  const msg     = document.getElementById('forgotMsg');
-  const btn     = document.getElementById('forgotBtn');
-  // Pré-remplir avec l'email saisi dans le formulaire de connexion
-  const loginEmail = document.getElementById('loginEmail').value.trim();
-  if (loginEmail) input.value = loginEmail;
-  msg.style.display = 'none';
-  btn.disabled = false;
-  btn.textContent = 'Envoyer le lien →';
-  overlay.classList.add('open');
-  setTimeout(() => input.focus(), 100);
-}
-
-function closeForgotModal() {
-  document.getElementById('forgotOverlay').classList.remove('open');
-}
-
-async function sendResetEmail() {
-  const email = document.getElementById('forgotEmail').value.trim();
-  const msg   = document.getElementById('forgotMsg');
-  const btn   = document.getElementById('forgotBtn');
-
-  msg.style.display = 'none';
-
-  if (!email || !email.includes('@')) {
-    msg.className = 'fm-msg fm-err';
-    msg.textContent = '⚠️ Entrez une adresse email valide.';
-    msg.style.display = 'block';
-    return;
-  }
-
-  btn.disabled = true;
-  btn.textContent = '⏳ Envoi en cours...';
-
-  try {
-    // Utiliser Supabase pour envoyer le lien de reset
-    // redirectTo pointe vers la page reset-password.html
-    const redirectUrl = window.location.origin + '/reset-password.html';
-    const { error } = await db.auth.resetPasswordForEmail(email, {
-      redirectTo: redirectUrl
-    });
-
-    if (error) {
-      msg.className = 'fm-msg fm-err';
-      msg.textContent = '❌ ' + error.message;
-      msg.style.display = 'block';
-      btn.disabled = false;
-      btn.textContent = 'Envoyer le lien →';
-      return;
-    }
-
-    // Succès
-    msg.className = 'fm-msg fm-ok';
-    msg.textContent = '✅ Email envoyé ! Vérifiez votre boîte mail (et les spams).';
-    msg.style.display = 'block';
-    btn.disabled = true;
-    btn.textContent = '✅ Email envoyé';
-
-    // Fermer auto après 4 secondes
-    setTimeout(() => closeForgotModal(), 4000);
-
-  } catch(e) {
-    msg.className = 'fm-msg fm-err';
-    msg.textContent = '❌ Erreur : ' + e.message;
-    msg.style.display = 'block';
-    btn.disabled = false;
-    btn.textContent = 'Envoyer le lien →';
-  }
-}
-
-// Fermer modale en cliquant sur l'overlay
-document.addEventListener('DOMContentLoaded', function() {
-  const overlay = document.getElementById('forgotOverlay');
-  if (overlay) overlay.addEventListener('click', function(e) {
-    if (e.target === overlay) closeForgotModal();
-  });
-});
 
 function showErr(el, msg) { el.textContent=msg; el.style.display='block'; }
 
@@ -1629,43 +1547,6 @@ function downloadPDF() {
 ${t.description ? `<div class="fl" style="margin-bottom:6px">Description</div><div class="desc">${t.description}</div>` : ''}
 <div class="footer">Résidence Missimi Living — Casablanca, Maroc · missimi-living.vercel.app</div>
 <script>window.onload=()=>{window.print();}<\/script>
-
-<style>
-#forgotOverlay{position:fixed;inset:0;background:rgba(0,0,0,.45);z-index:1000;display:none;align-items:center;justify-content:center;padding:20px;pointer-events:none;}
-#forgotOverlay.open{display:flex;pointer-events:auto;}
-#forgotModal{background:#fff;border-radius:16px;padding:28px;max-width:380px;width:100%;box-shadow:0 8px 32px rgba(0,0,0,.15);pointer-events:auto;}
-.fm-title{font-size:16px;font-weight:700;margin-bottom:6px;color:#0f172a;}
-.fm-sub{font-size:13px;color:#64748b;margin-bottom:20px;line-height:1.6;}
-.fm-input{width:100%;padding:10px 14px;border:1.5px solid #e2e8f0;border-radius:8px;font-size:13px;font-family:'DM Sans',sans-serif;outline:none;box-sizing:border-box;transition:border-color .2s;}
-.fm-input:focus{border-color:#1d4ed8;}
-.fm-btns{display:flex;gap:10px;margin-top:18px;justify-content:flex-end;}
-.fm-btn{padding:9px 20px;border-radius:8px;font-size:13px;font-weight:600;cursor:pointer;border:none;font-family:'DM Sans',sans-serif;transition:all .2s;}
-.fm-cancel{background:#f1f5f9;color:#64748b;}
-.fm-submit{background:#1d4ed8;color:#fff;}
-.fm-submit:hover{background:#1e40af;}
-.fm-submit:disabled{background:#94a3b8;cursor:not-allowed;}
-.fm-msg{font-size:12px;margin-top:10px;padding:9px 12px;border-radius:6px;display:none;}
-.fm-ok{background:#dcfce7;color:#166534;border:1px solid #bbf7d0;}
-.fm-err{background:#fee2e2;color:#991b1b;border:1px solid #fecaca;}
-</style>
-
-<!-- MODALE MOT DE PASSE OUBLIÉ -->
-<div id="forgotOverlay">
-  <div id="forgotModal">
-    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:16px">
-      <div class="fm-title">🔐 Mot de passe oublié</div>
-      <button onclick="closeForgotModal()" style="background:none;border:none;cursor:pointer;font-size:20px;color:#94a3b8;padding:0;line-height:1">×</button>
-    </div>
-    <div class="fm-sub">Entrez votre adresse email. Vous recevrez un lien pour réinitialiser votre mot de passe.</div>
-    <input type="email" id="forgotEmail" class="fm-input" placeholder="votre@email.com">
-    <div class="fm-msg" id="forgotMsg"></div>
-    <div class="fm-btns">
-      <button class="fm-btn fm-cancel" onclick="closeForgotModal()">Annuler</button>
-      <button class="fm-btn fm-submit" id="forgotBtn" onclick="sendResetEmail()">Envoyer le lien →</button>
-    </div>
-  </div>
-</div>
-
 </body></html>`);
   win.document.close();
 }
@@ -1977,6 +1858,107 @@ function togglePwd(inputId, btn) {
 
 init();
 
+</script>
+
+<!-- ══ MOT DE PASSE OUBLIÉ ══════════════════════════════════════════════════ -->
+<style>
+#forgotOverlay{position:fixed;inset:0;background:rgba(0,0,0,.45);z-index:2000;display:none;align-items:center;justify-content:center;padding:20px;pointer-events:none;}
+#forgotOverlay.open{display:flex;pointer-events:auto;}
+#forgotModal{background:#fff;border-radius:16px;padding:28px;max-width:380px;width:100%;box-shadow:0 8px 32px rgba(0,0,0,.18);pointer-events:auto;}
+.fm-title{font-size:16px;font-weight:700;color:#0f172a;}
+.fm-sub{font-size:13px;color:#64748b;margin:8px 0 18px;line-height:1.6;}
+.fm-input{width:100%;padding:10px 14px;border:1.5px solid #e2e8f0;border-radius:8px;font-size:13px;font-family:'DM Sans',sans-serif;outline:none;box-sizing:border-box;transition:border-color .2s;}
+.fm-input:focus{border-color:#1d4ed8;}
+.fm-btns{display:flex;gap:10px;margin-top:16px;justify-content:flex-end;}
+.fm-btn{padding:9px 20px;border-radius:8px;font-size:13px;font-weight:600;cursor:pointer;border:none;font-family:'DM Sans',sans-serif;transition:all .2s;}
+.fm-cancel{background:#f1f5f9;color:#64748b;}
+.fm-submit{background:#1d4ed8;color:#fff;}
+.fm-submit:hover{background:#1e40af;}
+.fm-submit:disabled{background:#94a3b8;cursor:not-allowed;}
+.fm-msg{font-size:12px;margin-top:10px;padding:9px 12px;border-radius:6px;display:none;}
+.fm-ok{background:#dcfce7;color:#166534;border:1px solid #bbf7d0;}
+.fm-err{background:#fee2e2;color:#991b1b;border:1px solid #fecaca;}
+</style>
+
+<div id="forgotOverlay" onclick="if(event.target===this)closeForgotModal()">
+  <div id="forgotModal">
+    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:4px">
+      <div class="fm-title">🔐 Mot de passe oublié</div>
+      <button onclick="closeForgotModal()" style="background:none;border:none;cursor:pointer;font-size:22px;color:#94a3b8;padding:0;line-height:1">×</button>
+    </div>
+    <div class="fm-sub">Entrez votre email. Vous recevrez un lien pour réinitialiser votre mot de passe.</div>
+    <input type="email" id="forgotEmail" class="fm-input" placeholder="votre@email.com">
+    <div class="fm-msg" id="forgotMsg"></div>
+    <div class="fm-btns">
+      <button class="fm-btn fm-cancel" onclick="closeForgotModal()">Annuler</button>
+      <button class="fm-btn fm-submit" id="forgotBtn" onclick="sendResetEmail()">Envoyer le lien →</button>
+    </div>
+  </div>
+</div>
+
+<script>
+function showForgotModal() {
+  var overlay = document.getElementById('forgotOverlay');
+  var input   = document.getElementById('forgotEmail');
+  var msg     = document.getElementById('forgotMsg');
+  var btn     = document.getElementById('forgotBtn');
+  var loginEmail = document.getElementById('loginEmail').value.trim();
+  if (loginEmail) input.value = loginEmail;
+  msg.style.display = 'none';
+  btn.disabled = false;
+  btn.textContent = 'Envoyer le lien →';
+  overlay.classList.add('open');
+  setTimeout(function(){ input.focus(); }, 120);
+}
+
+function closeForgotModal() {
+  document.getElementById('forgotOverlay').classList.remove('open');
+}
+
+async function sendResetEmail() {
+  var email = document.getElementById('forgotEmail').value.trim();
+  var msg   = document.getElementById('forgotMsg');
+  var btn   = document.getElementById('forgotBtn');
+
+  msg.style.display = 'none';
+
+  if (!email || !email.includes('@')) {
+    msg.className = 'fm-msg fm-err';
+    msg.textContent = '⚠️ Entrez une adresse email valide.';
+    msg.style.display = 'block';
+    return;
+  }
+
+  btn.disabled = true;
+  btn.textContent = '⏳ Envoi...';
+
+  try {
+    var redirectUrl = window.location.origin + '/reset-password.html';
+    var result = await db.auth.resetPasswordForEmail(email, { redirectTo: redirectUrl });
+
+    if (result.error) {
+      msg.className = 'fm-msg fm-err';
+      msg.textContent = '❌ ' + result.error.message;
+      msg.style.display = 'block';
+      btn.disabled = false;
+      btn.textContent = 'Envoyer le lien →';
+      return;
+    }
+
+    msg.className = 'fm-msg fm-ok';
+    msg.textContent = '✅ Email envoyé ! Vérifiez votre boîte mail (et les spams).';
+    msg.style.display = 'block';
+    btn.textContent = '✅ Envoyé';
+    setTimeout(function(){ closeForgotModal(); }, 4000);
+
+  } catch(e) {
+    msg.className = 'fm-msg fm-err';
+    msg.textContent = '❌ ' + e.message;
+    msg.style.display = 'block';
+    btn.disabled = false;
+    btn.textContent = 'Envoyer le lien →';
+  }
+}
 </script>
 
 </body>
