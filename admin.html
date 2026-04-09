@@ -468,6 +468,7 @@ tr:hover td{background:#fafafa;}
                 <th>Code</th>
                 <th>Espace</th>
                 <th>Email admin</th>
+                <th>Secteur</th>
                 <th>Abonnement</th>
                 <th>Expiration</th>
                 <th>Statut</th>
@@ -1043,14 +1044,14 @@ function loadStats() {
 
 function loadClients() {
   var tbody = document.getElementById('clientsBody');
-  tbody.innerHTML = '<tr><td colspan="8" class="empty">Chargement...</td></tr>';
+  tbody.innerHTML = '<tr><td colspan="9" class="empty">Chargement...</td></tr>';
   db.from('residences')
     .select('id,code_residence,nom,secteur,nb_apparts,actif,created_at,admin_id,abonnement,date_expiration,statut_notif,email_admin')
     .order('created_at', { ascending: false })
     .then(function(res) {
       var data = res.data;
       if (!data || !data.length) {
-        tbody.innerHTML = '<tr><td colspan="8" class="empty">Aucun client</td></tr>';
+        tbody.innerHTML = '<tr><td colspan="9" class="empty">Aucun client</td></tr>';
         return;
       }
       tbody.innerHTML = data.map(function(r) {
@@ -1078,6 +1079,10 @@ function loadClients() {
           '<td class="code-td">' + (r.code_residence || '—') + '</td>' +
           '<td style="font-weight:600">' + r.nom + '</td>' +
           '<td>' + emailDisplay + '</td>' +
+          '<td>' +
+            '<span style="font-size:11px;color:var(--muted);font-weight:500">' + (r.secteur||'—') + '</span> ' +
+            '<button onclick="editSecteur(\'' + r.id + '\',\'' + (r.secteur||'residence') + '\',\'' + r.nom.replace(/'/g,"\\'") + '\')" style="background:var(--blue-bg);border:1px solid var(--blue-border);color:var(--blue);border-radius:4px;padding:2px 7px;font-size:10px;font-weight:600;cursor:pointer;font-family:Plus Jakarta Sans,sans-serif">✏️</button>' +
+          '</td>' +
           '<td style="color:var(--muted);font-size:12px">' + (r.secteur || '—') + '</td>' +
           '<td style="font-family:\'DM Mono\',monospace;font-size:12px">' + (r.nb_apparts || '—') + '</td>' +
           '<td>' + badge + '</td>' +
@@ -1823,6 +1828,50 @@ function setStorageBar(prefix, usedMB, limitMB, pct) {
 
 
 
+
+// ── ÉDITION SECTEUR ──────────────────────────────────
+function editSecteur(id, secteurActuel, nom) {
+  var overlay = document.getElementById('secteurOverlay');
+  document.getElementById('secteurNom').textContent = nom;
+  document.getElementById('secteurId').value = id;
+  // Sélectionner le bon secteur
+  document.querySelectorAll('.sec-radio').forEach(function(btn) {
+    btn.classList.toggle('active', btn.dataset.val === secteurActuel);
+  });
+  document.getElementById('secteurCurrent').value = secteurActuel;
+  overlay.classList.add('open');
+}
+
+function closeSecteurModal() {
+  document.getElementById('secteurOverlay').classList.remove('open');
+}
+
+function selectSecteurRadio(btn) {
+  document.querySelectorAll('.sec-radio').forEach(function(b) { b.classList.remove('active'); });
+  btn.classList.add('active');
+  document.getElementById('secteurCurrent').value = btn.dataset.val;
+}
+
+function saveSecteur() {
+  var id      = document.getElementById('secteurId').value;
+  var secteur = document.getElementById('secteurCurrent').value;
+  var saveBtn = document.getElementById('secteurSaveBtn');
+  saveBtn.disabled = true; saveBtn.textContent = '⏳...';
+
+  db.from('residences').update({ secteur: secteur }).eq('id', id)
+    .then(function(res) {
+      saveBtn.disabled = false; saveBtn.textContent = '✅ Enregistrer';
+      if (res.error) { toast('❌ ' + res.error.message); return; }
+      toast('✅ Secteur mis à jour → ' + secteur);
+      closeSecteurModal();
+      loadClients();
+    })
+    .catch(function(e) {
+      saveBtn.disabled = false; saveBtn.textContent = '✅ Enregistrer';
+      toast('❌ ' + e.message);
+    });
+}
+
 function toggleEye(inputId, btn) {
   var inp = document.getElementById(inputId);
   inp.type = inp.type === 'password' ? 'text' : 'password';
@@ -1848,5 +1897,39 @@ function toast(msg) {
 }
 
 </script>
+
+<style>
+#secteurOverlay{position:fixed;inset:0;background:rgba(0,0,0,.5);z-index:600;display:none;align-items:center;justify-content:center;padding:20px;pointer-events:none;}
+#secteurOverlay.open{display:flex;pointer-events:auto;}
+#secteurModal{background:var(--surface);border-radius:var(--radius-lg);padding:28px;max-width:420px;width:100%;box-shadow:var(--shadow-lg);pointer-events:auto;}
+.sec-radio{padding:10px 12px;border:1.5px solid var(--border);border-radius:var(--radius-md);background:var(--bg);cursor:pointer;text-align:center;transition:all .2s;font-family:"Plus Jakarta Sans",sans-serif;font-size:12px;font-weight:600;color:var(--muted);}
+.sec-radio:hover,.sec-radio.active{border-color:var(--blue);background:var(--blue-bg);color:var(--blue);}
+.sec-radio .ico{font-size:18px;display:block;margin-bottom:4px;}
+</style>
+
+<div id="secteurOverlay" onclick="if(event.target===this)closeSecteurModal()">
+  <div id="secteurModal">
+    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:6px">
+      <div style="font-size:16px;font-weight:700">✏️ Modifier le secteur</div>
+      <button onclick="closeSecteurModal()" style="background:none;border:none;cursor:pointer;font-size:20px;color:var(--muted);padding:0;line-height:1">×</button>
+    </div>
+    <div style="font-size:13px;color:var(--muted);margin-bottom:18px">Client : <strong id="secteurNom"></strong></div>
+    <input type="hidden" id="secteurId">
+    <input type="hidden" id="secteurCurrent" value="residence">
+    <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-bottom:20px">
+      <button class="sec-radio" data-val="residence" onclick="selectSecteurRadio(this)"><span class="ico">🏢</span>Résidence</button>
+      <button class="sec-radio" data-val="hotel" onclick="selectSecteurRadio(this)"><span class="ico">🏨</span>Hôtel</button>
+      <button class="sec-radio" data-val="campus" onclick="selectSecteurRadio(this)"><span class="ico">🎓</span>Campus</button>
+      <button class="sec-radio" data-val="industrie" onclick="selectSecteurRadio(this)"><span class="ico">🏭</span>Industrie</button>
+      <button class="sec-radio" data-val="mall" onclick="selectSecteurRadio(this)"><span class="ico">🏬</span>Mall</button>
+      <button class="sec-radio" data-val="collectivite" onclick="selectSecteurRadio(this)"><span class="ico">🏛️</span>Collectivité</button>
+    </div>
+    <div style="display:flex;gap:10px;justify-content:flex-end">
+      <button onclick="closeSecteurModal()" style="padding:9px 20px;border-radius:var(--radius-md);font-family:'Plus Jakarta Sans',sans-serif;font-size:13px;font-weight:600;cursor:pointer;background:var(--bg);color:var(--muted);border:1px solid var(--border)">Annuler</button>
+      <button id="secteurSaveBtn" onclick="saveSecteur()" style="padding:9px 20px;border-radius:var(--radius-md);font-family:'Plus Jakarta Sans',sans-serif;font-size:13px;font-weight:600;cursor:pointer;background:var(--blue);color:white;border:none">✅ Enregistrer</button>
+    </div>
+  </div>
+</div>
+
 </body>
 </html>
