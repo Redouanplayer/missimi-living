@@ -1491,8 +1491,11 @@ function catKey(cat) {
 }
 
 async function loadPros() {
-  const { data, error } = await db.from('professionnels')
-    .select('*').eq('actif', true).order('categorie').order('nom');
+  const resId = currentUserMeta.residence_id || null;
+  let query = db.from('professionnels').select('*').eq('actif', true).order('categorie').order('nom');
+  // Filtrer par residence_id si disponible
+  if (resId) query = query.eq('residence_id', resId);
+  const { data, error } = await query;
   if (!error && data) pros = data;
 }
 
@@ -1586,8 +1589,10 @@ async function savePro() {
   if (!nom || !tel || !cat) { errEl.textContent = '⚠️ Remplissez les champs obligatoires (*)'; errEl.style.display = 'block'; return; }
   const btn = document.getElementById('proSubmitBtn');
   btn.disabled = true; btn.textContent = 'Enregistrement...';
+  const resId = currentUserMeta.residence_id || null;
   const { error } = await db.from('professionnels').insert({
-    nom, telephone: tel, categorie: cat, description: desc, actif: true
+    nom, telephone: tel, categorie: cat, description: desc, actif: true,
+    residence_id: resId
   });
   btn.disabled = false; btn.textContent = 'Ajouter le professionnel →';
   if (error) { errEl.textContent = '❌ Erreur : ' + error.message; errEl.style.display = 'block'; return; }

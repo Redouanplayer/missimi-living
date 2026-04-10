@@ -1264,21 +1264,33 @@ function deleteClient(id, nom, adminId) {
     if (i >= tables.length) {
       db.from('residences').delete().eq('id', id).then(function(res) {
         if (res.error) { toast('❌ ' + res.error.message); return; }
-        if (adminId && SB_SERVICE !== 'REMPLACE_PAR_TA_SERVICE_ROLE_KEY') {
-          fetch(SB_URL + '/auth/v1/admin/users/' + adminId, {
-            method: 'DELETE',
-            headers: { 'apikey': SB_SERVICE, 'Authorization': 'Bearer ' + SB_SERVICE }
-          }).then(function() {
-            toast('🗑 ' + nom + ' supprimé'); loadClients(); loadStats(); loadDashboard();
-          });
-        } else {
-          toast('🗑 ' + nom + ' supprimé (compte Auth à supprimer manuellement)');
-          loadClients(); loadStats(); loadDashboard();
+
+        // Supprimer compte Auth via Edge Function (service key côté serveur)
+        if (adminId) {
+          fetch('https://nwusjraxjfirsonbndfy.supabase.co/functions/v1/clever-handler', {
+            method: 'POST',
+            headers: {
+              'Content-Type':   'application/json',
+              'x-internal-key': 'redtech-2026-secret',
+              'Authorization':  'Bearer ' + SB_KEY
+            },
+            body: JSON.stringify({
+              type:          'update_user_metadata',
+              admin_user_id: adminId,
+              metadata:      { deleted: true, role: 'deleted' }
+            })
+          }).catch(function() {});
         }
+
+        toast('🗑 ' + nom + ' supprimé');
+        loadClients(); loadStats(); loadDashboard();
       });
       return;
     }
-    db.from(tables[i]).delete().eq('residence_id', id).then(function() { i++; deleteNext(); });
+    db.from(tables[i]).delete().eq('residence_id', id).then(function(res) {
+      if (res.error) console.warn('Delete ' + tables[i] + ':', res.error.message);
+      i++; deleteNext();
+    });
   }
   deleteNext();
 }
