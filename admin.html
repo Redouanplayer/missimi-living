@@ -846,8 +846,10 @@ window.addEventListener('load', function() {
 // ── FONCTIONS ─────────────────────────────────────────
 
 function isOwner(user) {
-  var role = (user.user_metadata && user.user_metadata.role) || '';
-  return role === 'owner' || role === 'admin' || OWNER_EMAILS.indexOf(user.email.toLowerCase()) !== -1;
+  if (!user || !user.email) return false;
+  var email = user.email.toLowerCase().trim();
+  var role  = (user.user_metadata && user.user_metadata.role) || '';
+  return OWNER_EMAILS.indexOf(email) !== -1 || role === 'owner';
 }
 
 function enterApp(user) {
