@@ -1214,11 +1214,22 @@ function confirmSuspend(id, nom) {
     'Voulez-vous suspendre <strong>' + nom + '</strong> ?<br>Les utilisateurs ne pourront plus se connecter.',
     'Suspendre', 'mbtn-warn',
     function() {
-      db.from('residences').update({ actif: false }).eq('id', id).then(function(res) {
-        if (res.error) { toast('❌ ' + res.error.message); return; }
-        toast('⏸ ' + nom + ' suspendu');
-        loadClients(); loadStats();
-      });
+      // Passer par Edge Function (service_role_key pour bypass RLS)
+      fetch('https://nwusjraxjfirsonbndfy.supabase.co/functions/v1/clever-handler', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', 'x-internal-key': 'redtech-2026-secret', 'Authorization': 'Bearer ' + SB_KEY },
+        body: JSON.stringify({ type: 'suspend_client', residence_id: id, nom: nom })
+      })
+      .then(function(r) { return r.json(); })
+      .then(function(data) {
+        if (data.success) {
+          toast('⏸ ' + nom + ' suspendu — email envoyé');
+          loadClients(); loadStats();
+        } else {
+          toast('❌ ' + JSON.stringify(data.error || data).substring(0, 80));
+        }
+      })
+      .catch(function(e) { toast('❌ ' + e.message); });
     }
   );
 }
@@ -1228,11 +1239,21 @@ function confirmReactivate(id, nom) {
     'Voulez-vous réactiver <strong>' + nom + '</strong> ?<br>Les utilisateurs pourront à nouveau se connecter.',
     'Réactiver', 'mbtn-info',
     function() {
-      db.from('residences').update({ actif: true }).eq('id', id).then(function(res) {
-        if (res.error) { toast('❌ ' + res.error.message); return; }
-        toast('✅ ' + nom + ' réactivé');
-        loadClients(); loadStats();
-      });
+      fetch('https://nwusjraxjfirsonbndfy.supabase.co/functions/v1/clever-handler', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', 'x-internal-key': 'redtech-2026-secret', 'Authorization': 'Bearer ' + SB_KEY },
+        body: JSON.stringify({ type: 'reactivate_client', residence_id: id, nom: nom })
+      })
+      .then(function(r) { return r.json(); })
+      .then(function(data) {
+        if (data.success) {
+          toast('✅ ' + nom + ' réactivé');
+          loadClients(); loadStats();
+        } else {
+          toast('❌ ' + JSON.stringify(data.error || data).substring(0, 80));
+        }
+      })
+      .catch(function(e) { toast('❌ ' + e.message); });
     }
   );
 }
