@@ -1274,52 +1274,32 @@ function confirmDelete(id, nom, adminId) {
 
 function deleteClient(id, nom, adminId) {
   toast('⏳ Suppression en cours...');
-  var email_admin_cache = '';
-  // Récupérer email avant suppression
-  db.from('residences').select('email_admin').eq('id', id).single().then(function(r){
-    if (r.data && r.data.email_admin) email_admin_cache = r.data.email_admin;
-  }).catch(function(){});
-  var tables = ['commentaires', 'tickets', 'comptabilite', 'professionnels'];
-  var i = 0;
-  function deleteNext() {
-    if (i >= tables.length) {
-      db.from('residences').delete().eq('id', id).then(function(res) {
-        if (res.error) { toast('❌ ' + res.error.message); return; }
 
-        // Supprimer compte Auth via Edge Function (service key côté serveur)
-        if (adminId) {
-          fetch('https://nwusjraxjfirsonbndfy.supabase.co/functions/v1/clever-handler', {
-            method: 'POST',
-            headers: {
-              'Content-Type':   'application/json',
-              'x-internal-key': 'redtech-2026-secret',
-              'Authorization':  'Bearer ' + SB_KEY
-            },
-            body: JSON.stringify({
-              type:          'update_user_metadata',
-              admin_user_id: adminId,
-              metadata:      { deleted: true, role: 'deleted' }
-            })
-          }).catch(function() {});
-        }
-
-        // Email suppression au client
-        fetch('https://nwusjraxjfirsonbndfy.supabase.co/functions/v1/clever-handler', {
-          method: 'POST',
-          headers: {'Content-Type':'application/json','x-internal-key':'redtech-2026-secret','Authorization':'Bearer '+SB_KEY},
-          body: JSON.stringify({type:'suppression_compte',email:email_admin_cache,nom:nom})
-        }).catch(function(){});
-        toast('🗑 ' + nom + ' supprimé');
-        loadClients(); loadStats(); loadDashboard();
-      });
-      return;
+  // Tout passer par la Edge Function qui utilise service_role_key
+  fetch('https://nwusjraxjfirsonbndfy.supabase.co/functions/v1/clever-handler', {
+    method: 'POST',
+    headers: {
+      'Content-Type':   'application/json',
+      'x-internal-key': 'redtech-2026-secret',
+      'Authorization':  'Bearer ' + SB_KEY
+    },
+    body: JSON.stringify({
+      type:         'delete_client',
+      residence_id: id,
+      admin_user_id: adminId || null,
+      nom:          nom
+    })
+  })
+  .then(function(r) { return r.json(); })
+  .then(function(data) {
+    if (data.success) {
+      toast('🗑 ' + nom + ' supprimé définitivement');
+      loadClients(); loadStats(); loadDashboard();
+    } else {
+      toast('❌ ' + JSON.stringify(data.error || data).substring(0, 80));
     }
-    db.from(tables[i]).delete().eq('residence_id', id).then(function(res) {
-      if (res.error) console.warn('Delete ' + tables[i] + ':', res.error.message);
-      i++; deleteNext();
-    });
-  }
-  deleteNext();
+  })
+  .catch(function(e) { toast('❌ ' + e.message); });
 }
 
 // ── DASHBOARD STOCKAGE ────────────────────────────────
