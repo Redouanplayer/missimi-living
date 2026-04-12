@@ -505,6 +505,7 @@
         <div class="fr2">
           <div><label class="lbl">Nom <span class="req">*</span></label><input type="text" id="proNom" placeholder="Hassan Benmoussa"></div>
           <div><label class="lbl">Téléphone <span class="req">*</span></label><input type="tel" id="proTel" placeholder="06 61 23 45 67"></div>
+          <div><label class="lbl">Email (notifications)</label><input type="email" id="proEmail" placeholder="pro@exemple.com"></div>
         </div>
         <div class="fr2">
           <div>
@@ -1340,6 +1341,29 @@ async function submitTicket() {
   okEl.style.display='block';
   resetForm();
   setTimeout(()=>{ okEl.style.display='none'; }, 6000);
+
+  // Notifier l'admin : nouvelle réclamation (+ alerte urgence haute)
+  try {
+    const resNom = currentUserMeta.residence_nom || 'Résidence';
+    const { data: resRow } = await db.from('residences').select('email_admin').eq('id', resId).single();
+    if (resRow && resRow.email_admin) {
+      const notifType = urgence === 'Haute' ? 'ticket_urgent' : 'nouvelle_reclamation';
+      fetch('https://nwusjraxjfirsonbndfy.supabase.co/functions/v1/clever-handler', {
+        method: 'POST',
+        headers: {'Content-Type':'application/json','x-internal-key':'redtech-2026-secret','Authorization':'Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im53dXNqcmF4amZpcnNvbmJuZGZ5Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzM2ODI5NjcsImV4cCI6MjA4OTI1ODk2N30.wqVBvGwrLv8bJfGuHJTWj1Upao63aTYQMcH-IIN7OGw'},
+        body: JSON.stringify({
+          type:           notifType,
+          email:          resRow.email_admin,
+          nom:            resNom,
+          ticket_titre:   titre,
+          ticket_cat:     cat,
+          ticket_urgence: urgence,
+          ticket_apt:     apt,
+          resident_nom:   currentUserMeta.nom || currentUser.email
+        })
+      }).catch(function(e){ console.warn('Notif ticket:', e.message); });
+    }
+  } catch(e) { console.warn('Notif ticket:', e.message); }
 }
 
 function resetForm() {
@@ -1456,8 +1480,50 @@ async function addComment() {
   await loadTickets();
   const t = tickets.find(x=>x.id===currentTicketId);
   if (t) renderModalComments(t.commentaires||[]);
-  if (currentRole==='admin') renderAdmin();
-  else { renderSuivi(); updateUnreadBadge(); }
+  if (currentRole==='admin') {
+    renderAdmin();
+    // Notifier le professionnel assigné si email disponible
+    await notifyProReponse(t, text);
+  } else {
+    renderSuivi(); updateUnreadBadge();
+  }
+}
+
+async function notifyProReponse(ticket, message) {
+  if (!ticket) return;
+  try {
+    // Chercher si un professionnel est lié à ce ticket (via categorie)
+    const resId = currentUserMeta.residence_id;
+    if (!resId) return;
+    const { data: pros } = await db.from('professionnels')
+      .select('nom, email')
+      .eq('residence_id', resId)
+      .eq('actif', true)
+      .eq('categorie', ticket.categorie || '')
+      .not('email', 'is', null)
+      .limit(1);
+
+    if (!pros || !pros.length || !pros[0].email) return;
+    const pro = pros[0];
+
+    await fetch('https://nwusjraxjfirsonbndfy.supabase.co/functions/v1/clever-handler', {
+      method: 'POST',
+      headers: {
+        'Content-Type':   'application/json',
+        'x-internal-key': 'redtech-2026-secret',
+        'Authorization':  'Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im53dXNqcmF4amZpcnNvbmJuZGZ5Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzM2ODI5NjcsImV4cCI6MjA4OTI1ODk2N30.wqVBvGwrLv8bJfGuHJTWj1Upao63aTYQMcH-IIN7OGw'
+      },
+      body: JSON.stringify({
+        type:           'notification_pro',
+        email:          pro.email,
+        nom:            currentUserMeta.residence_nom || 'Résidence',
+        pro_nom:        pro.nom,
+        ticket_titre:   ticket.titre || 'Ticket',
+        ticket_cat:     ticket.categorie || '',
+        message:        message
+      })
+    });
+  } catch(e) { console.warn('Notif pro:', e.message); }
 }
 
 function closeModal(e) { if(e.target===document.getElementById('modalOverlay')) closeModalDirect(); }
@@ -1542,6 +1608,7 @@ function renderPros() {
       ${p.description ? `<p style="font-size:12px;color:var(--muted);line-height:1.55;margin:0">${p.description}</p>` : ''}
       <div class="pro-divider"></div>
       <div class="pro-tel">📞 <a href="tel:${telClean}">${p.telephone}</a></div>
+      ${p.email ? `<div class="pro-tel">✉️ <a href="mailto:${p.email}">${p.email}</a></div>` : ''}
       <a href="tel:${telClean}" class="pro-call-btn">📲 Appeler</a>
     </div>`;
   }).join('');
@@ -1590,8 +1657,9 @@ async function savePro() {
   const btn = document.getElementById('proSubmitBtn');
   btn.disabled = true; btn.textContent = 'Enregistrement...';
   const resId = currentUserMeta.residence_id || null;
+  const proEmail = document.getElementById('proEmail') ? document.getElementById('proEmail').value.trim() : '';
   const { error } = await db.from('professionnels').insert({
-    nom, telephone: tel, categorie: cat, description: desc, actif: true,
+    nom, telephone: tel, email: proEmail || null, categorie: cat, description: desc, actif: true,
     residence_id: resId
   });
   btn.disabled = false; btn.textContent = 'Ajouter le professionnel →';
