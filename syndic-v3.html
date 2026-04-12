@@ -920,22 +920,59 @@ async function doRegister() {
   }
 
   const resData = resCheck;
-  // résidence trouvée — adapter le vocabulaire
   if (resData.secteur) applyVocabulaire(resData.secteur);
   btn.disabled=true; btn.textContent='Envoi en cours...';
-  const { error } = await db.auth.signUp({
+
+  const newMeta = {
+    nom, appartement: apt, telephone: tel,
+    role: 'resident_pending',
+    residence_id: resData.id,
+    residence_nom: resData.nom,
+    residence_code: resData.code_residence,
+    secteur: resData.secteur || currentRegSector
+  };
+
+  // Tenter signUp — si email déjà utilisé, mettre à jour via Edge Function
+  const { data: signUpData, error } = await db.auth.signUp({
     email, password: pwd,
-    options: { data: {
-      nom, appartement: apt, telephone: tel,
-      role: 'resident_pending',
-      residence_id: resData.id,
-      residence_nom: resData.nom,
-      residence_code: resData.code_residence,
-      secteur: resData.secteur || currentRegSector
-    }}
+    options: { data: newMeta }
   });
+
   btn.disabled=false; btn.textContent='Demander accès →';
-  if (error) { showErr(errEl, error.message); return; }
+
+  // Cas : email déjà enregistré → mise à jour residence via Edge Function
+  if (error && error.message && error.message.toLowerCase().includes('already')) {
+    btn.disabled=true; btn.textContent='Mise à jour en cours...';
+    try {
+      const resp = await fetch('https://nwusjraxjfirsonbndfy.supabase.co/functions/v1/clever-handler', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'x-internal-key': 'redtech-2026-secret',
+          'Authorization': 'Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im53dXNqcmF4amZpcnNvbmJuZGZ5Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzM2ODI5NjcsImV4cCI6MjA4OTI1ODk2N30.wqVBvGwrLv8bJfGuHJTWj1Upao63aTYQMcH-IIN7OGw'
+        },
+        body: JSON.stringify({
+          type: 'update_resident_residence',
+          email: email,
+          metadata: newMeta
+        })
+      });
+      const result = await resp.json();
+      btn.disabled=false; btn.textContent='Demander accès →';
+      if (!result.success) {
+        showErr(errEl, '❌ ' + (result.error || 'Erreur mise à jour'));
+        return;
+      }
+      // Succès — continuer vers la notification admin
+    } catch(e) {
+      btn.disabled=false; btn.textContent='Demander accès →';
+      showErr(errEl, '❌ ' + e.message);
+      return;
+    }
+  } else if (error) {
+    showErr(errEl, error.message);
+    return;
+  }
   okEl.innerHTML = `✅ Demande envoyée pour <strong>${resData.nom}</strong> (${resData.code_residence}) !<br>Le syndic va vérifier et valider votre inscription.`;
   okEl.style.display='block';
   ['regNom','regEmail','regResidence','regApt','regTel','regPwd','regPwdConfirm'].forEach(id => { const el=document.getElementById(id); if(el) el.value=''; });
@@ -947,7 +984,7 @@ async function doRegister() {
       .eq('id', resData.id)
       .single();
     if (res && res.email_admin) {
-      await fetch('https://nwusjraxjfirsonbndfy.supabase.co/functions/v1/clever-handler', {
+      const notifResp = await fetch('https://nwusjraxjfirsonbndfy.supabase.co/functions/v1/clever-handler', {
         method: 'POST',
         headers: {
           'Content-Type':   'application/json',
@@ -965,8 +1002,16 @@ async function doRegister() {
           code_residence:    resData.code_residence
         })
       });
+      const notifData = await notifResp.json();
+      if (notifData.success) {
+        console.log('✅ Email admin envoyé à', res.email_admin);
+      } else {
+        console.warn('⚠️ Email admin échoué:', JSON.stringify(notifData));
+      }
+    } else {
+      console.warn('⚠️ Pas d\'email_admin pour cette résidence');
     }
-  } catch(e) { console.warn('Notif admin:', e.message); }
+  } catch(e) { console.warn('Notif admin erreur:', e.message); }
 }
 
 async function doLogout() {
@@ -1345,23 +1390,37 @@ async function submitTicket() {
   // Notifier l'admin : nouvelle réclamation (+ alerte urgence haute)
   try {
     const resNom = currentUserMeta.residence_nom || 'Résidence';
-    const { data: resRow } = await db.from('residences').select('email_admin').eq('id', resId).single();
+
+    // Trouver la résidence via residence_id (résident) OU admin_id (admin)
+    let resQuery;
+    if (resId) {
+      resQuery = db.from('residences').select('email_admin,nom').eq('id', resId).single();
+    } else {
+      // Pour l'admin : trouver sa résidence via admin_id
+      resQuery = db.from('residences').select('email_admin,nom').eq('admin_id', currentUser.id).single();
+    }
+    const { data: resRow } = await resQuery;
+
     if (resRow && resRow.email_admin) {
       const notifType = urgence === 'Haute' ? 'ticket_urgent' : 'nouvelle_reclamation';
-      fetch('https://nwusjraxjfirsonbndfy.supabase.co/functions/v1/clever-handler', {
+      const notifResp = await fetch('https://nwusjraxjfirsonbndfy.supabase.co/functions/v1/clever-handler', {
         method: 'POST',
         headers: {'Content-Type':'application/json','x-internal-key':'redtech-2026-secret','Authorization':'Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im53dXNqcmF4amZpcnNvbmJuZGZ5Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzM2ODI5NjcsImV4cCI6MjA4OTI1ODk2N30.wqVBvGwrLv8bJfGuHJTWj1Upao63aTYQMcH-IIN7OGw'},
         body: JSON.stringify({
           type:           notifType,
           email:          resRow.email_admin,
-          nom:            resNom,
+          nom:            resRow.nom || resNom,
           ticket_titre:   titre,
           ticket_cat:     cat,
           ticket_urgence: urgence,
           ticket_apt:     apt,
           resident_nom:   currentUserMeta.nom || currentUser.email
         })
-      }).catch(function(e){ console.warn('Notif ticket:', e.message); });
+      });
+      const nd = await notifResp.json();
+      console.log('Notif ticket:', nd.success ? '✅ envoyé' : '❌ ' + JSON.stringify(nd.error));
+    } else {
+      console.warn('⚠️ email_admin introuvable pour cette résidence');
     }
   } catch(e) { console.warn('Notif ticket:', e.message); }
 }
