@@ -520,10 +520,10 @@ tr:hover td{background:#fafafa;}
                 <th>Secteur</th>
                 <th>Nb unités</th>
                 <th>Inscriptions</th>
-                '<th>Recouvrement</th>'
-                <th>Abonnement</th>
-                <th>Statut</th>
-                <th>Actions</th>
+<th>Recouvrement</th>
+<th>Abonnement</th>
+<th>Statut</th>
+<th>Actions</th>
               </tr>
             </thead>
             <tbody id="clientsBody">
@@ -1220,64 +1220,109 @@ function filterClients(query) {
   }
 }
 function buildClientsTable(data, tbody) {
-    tbody.innerHTML = data.map(function(r) {
-        var date  = r.created_at ? new Date(r.created_at).toLocaleDateString('fr-FR') : '—';
-        var badge = r.actif
-          ? '<span class="badge b-on">● Actif</span>'
-          : '<span class="badge b-off">● Suspendu</span>';
-        var aboBadge = r.abonnement
-          ? '<span class="badge b-' + r.abonnement + '">' + r.abonnement + '</span>'
-          : '<span style="color:var(--muted);font-size:12px">—</span>';
-        var expClass = 'exp-ok', expTxt = '—';
-        if (r.date_expiration) {
-          var expDate = new Date(r.date_expiration);
-          var today   = new Date(); today.setHours(0,0,0,0);
-          var diff    = Math.round((expDate - today) / 86400000);
-          if (diff < 0)       { expClass = 'exp-dead'; expTxt = '🔴 Expiré'; }
-          else if (diff <= 10) { expClass = 'exp-warn'; expTxt = '🟠 J-' + diff; }
-          else                 { expClass = 'exp-ok';   expTxt = '🟢 ' + expDate.toLocaleDateString('fr-FR', {day:'2-digit',month:'2-digit',year:'2-digit'}); }
-        }
-        var menuId = 'menu-' + r.id;
-        var emailDisplay = r.email_admin
-          ? '<a href="mailto:' + r.email_admin + '" style="color:var(--blue);font-size:12px;text-decoration:none">' + r.email_admin + '</a>'
-          : '<span style="color:var(--muted);font-size:12px">—</span>';
-        var nbInscriptions = inscriptionsMap[r.id] || 0;
-        var inscBadge = '<span style="background:var(--blue-bg);color:var(--blue);border:1px solid var(--blue-border);border-radius:20px;padding:2px 10px;font-size:12px;font-weight:700">' + nbInscriptions + '</span>';
-        return '<tr>' +
-          '<td class="code-td">' + (r.code_residence || '—') + '</td>' +
-          '<td style="font-weight:600">' + r.nom + '</td>' +
-          '<td>' + emailDisplay + '</td>' +
-          '<td>' +
-            '<span style="font-size:11px;color:var(--muted);font-weight:500">' + (r.secteur||'—') + '</span> ' +
-            '<button onclick="editSecteur(\'' + r.id + '\',\'' + (r.secteur||'residence') + '\',\'' + r.nom.replace(/'/g,"\\'") + '\')" style="background:var(--blue-bg);border:1px solid var(--blue-border);color:var(--blue);border-radius:4px;padding:2px 7px;font-size:10px;font-weight:600;cursor:pointer;font-family:Plus Jakarta Sans,sans-serif">✏️</button>' +
-          '</td>' +
-          '<td style="font-family:\'DM Mono\',monospace;font-size:12px;text-align:center">' + (r.nb_apparts || '—') + '</td>' +
-          '<td style="text-align:center">' + inscBadge + '</td>' +
-'<td style="text-align:center">' +
-  (r.secteur === 'residence'
-    ? '<span id="rec-' + r.id + '" ' +
-      'style="font-size:11px;color:var(--muted)">⏳</span>'
-    : '<span style="font-size:11px;' +
-      'color:var(--muted)">—</span>'
-  ) +
-'</td>'
-          '<td>' + badge + '</td>' +
-          '<td style="position:relative">' +
-            '<button class="actions-trigger" onclick="toggleMenu(\'' + r.id + '\')">⋯</button>' +
-            '<div class="actions-menu" id="' + menuId + '">' +
-              (r.actif
-                ? '<button class="am-item warn" onclick="closeMenus();confirmSuspend(\'' + r.id + '\',\'' + r.nom.replace(/'/g,"\\'") + '\')">⏸ Suspendre</button>'
-                : '<button class="am-item info" onclick="closeMenus();confirmReactivate(\'' + r.id + '\',\'' + r.nom.replace(/'/g,"\\'") + '\')">▶ Réactiver</button>'
-              ) +
-              '<button class="am-item info" onclick="closeMenus();confirmViderArchive(\'' + r.id + '\',\'' + r.nom.replace(/'/g,"\\'") + '\')">🗑 Vider l\'archive</button>' +
-              '<div class="am-sep"></div>' +
-              '<button class="am-item danger" onclick="closeMenus();confirmDelete(\'' + r.id + '\',\'' + r.nom.replace(/'/g,"\\'") + '\',\'' + (r.admin_id||'') + '\')">⛔ Supprimer</button>' +
-            '</div>' +
-          '</td>' +
-          '</tr>';
-      }).join('');
-}
-   loadRecStatsForAdmin();
+  tbody.innerHTML = data.map(function(r) {
+
+    var badge = r.actif
+      ? '<span class="badge b-on">● Actif</span>'
+      : '<span class="badge b-off">● Suspendu</span>';
+
+    var aboBadge = r.abonnement
+      ? '<span class="badge b-' + r.abonnement + '">'
+        + r.abonnement + '</span>'
+      : '<span style="color:var(--muted);font-size:12px">—</span>';
+
+    var expClass = 'exp-ok', expTxt = '—';
+    if (r.date_expiration) {
+      var expDate = new Date(r.date_expiration);
+      var today   = new Date(); today.setHours(0,0,0,0);
+      var diff    = Math.round((expDate - today) / 86400000);
+      if (diff < 0)        { expClass='exp-dead'; expTxt='🔴 Expiré'; }
+      else if (diff <= 10) { expClass='exp-warn'; expTxt='🟠 J-'+diff; }
+      else {
+        expClass = 'exp-ok';
+        expTxt   = '🟢 ' + expDate.toLocaleDateString('fr-FR',{
+          day:'2-digit', month:'2-digit', year:'2-digit'
+        });
+      }
+    }
+
+    var menuId = 'menu-' + r.id;
+
+    var emailDisplay = r.email_admin
+      ? '<a href="mailto:' + r.email_admin
+        + '" style="color:var(--blue);font-size:12px;'
+        + 'text-decoration:none">' + r.email_admin + '</a>'
+      : '<span style="color:var(--muted);font-size:12px">—</span>';
+
+    var nbInscriptions = inscriptionsMap[r.id] || 0;
+    var inscBadge =
+      '<span style="background:var(--blue-bg);color:var(--blue);'
+      + 'border:1px solid var(--blue-border);border-radius:20px;'
+      + 'padding:2px 10px;font-size:12px;font-weight:700">'
+      + nbInscriptions + '</span>';
+
+    // Colonne recouvrement
+    var recCell = r.secteur === 'residence'
+      ? '<span id="rec-' + r.id + '" '
+        + 'style="font-size:11px;color:var(--muted)">⏳</span>'
+      : '<span style="font-size:11px;color:var(--muted)">—</span>';
+
+    // Menu actions
+    var menuActions = r.actif
+      ? '<button class="am-item warn" onclick="closeMenus();'
+        + 'confirmSuspend(\'' + r.id + '\',\''
+        + r.nom.replace(/'/g,"\\'") + '\')">⏸ Suspendre</button>'
+      : '<button class="am-item info" onclick="closeMenus();'
+        + 'confirmReactivate(\'' + r.id + '\',\''
+        + r.nom.replace(/'/g,"\\'") + '\')">▶ Réactiver</button>';
+
+    return '<tr>'
+      + '<td class="code-td">'
+        + (r.code_residence || '—') + '</td>'
+      + '<td style="font-weight:600">' + r.nom + '</td>'
+      + '<td>' + emailDisplay + '</td>'
+      + '<td>'
+        + '<span style="font-size:11px;color:var(--muted);'
+          + 'font-weight:500">' + (r.secteur||'—') + '</span> '
+        + '<button onclick="editSecteur(\'' + r.id + '\',\''
+          + (r.secteur||'residence') + '\',\''
+          + r.nom.replace(/'/g,"\\'") + '\')" '
+          + 'style="background:var(--blue-bg);'
+          + 'border:1px solid var(--blue-border);'
+          + 'color:var(--blue);border-radius:4px;'
+          + 'padding:2px 7px;font-size:10px;font-weight:600;'
+          + 'cursor:pointer;font-family:Plus Jakarta Sans,'
+          + 'sans-serif">✏️</button>'
+      + '</td>'
+      + '<td style="font-family:\'DM Mono\',monospace;'
+        + 'font-size:12px;text-align:center">'
+        + (r.nb_apparts || '—') + '</td>'
+      + '<td style="text-align:center">' + inscBadge + '</td>'
+      + '<td style="text-align:center">' + recCell + '</td>'
+      + '<td>' + badge + '</td>'
+      + '<td style="position:relative">'
+        + '<button class="actions-trigger" '
+          + 'onclick="toggleMenu(\'' + r.id + '\')">⋯</button>'
+        + '<div class="actions-menu" id="' + menuId + '">'
+          + menuActions
+          + '<button class="am-item info" onclick="closeMenus();'
+            + 'confirmViderArchive(\'' + r.id + '\',\''
+            + r.nom.replace(/'/g,"\\'") + '\')">'
+            + '🗑 Vider l\'archive</button>'
+          + '<div class="am-sep"></div>'
+          + '<button class="am-item danger" onclick="closeMenus();'
+            + 'confirmDelete(\'' + r.id + '\',\''
+            + r.nom.replace(/'/g,"\\'") + '\',\''
+            + (r.admin_id||'') + '\')">'
+            + '⛔ Supprimer</button>'
+        + '</div>'
+      + '</td>'
+      + '</tr>';
+
+  }).join('');
+
+  // Charger stats recouvrement après rendu
+  loadRecStatsForAdmin();
 }
 
 // ET AJOUTER cette nouvelle fonction :
@@ -1285,34 +1330,42 @@ async function loadRecStatsForAdmin() {
   const mois = new Date().toISOString().slice(0, 7);
 
   const residences = allClientsData
-    .filter(r => r.secteur === 'residence' && r.actif);
+    .filter(function(r) {
+      return r.secteur === 'residence' && r.actif;
+    });
 
-  for (const r of residences) {
-    const el = document.getElementById('rec-' + r.id);
+  for (var i = 0; i < residences.length; i++) {
+    var r  = residences[i];
+    var el = document.getElementById('rec-' + r.id);
     if (!el) continue;
 
-    const { data: stats } = await db
-      .rpc('get_stats_recouvrement', {
+    try {
+      var result = await db.rpc('get_stats_recouvrement', {
         p_residence_id: r.id,
         p_periode:      mois
       });
 
-    if (stats?.[0]) {
-      const s   = stats[0];
-      const t   = s.taux_recouvrement || 0;
-      const col = t >= 80
-        ? 'var(--green)'
-        : t >= 50
-        ? 'var(--orange,#ea580c)'
-        : 'var(--red)';
+      var stats = result.data;
 
-      el.innerHTML =
-        '<span style="font-weight:700;color:' + col + '">'
-        + t + '%</span>' +
-        '<span style="color:var(--muted);font-size:10px">' +
-        ' (' + s.nb_payes + '/' + s.total_residents + ')' +
-        '</span>';
-    } else {
+      if (stats && stats[0]) {
+        var s   = stats[0];
+        var t   = s.taux_recouvrement || 0;
+        var col = t >= 80
+          ? 'var(--green)'
+          : t >= 50
+          ? 'var(--orange,#ea580c)'
+          : 'var(--red)';
+
+        el.innerHTML =
+          '<span style="font-weight:700;color:' + col + '">'
+          + t + '%</span>'
+          + '<span style="color:var(--muted);font-size:10px">'
+          + ' (' + s.nb_payes + '/' + s.total_residents + ')'
+          + '</span>';
+      } else {
+        el.textContent = '—';
+      }
+    } catch(e) {
       el.textContent = '—';
     }
   }
