@@ -981,7 +981,14 @@
 const SUPABASE_URL = 'https://nwusjraxjfirsonbndfy.supabase.co';
 const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im53dXNqcmF4amZpcnNvbmJuZGZ5Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzM2ODI5NjcsImV4cCI6MjA4OTI1ODk2N30.wqVBvGwrLv8bJfGuHJTWj1Upao63aTYQMcH-IIN7OGw';
 const { createClient } = supabase;
-const db = createClient(SUPABASE_URL, SUPABASE_KEY);
+const db = createClient(SUPABASE_URL, SUPABASE_KEY, {
+  auth: {
+    storageKey: 'redtech-syndic-v1',
+    persistSession: true,
+    autoRefreshToken: true,
+    detectSessionInUrl: false
+  }
+});
 
 let currentUser = null;
 let currentRole = 'resident';
