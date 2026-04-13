@@ -2755,167 +2755,315 @@ async function callEdge(payload) {
   return await resp.json();
 }
 // ========================
-// GESTION RESIDENTS
+// GESTION RESIDENTS ANNUEL
 // ========================
-let allResidents = [];
+let allResidents      = [];
 let residentsFiltered = [];
+let resAnneeActive    = new Date().getFullYear();
+let resConfigRes      = {};
+let resAllPaiements   = {};
+let resMenuCurrentId  = null;
+let resMenuCurrentData= null;
 
+// ── INIT ANNÉE ──────────────────────────────────────────────
+function initResAnneeFilter() {
+  const sel = document.getElementById('resAnneeFilter');
+  if (!sel) return;
+  const now = new Date().getFullYear();
+  sel.innerHTML = '';
+  for (let y = now; y >= now - 4; y--) {
+    sel.innerHTML += `<option value="${y}">${y}</option>`;
+  }
+  sel.value = resAnneeActive;
+}
+
+function onResAnneeChange() {
+  resAnneeActive = parseInt(document.getElementById('resAnneeFilter').value);
+  loadAndRenderResidents();
+}
+
+// ── CHARGER CONFIG RÉSIDENCE ─────────────────────────────────
+async function loadResConfig() {
+  const { data } = await db.from('residences')
+    .select('montant_mensuel,date_debut_charges,historique_montants')
+    .eq('admin_id', currentUser.id)
+    .single();
+  if (data) {
+    resConfigRes = data;
+    const montantEl = document.getElementById('resMontantGlobal');
+    const dateEl    = document.getElementById('resDateDebut');
+    if (montantEl) montantEl.value = data.montant_mensuel || 300;
+    if (dateEl)    dateEl.value    = data.date_debut_charges || '';
+  }
+}
+
+// ── SAUVEGARDER CONFIG ───────────────────────────────────────
+async function saveConfigResidence() {
+  const montant = parseFloat(document.getElementById('resMontantGlobal').value) || 300;
+  const date    = document.getElementById('resDateDebut').value;
+
+  // Historique montants
+  let historique = [];
+  try { historique = resConfigRes.historique_montants || []; } catch(e) {}
+  const dernierMontant = historique.length
+    ? historique[historique.length - 1].montant : null;
+  if (dernierMontant !== montant) {
+    historique.push({
+      montant,
+      date_changement: new Date().toISOString().split('T')[0],
+      mois_debut: new Date().toISOString().slice(0, 7)
+    });
+  }
+
+  const { error } = await db.from('residences')
+    .update({
+      montant_mensuel:     montant,
+      date_debut_charges:  date || null,
+      historique_montants: historique
+    })
+    .eq('admin_id', currentUser.id);
+
+  if (error) {
+    showToast('❌ Erreur : ' + error.message, 'error');
+    return;
+  }
+  resConfigRes.montant_mensuel    = montant;
+  resConfigRes.date_debut_charges = date;
+  resConfigRes.historique_montants= historique;
+  showToast('✅ Configuration enregistrée !', 'success');
+  renderResAnnuel();
+}
+
+// ── MONTANT POUR UN MOIS DONNÉ ───────────────────────────────
+function getMontantPourMois(annee, mois) {
+  const historique = resConfigRes.historique_montants || [];
+  const periodeStr = `${annee}-${String(mois).padStart(2,'0')}`;
+  let montant = resConfigRes.montant_mensuel || 300;
+  // Chercher le montant applicable à cette période
+  for (let i = historique.length - 1; i >= 0; i--) {
+    const h = historique[i];
+    if (h.mois_debut && h.mois_debut <= periodeStr) {
+      montant = h.montant;
+      break;
+    }
+  }
+  return montant;
+}
+
+// ── CHARGER RÉSIDENTS + PAIEMENTS ───────────────────────────
 async function loadAndRenderResidents() {
-  document.getElementById('residentsList').innerHTML = '<div class="empty-state">Chargement...</div>';
+  const tbody = document.getElementById('residentsList');
+  if (tbody) tbody.innerHTML =
+    '<tr><td colspan="16" class="empty-state" style="padding:32px;text-align:center">⏳ Chargement...</td></tr>';
+
+  initResAnneeFilter();
+  await loadResConfig();
+
   try {
     const { data: myRes } = await db.from('residences')
       .select('id,nom,code_residence')
       .eq('admin_id', currentUser.id)
       .single();
+
     if (!myRes) {
-      document.getElementById('residentsList').innerHTML = '<div class="empty-state">❌ Résidence introuvable</div>';
+      if (tbody) tbody.innerHTML =
+        '<tr><td colspan="16" style="padding:32px;text-align:center;color:var(--red-text)">❌ Résidence introuvable</td></tr>';
       return;
     }
-    const result = await callEdge({ type: 'list_residents', residence_id: myRes.id });
+
+    // Résidents
+    const result = await callEdge({
+      type: 'list_residents',
+      residence_id: myRes.id
+    });
+
     if (!result.success) {
-      document.getElementById('residentsList').innerHTML = `<div class="empty-state">❌ ${result.error || 'Erreur chargement'}</div>`;
+      if (tbody) tbody.innerHTML =
+        `<tr><td colspan="16" style="padding:32px;text-align:center;color:var(--red-text)">❌ ${result.error}</td></tr>`;
       return;
     }
-    allResidents = result.residents || [];
+
+    allResidents      = result.residents || [];
     residentsFiltered = [...allResidents];
-    renderResidents();
+
+    // Paiements de toute l'année
+    const { data: paiements } = await db.from('recouvrement')
+      .select('*')
+      .eq('residence_id', myRes.id)
+      .like('periode', `${resAnneeActive}-%`);
+
+    // Indexer : resAllPaiements[resident_id][periode] = paiement
+    resAllPaiements = {};
+    (paiements || []).forEach(p => {
+      if (!resAllPaiements[p.resident_id])
+        resAllPaiements[p.resident_id] = {};
+      resAllPaiements[p.resident_id][p.periode] = p;
+    });
+
+    // Stats
+    const validated = allResidents.filter(r => r.role === 'resident');
+    const pending   = allResidents.filter(r => r.role === 'resident_pending');
+    const suspendus = validated.filter(r => r.suspendu);
+    const apparts   = [...new Set(validated.map(r => r.appartement).filter(Boolean))];
+
+    const elTotal    = document.getElementById('resTotal');
+    const elPending  = document.getElementById('resPending');
+    const elApparts  = document.getElementById('resApparts');
+    const elSuspendu = document.getElementById('resSuspendu');
+    if (elTotal)    elTotal.textContent    = validated.length;
+    if (elPending)  elPending.textContent  = pending.length;
+    if (elApparts)  elApparts.textContent  = apparts.length;
+    if (elSuspendu) elSuspendu.textContent = suspendus.length;
+
+    renderResAnnuel();
+
   } catch(e) {
-    document.getElementById('residentsList').innerHTML = `<div class="empty-state">❌ ${e.message}</div>`;
+    if (tbody) tbody.innerHTML =
+      `<tr><td colspan="16" style="padding:32px;text-align:center;color:var(--red-text)">❌ ${e.message}</td></tr>`;
   }
 }
 
-function renderResidents() {
-  const validated = residentsFiltered.filter(r => r.role === 'resident');
-  const pending   = residentsFiltered.filter(r => r.role === 'resident_pending');
+// ── RENDER TABLEAU ANNUEL ────────────────────────────────────
+function renderResAnnuel() {
+  const tbody  = document.getElementById('residentsList');
+  if (!tbody) return;
 
-  document.getElementById('resTotal').textContent   = validated.length;
-  document.getElementById('resPending').textContent = pending.length;
-  const apparts = [...new Set(validated.map(r => r.appartement).filter(Boolean))];
-  document.getElementById('resApparts').textContent = apparts.length;
+  const now        = new Date();
+  const moisActuel = now.getMonth() + 1;
+  const anneeNow   = now.getFullYear();
 
-  const el = document.getElementById('residentsList');
-  if (!residentsFiltered.length) {
-    el.innerHTML = '<div class="empty-state"><div class="empty-icon">👥</div>Aucun résident trouvé</div>';
+  // Filtre recherche
+  const q = (document.getElementById('searchResidents')?.value || '').toLowerCase();
+  const validated = allResidents.filter(r => {
+    if (r.role !== 'resident') return false;
+    if (!q) return true;
+    return (r.nom         && r.nom.toLowerCase().includes(q))   ||
+           (r.email       && r.email.toLowerCase().includes(q)) ||
+           (r.appartement && r.appartement.toLowerCase().includes(q));
+  });
+
+  if (!validated.length) {
+    tbody.innerHTML =
+      '<tr><td colspan="16" style="padding:32px;text-align:center;color:var(--muted)">👥 Aucun résident trouvé</td></tr>';
+    updateTotauxAnnuel([], anneeNow, moisActuel);
     return;
   }
 
-  let html = '';
+  // Date début globale
+  const dateDebutGlobal = resConfigRes.date_debut_charges
+    ? new Date(resConfigRes.date_debut_charges) : null;
 
-  // Résidents validés
-  if (validated.length) {
-    html += `<div class="section-heading" style="margin-bottom:12px">✅ Résidents validés (${validated.length})</div>`;
-    html += validated.map(r => {
-      const initiale = (r.nom || r.email || '?')[0].toUpperCase();
-      return `
-      <div class="res-card">
-        <div class="res-avatar">${initiale}</div>
-        <div class="res-info">
-          <div class="res-name">${r.nom || 'Sans nom'}</div>
-          <div class="res-meta">
-            <span>📧 ${r.email}</span>
-            ${r.appartement ? `<span>🏠 Apt ${r.appartement}</span>` : ''}
-            ${r.telephone   ? `<span>📞 ${r.telephone}</span>`       : ''}
-          </div>
-        </div>
-        <div class="res-actions">
-          <button class="btn-xs btn-green" onclick="openEditResident('${r.id}','${(r.nom||'').replace(/'/g,"\\'")}','${r.appartement||''}','${r.telephone||''}')">✏️ Modifier</button>
-          <button class="btn-xs" style="background:var(--red-bg);color:var(--red-text);border-color:var(--red-border)" onclick="deleteResident('${r.id}','${r.email}')">🗑️</button>
-        </div>
-      </div>`;
-    }).join('');
-  }
+  tbody.innerHTML = validated.map(r => {
+    const paiementsRes = resAllPaiements[r.id] || {};
+    const suspendu     = r.suspendu || false;
 
-  // Résidents en attente
-  if (pending.length) {
-    html += `<div class="section-heading" style="margin:20px 0 12px">⏳ En attente de validation (${pending.length})</div>`;
-    html += pending.map(r => `
-      <div class="pending-card">
-        <div style="width:42px;height:42px;border-radius:50%;background:var(--orange-bg);color:var(--orange-text);display:flex;align-items:center;justify-content:center;font-weight:700;font-size:16px;flex-shrink:0;border:2px solid var(--orange-border)">
-          ${(r.nom||r.email||'?')[0].toUpperCase()}
-        </div>
-        <div class="pc-info">
-          <div class="pc-name">${r.nom || 'Sans nom'}</div>
-          <div class="pc-meta">📧 ${r.email} · 🏠 Apt ${r.appartement||'?'} · 📞 ${r.telephone||'?'}</div>
-        </div>
-        <div class="pc-actions">
-          <button class="btn-approve" onclick="approveResident('${r.id}','${r.email}')">✅ Approuver</button>
-          <button class="btn-reject"  onclick="rejectResident('${r.id}','${r.email}')">❌ Refuser</button>
-        </div>
-      </div>`).join('');
-  }
+    // Date début spécifique au résident (stockée dans metadata)
+    const dateDebutRes = r.date_debut_charges
+      ? new Date(r.date_debut_charges)
+      : dateDebutGlobal;
 
-  el.innerHTML = html;
-}
+    // Calcul payé annuel
+    let totalPaye  = 0;
+    let totalDu    = 0;
+    let nbPayes    = 0;
 
-let _resDebounce = null;
-function filterResidents(query) {
-  clearTimeout(_resDebounce);
-  _resDebounce = setTimeout(() => {
-    const q = query.toLowerCase().trim();
-    residentsFiltered = !q ? [...allResidents] : allResidents.filter(r =>
-      (r.nom         && r.nom.toLowerCase().includes(q))         ||
-      (r.email       && r.email.toLowerCase().includes(q))       ||
-      (r.appartement && r.appartement.toLowerCase().includes(q)) ||
-      (r.telephone   && r.telephone.includes(q))
-    );
-    renderResidents();
-  }, 250);
-}
+    const cellules = [];
+    for (let m = 1; m <= 12; m++) {
+      const periodeStr = `${resAnneeActive}-${String(m).padStart(2,'0')}`;
+      const montantM   = getMontantPourMois(resAnneeActive, m);
+      const paiement   = paiementsRes[periodeStr];
 
-function toggleAddResidentForm() {
-  const form = document.getElementById('addResidentForm');
-  const isVisible = form.style.display !== 'none';
-  form.style.display = isVisible ? 'none' : 'block';
-  document.getElementById('btnAddResident').textContent = isVisible ? '+ Ajouter manuellement' : '✕ Fermer';
-  if (!isVisible) document.getElementById('newResNom').focus();
-}
+      // Déterminer si le mois est avant la date de début
+      let avantDebut = false;
+      if (dateDebutRes) {
+        const debutAnnee = dateDebutRes.getFullYear();
+        const debutMois  = dateDebutRes.getMonth() + 1;
+        if (resAnneeActive < debutAnnee ||
+           (resAnneeActive === debutAnnee && m < debutMois)) {
+          avantDebut = true;
+        }
+      }
 
-function openEditResident(id, nom, apt, tel) {
-  document.getElementById('editResId').value  = id;
-  document.getElementById('editResNom').value = nom;
-  document.getElementById('editResApt').value = apt;
-  document.getElementById('editResTel').value = tel;
-  document.getElementById('editResErr').style.display = 'none';
-  document.getElementById('editResOk').style.display  = 'none';
-  document.getElementById('editResidentModal').classList.add('open');
-}
+      // Déterminer si futur
+      const estFutur = resAnneeActive > anneeNow ||
+        (resAnneeActive === anneeNow && m > moisActuel);
 
-function closeEditResident() {
-  document.getElementById('editResidentModal').classList.remove('open');
-}
+      let cellHtml = '';
+      let statut   = paiement?.statut || null;
 
-async function saveEditResident() {
-  const id  = document.getElementById('editResId').value;
-  const nom = document.getElementById('editResNom').value.trim();
-  const apt = document.getElementById('editResApt').value.trim();
-  const tel = document.getElementById('editResTel').value.trim();
-  const errEl = document.getElementById('editResErr');
-  const okEl  = document.getElementById('editResOk');
-  errEl.style.display = 'none'; okEl.style.display = 'none';
-  if (!nom) { errEl.textContent = '⚠️ Le nom est obligatoire.'; errEl.style.display = 'block'; return; }
+      if (avantDebut && !paiement) {
+        // Avant date début = non dû = vert automatique
+        cellHtml = `<td style="padding:4px;text-align:center">
+          <span style="font-size:16px;opacity:0.4" title="Non dû">✅</span>
+        </td>`;
+        // Ne compte pas dans les totaux
+      } else if (paiement) {
+        // Paiement enregistré
+        totalDu  += montantM;
+        totalPaye += parseFloat(paiement.montant_paye) || 0;
+        if (statut === 'paye') nbPayes++;
 
-  const result = await callEdge({
-    type:          'update_user_metadata',
-    admin_user_id: id,
-    metadata:      { nom, appartement: apt, telephone: tel }
-  });
+        const icon  = statut === 'paye' ? '✅' : statut === 'partiel' ? '⚠️' : '❌';
+        const color = statut === 'paye'
+          ? 'var(--green-text)' : statut === 'partiel'
+          ? 'var(--yellow-text)' : 'var(--red-text)';
+        const montantAff = paiement.montant_paye
+          ? parseFloat(paiement.montant_paye).toLocaleString('fr-MA') + ' DH'
+          : '';
+        const dateAff = paiement.date_paiement
+          ? new Date(paiement.date_paiement).toLocaleDateString('fr-FR',{day:'numeric',month:'short'})
+          : '';
+        const title = `${icon} ${montantAff}${dateAff ? ' · ' + dateAff : ''}`;
 
-  if (!result.success) {
-    errEl.textContent = '❌ ' + (result.error || 'Erreur');
-    errEl.style.display = 'block'; return;
-  }
-  okEl.textContent = '✅ Résident mis à jour !';
-  okEl.style.display = 'block';
-  setTimeout(() => { closeEditResident(); loadAndRenderResidents(); }, 1200);
-}
+        cellHtml = `<td style="padding:4px;text-align:center">
+          <span onclick="openResMoisModal('${r.id}','${periodeStr}','${(r.nom||'').replace(/'/g,"\\'")}','${r.appartement||''}')"
+            style="font-size:16px;cursor:pointer;display:inline-block;transition:transform 0.1s"
+            onmouseover="this.style.transform='scale(1.3)'"
+            onmouseout="this.style.transform='scale(1)'"
+            title="${title}">${icon}</span>
+        </td>`;
+      } else if (estFutur) {
+        // Futur — cliquable pour anticipé
+        totalDu += montantM;
+        cellHtml = `<td style="padding:4px;text-align:center">
+          <span onclick="openResMoisModal('${r.id}','${periodeStr}','${(r.nom||'').replace(/'/g,"\\'")}','${r.appartement||''}')"
+            style="font-size:13px;cursor:pointer;color:var(--hint);display:inline-block;transition:transform 0.1s"
+            onmouseover="this.style.transform='scale(1.2)';this.style.color='var(--blue)'"
+            onmouseout="this.style.transform='scale(1)';this.style.color='var(--hint)'"
+            title="Paiement anticipé possible">—</span>
+        </td>`;
+      } else {
+        // Mois passé non payé
+        totalDu += montantM;
+        cellHtml = `<td style="padding:4px;text-align:center">
+          <span onclick="openResMoisModal('${r.id}','${periodeStr}','${(r.nom||'').replace(/'/g,"\\'")}','${r.appartement||''}')"
+            style="font-size:16px;cursor:pointer;display:inline-block;transition:transform 0.1s"
+            onmouseover="this.style.transform='scale(1.3)'"
+            onmouseout="this.style.transform='scale(1)'"
+            title="Non payé — cliquer pour enregistrer">❌</span>
+        </td>`;
+      }
+      cellules.push(cellHtml);
+    }
 
-async function deleteResident(id, email) {
-  if (!confirm(`Supprimer le compte de ${email} ?\n\nCette action est irréversible.`)) return;
-  const result = await callEdge({ type: 'delete_resident', admin_user_id: id });
-  if (!result.success) { alert('❌ Erreur : ' + (result.error || 'Inconnue')); return; }
-  showToast('🗑️ Résident supprimé.', 'error');
-  await loadAndRenderResidents();
-}
+    // Couleur ligne selon taux
+    const taux = totalDu > 0 ? (totalPaye / totalDu) * 100 : 0;
+    let bgLigne = '';
+    if (suspendu) {
+      bgLigne = 'background:rgba(185,28,28,0.04);opacity:0.75';
+    } else if (taux >= 80) {
+      bgLigne = 'background:var(--green-bg)';
+    } else if (taux >= 50) {
+      bgLigne = 'background:var(--yellow-bg)';
+    } else {
+      bgLigne = 'background:var(--red-bg)';
+    }
+
+    const reste = Math.max(0, totalDu - totalPaye);
+    const initiale = (r.nom || r.email || '?')[0].toUpperCase();
+
+    return `<tr style="${bgLigne};border-bottom:1px solid var(--border);transition:all 0.15s"
+      on
 
 async function addResidentManually() {
   const nom   = document.getElementById('newResNom').value.trim();
