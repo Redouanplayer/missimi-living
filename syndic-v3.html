@@ -717,7 +717,204 @@
       </div>
     </div>
   </div>
+      <div class="fg"><label class="lbl">Nom complet</label><input type="text" id="editResNom" placeholder="Nom complet"></div>
+      <div class="fr2">
+        <div><label class="lbl">Appartement</label><input type="text" id="editResApt" placeholder="Ex : 5A"></div>
+        <div><label class="lbl">Téléphone</label><input type="tel" id="editResTel" placeholder="06 XX XX XX XX"></div>
+      </div>
+      <div class="alert alert-error" id="editResErr"></div>
+      <div class="alert alert-success" id="editResOk"></div>
+      <div class="btn-row">
+        <button class="btn btn-ghost" onclick="closeEditResident()">Annuler</button>
+        <button class="btn btn-primary" style="width:auto" onclick="saveEditResident()">Enregistrer →</button>
+      </div>
+    </div>
+  </div>
+</div>
 
+<!-- MODAL PAIEMENT MENSUEL -->
+<div class="modal-overlay" id="resMoisModal" onclick="if(event.target===this)closeResMoisModal()">
+  <div class="modal-box" style="max-width:460px">
+    <div class="modal-header">
+      <div>
+        <div class="modal-title" id="resMoisModalTitle">💳 Paiement</div>
+        <div style="font-size:12px;color:var(--muted);margin-top:3px" id="resMoisModalSub"></div>
+      </div>
+      <button class="modal-close" onclick="closeResMoisModal()">×</button>
+    </div>
+    <div class="modal-body">
+      <input type="hidden" id="resMoisResId">
+      <input type="hidden" id="resMoisPeriode">
+
+      <div style="margin-bottom:16px">
+        <label class="lbl">Statut du paiement</label>
+        <div style="display:flex;gap:8px;margin-top:6px">
+          <button onclick="selectResMoisStatut('paye')"
+            id="rmBtnPaye"
+            style="flex:1;padding:10px;border-radius:var(--radius-sm);border:2px solid var(--green-border);background:var(--green-bg);color:var(--green-text);cursor:pointer;font-weight:600;font-size:12px;font-family:'DM Sans',sans-serif">
+            ✅ Payé
+          </button>
+          <button onclick="selectResMoisStatut('partiel')"
+            id="rmBtnPartiel"
+            style="flex:1;padding:10px;border-radius:var(--radius-sm);border:2px solid var(--yellow-border);background:var(--surface);color:var(--yellow-text);cursor:pointer;font-weight:600;font-size:12px;font-family:'DM Sans',sans-serif">
+            ⚠️ Partiel
+          </button>
+          <button onclick="selectResMoisStatut('non_paye')"
+            id="rmBtnNonPaye"
+            style="flex:1;padding:10px;border-radius:var(--radius-sm);border:2px solid var(--red-border);background:var(--surface);color:var(--red-text);cursor:pointer;font-weight:600;font-size:12px;font-family:'DM Sans',sans-serif">
+            ❌ Non payé
+          </button>
+        </div>
+        <input type="hidden" id="resMoisStatut" value="paye">
+      </div>
+
+      <div class="fr2">
+        <div>
+          <label class="lbl">Montant payé (DH)</label>
+          <input type="number" id="resMoisMontant" placeholder="0" min="0" step="1">
+        </div>
+        <div>
+          <label class="lbl">Date de paiement</label>
+          <input type="date" id="resMoisDate">
+        </div>
+      </div>
+
+      <div class="fg">
+        <label class="lbl">Mode de paiement</label>
+        <select id="resMoisMode">
+          <option value="especes">💵 Espèces</option>
+          <option value="virement">🏦 Virement bancaire</option>
+          <option value="cheque">📄 Chèque</option>
+          <option value="mobile">📱 Paiement mobile</option>
+        </select>
+      </div>
+
+      <div class="fg">
+        <label class="lbl">Note / Référence</label>
+        <input type="text" id="resMoisNote" placeholder="Ex : Reçu n°123...">
+      </div>
+
+      <div class="alert alert-error" id="resMoisErr"></div>
+      <div class="alert alert-success" id="resMoisOk"></div>
+
+      <div class="btn-row">
+        <button class="btn btn-ghost" onclick="closeResMoisModal()">Annuler</button>
+        <button class="btn btn-primary" style="width:auto" onclick="saveResMoisPaiement()">💾 Enregistrer →</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- MODAL SUSPENDRE RESIDENT -->
+<div class="modal-overlay" id="suspendreModal" onclick="if(event.target===this)closeSuspendreModal()">
+  <div class="modal-box" style="max-width:420px">
+    <div class="modal-header">
+      <div class="modal-title">⏸ Suspendre le résident</div>
+      <button class="modal-close" onclick="closeSuspendreModal()">×</button>
+    </div>
+    <div class="modal-body">
+      <input type="hidden" id="suspendreResId">
+      <div style="background:var(--orange-bg);border:1px solid var(--orange-border);border-radius:var(--radius-sm);padding:12px 14px;margin-bottom:16px;font-size:13px;color:var(--orange-text)">
+        ⚠️ Le résident sera marqué comme suspendu (visuel uniquement). Il pourra toujours se connecter.
+      </div>
+      <div style="font-size:14px;font-weight:600;margin-bottom:16px" id="suspendreNom"></div>
+      <div class="fg">
+        <label class="lbl">Motif de suspension (note interne) <span class="req">*</span></label>
+        <textarea id="suspendreNote" placeholder="Ex : Impayés depuis 3 mois, en attente de régularisation..."
+          style="min-height:100px"></textarea>
+      </div>
+      <div class="alert alert-error" id="suspendreErr"></div>
+      <div class="btn-row">
+        <button class="btn btn-ghost" onclick="closeSuspendreModal()">Annuler</button>
+        <button class="btn btn-primary" style="width:auto;background:var(--orange-text);border-color:var(--orange-text)"
+          onclick="confirmerSuspendre()">⏸ Suspendre</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- MODAL REACTIVER RESIDENT -->
+<div class="modal-overlay" id="reactiverModal" onclick="if(event.target===this)closeReactiverModal()">
+  <div class="modal-box" style="max-width:420px">
+    <div class="modal-header">
+      <div class="modal-title">▶️ Réactiver le résident</div>
+      <button class="modal-close" onclick="closeReactiverModal()">×</button>
+    </div>
+    <div class="modal-body">
+      <input type="hidden" id="reactiverResId">
+      <div style="background:var(--green-bg);border:1px solid var(--green-border);border-radius:var(--radius-sm);padding:12px 14px;margin-bottom:16px;font-size:13px;color:var(--green-text)">
+        ✅ Le résident sera réactivé et retiré de la liste des suspendus.
+      </div>
+      <div style="font-size:14px;font-weight:600;margin-bottom:16px" id="reactiverNom"></div>
+      <div class="fg">
+        <label class="lbl">Commentaire de réactivation <span class="req">*</span></label>
+        <textarea id="reactiverNote" placeholder="Ex : Situation régularisée, paiements à jour..."
+          style="min-height:80px"></textarea>
+      </div>
+      <div class="alert alert-error" id="reactiverErr"></div>
+      <div class="btn-row">
+        <button class="btn btn-ghost" onclick="closeReactiverModal()">Annuler</button>
+        <button class="btn btn-primary" style="width:auto" onclick="confirmerReactiver()">▶️ Réactiver</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- MODAL DATE DEBUT RESIDENT -->
+<div class="modal-overlay" id="dateDebutModal" onclick="if(event.target===this)closeDateDebutModal()">
+  <div class="modal-box" style="max-width:400px">
+    <div class="modal-header">
+      <div class="modal-title">📅 Date de début des charges</div>
+      <button class="modal-close" onclick="closeDateDebutModal()">×</button>
+    </div>
+    <div class="modal-body">
+      <input type="hidden" id="dateDebutResId">
+      <div style="font-size:14px;font-weight:600;margin-bottom:16px" id="dateDebutNom"></div>
+      <div style="background:var(--blue-bg);border:1px solid var(--blue-border);border-radius:var(--radius-sm);padding:12px 14px;margin-bottom:16px;font-size:12px;color:var(--blue-text)">
+        💡 Les mois avant cette date seront considérés comme non dus (✅ automatique).
+      </div>
+      <div class="fg">
+        <label class="lbl">Date de première exigibilité <span class="req">*</span></label>
+        <input type="date" id="dateDebutValue">
+      </div>
+      <div class="alert alert-error" id="dateDebutErr"></div>
+      <div class="btn-row">
+        <button class="btn btn-ghost" onclick="closeDateDebutModal()">Annuler</button>
+        <button class="btn btn-primary" style="width:auto" onclick="confirmerDateDebut()">📅 Enregistrer</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- MENU ACTIONS RESIDENT (dropdown) -->
+<div id="resActionsMenu" style="display:none;position:fixed;background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);box-shadow:var(--shadow);z-index:500;min-width:180px;overflow:hidden">
+  <div id="resMenuNom" style="padding:10px 14px;font-size:12px;font-weight:600;color:var(--muted);border-bottom:1px solid var(--border);background:var(--bg)"></div>
+  <button onclick="resMenuAction('edit')"
+    style="display:flex;align-items:center;gap:8px;width:100%;padding:10px 14px;border:none;background:none;cursor:pointer;font-size:13px;font-family:'DM Sans',sans-serif;color:var(--text);text-align:left">
+    ✏️ Modifier infos
+  </button>
+  <button onclick="resMenuAction('date')"
+    style="display:flex;align-items:center;gap:8px;width:100%;padding:10px 14px;border:none;background:none;cursor:pointer;font-size:13px;font-family:'DM Sans',sans-serif;color:var(--text);text-align:left">
+    📅 Date début charges
+  </button>
+  <div id="resMenuSuspendreBtn">
+    <button onclick="resMenuAction('suspendre')"
+      style="display:flex;align-items:center;gap:8px;width:100%;padding:10px 14px;border:none;background:none;cursor:pointer;font-size:13px;font-family:'DM Sans',sans-serif;color:var(--orange-text);text-align:left">
+      ⏸ Suspendre
+    </button>
+  </div>
+  <div id="resMenuReactiverBtn" style="display:none">
+    <button onclick="resMenuAction('reactiver')"
+      style="display:flex;align-items:center;gap:8px;width:100%;padding:10px 14px;border:none;background:none;cursor:pointer;font-size:13px;font-family:'DM Sans',sans-serif;color:var(--green-text);text-align:left">
+      ▶️ Réactiver
+    </button>
+  </div>
+  <div style="height:1px;background:var(--border);margin:2px 0"></div>
+  <button onclick="resMenuAction('delete')"
+    style="display:flex;align-items:center;gap:8px;width:100%;padding:10px 14px;border:none;background:none;cursor:pointer;font-size:13px;font-family:'DM Sans',sans-serif;color:var(--red-text);text-align:left">
+    🗑️ Supprimer
+  </button>
+</div>
   <!-- FORMULAIRE AJOUT -->
   <div class="card" id="addResidentForm" style="display:none;margin-bottom:16px;border-left:3px solid var(--blue)">
     <div class="card-title" style="margin-bottom:16px">Ajouter un résident manuellement</div>
