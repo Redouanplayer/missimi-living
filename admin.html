@@ -1214,7 +1214,7 @@ function confirmSuspend(id, nom) {
       // Passer par Edge Function (service_role_key pour bypass RLS)
       fetch('https://nwusjraxjfirsonbndfy.supabase.co/functions/v1/clever-handler', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json', 'x-internal-key': 'redtech-2026-secret', 'Authorization': 'Bearer ' + SB_KEY },
+        headers: { 'Content-Type': 'application/json', 'x-internal-key': 'redtech-2026-xK9#mP2$vL7@nQ4', 'Authorization': 'Bearer ' + SB_KEY },
         body: JSON.stringify({ type: 'suspend_client', residence_id: id, nom: nom })
       })
       .then(function(r) { return r.json(); })
@@ -1238,7 +1238,7 @@ function confirmReactivate(id, nom) {
     function() {
       fetch('https://nwusjraxjfirsonbndfy.supabase.co/functions/v1/clever-handler', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json', 'x-internal-key': 'redtech-2026-secret', 'Authorization': 'Bearer ' + SB_KEY },
+        headers: { 'Content-Type': 'application/json', 'x-internal-key': 'redtech-2026-xK9#mP2$vL7@nQ4', 'Authorization': 'Bearer ' + SB_KEY },
         body: JSON.stringify({ type: 'reactivate_client', residence_id: id, nom: nom })
       })
       .then(function(r) { return r.json(); })
@@ -1298,7 +1298,7 @@ function deleteClient(id, nom, adminId) {
     method: 'POST',
     headers: {
       'Content-Type':   'application/json',
-      'x-internal-key': 'redtech-2026-secret',
+      'x-internal-key': 'redtech-2026-xK9#mP2$vL7@nQ4',
       'Authorization':  'Bearer ' + SB_KEY
     },
     body: JSON.stringify({
@@ -1454,7 +1454,7 @@ function renouvelerClient(id, nom) {
           method: 'POST',
           headers: {
             'Content-Type':   'application/json',
-            'x-internal-key': 'redtech-2026-secret',
+            'x-internal-key': 'redtech-2026-xK9#mP2$vL7@nQ4',
             'Authorization':  'Bearer ' + sbKey
           },
           body: JSON.stringify({
@@ -1658,7 +1658,7 @@ function sendNotif(id, type) {
       toast('📧 Envoi en cours...');
       fetch('https://nwusjraxjfirsonbndfy.supabase.co/functions/v1/clever-handler', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json', 'x-internal-key': 'redtech-2026-secret', 'Authorization': 'Bearer ' + SB_KEY },
+        headers: { 'Content-Type': 'application/json', 'x-internal-key': 'redtech-2026-xK9#mP2$vL7@nQ4', 'Authorization': 'Bearer ' + SB_KEY },
         body: JSON.stringify(payload)
       })
       .then(function(resp) { return resp.json(); })
@@ -1701,7 +1701,7 @@ function sendBulkNotif(type) {
         var diff = Math.round((new Date(r.date_expiration) - today) / 86400000);
         fetch('https://nwusjraxjfirsonbndfy.supabase.co/functions/v1/clever-handler', {
           method: 'POST',
-          headers: { 'Content-Type': 'application/json', 'x-internal-key': 'redtech-2026-secret', 'Authorization': 'Bearer ' + SB_KEY },
+          headers: { 'Content-Type': 'application/json', 'x-internal-key': 'redtech-2026-xK9#mP2$vL7@nQ4', 'Authorization': 'Bearer ' + SB_KEY },
           body: JSON.stringify({
             type:            type === 'j10' ? 'expiration_warning' : 'expiration_warning',
             email:           r.email_admin,
@@ -1743,7 +1743,7 @@ function runSuspensions() {
           if (r.email_admin) {
             fetch('https://nwusjraxjfirsonbndfy.supabase.co/functions/v1/clever-handler', {
               method: 'POST',
-              headers: { 'Content-Type': 'application/json', 'x-internal-key': 'redtech-2026-secret', 'Authorization': 'Bearer ' + SB_KEY },
+              headers: { 'Content-Type': 'application/json', 'x-internal-key': 'redtech-2026-xK9#mP2$vL7@nQ4', 'Authorization': 'Bearer ' + SB_KEY },
               body: JSON.stringify({
                 type: 'suspension', email: r.email_admin, nom: r.nom,
                 abonnement: r.abonnement || 'mensuel', date_expiration: r.date_expiration
@@ -1964,7 +1964,7 @@ function saveSecteur() {
               method: 'POST',
               headers: {
                 'Content-Type':   'application/json',
-                'x-internal-key': 'redtech-2026-secret',
+                'x-internal-key': 'redtech-2026-xK9#mP2$vL7@nQ4',
                 'Authorization':  'Bearer ' + SB_KEY
               },
               body: JSON.stringify({
