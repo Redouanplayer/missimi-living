@@ -809,7 +809,15 @@ window.addEventListener('load', function() {
     return;
   }
 
-  db = supabase.createClient(SB_URL, SB_KEY);
+  db = supabase.createClient(SB_URL, SB_KEY, {
+  auth: {
+    storageKey: 'redtech-admin-session',  // ← Clé unique par app
+    storage: window.localStorage,
+    autoRefreshToken: true,
+    persistSession: true,
+    detectSessionInUrl: false
+  }
+});
 
   // ── LOGIN ──────────────────────────────────────────
   document.getElementById('loginBtn').addEventListener('click', doLogin);
