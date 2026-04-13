@@ -1694,7 +1694,7 @@ async function submitTicket() {
 
     await fetch('https://nwusjraxjfirsonbndfy.supabase.co/functions/v1/clever-handler', {
       method: 'POST',
-      headers: {'Content-Type':'application/json','x-internal-key':'redtech-2026-secret','Authorization':'Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im53dXNqcmF4amZpcnNvbmJuZGZ5Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzM2ODI5NjcsImV4cCI6MjA4OTI1ODk2N30.wqVBvGwrLv8bJfGuHJTWj1Upao63aTYQMcH-IIN7OGw'},
+      headers: {'Content-Type':'application/json','x-internal-key': 'redtech-2026-xK9#mP2$vL7@nQ4','Authorization':'Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im53dXNqcmF4amZpcnNvbmJuZGZ5Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzM2ODI5NjcsImV4cCI6MjA4OTI1ODk2N30.wqVBvGwrLv8bJfGuHJTWj1Upao63aTYQMcH-IIN7OGw'},
       body: JSON.stringify({
         type:            urgence === 'Haute' ? 'ticket_urgent' : 'nouvelle_reclamation',
         email:           'lookup',
@@ -1879,9 +1879,18 @@ function closeModalDirect() { document.getElementById('modalOverlay').classList.
 // ========================
 function urgClass(u){ return u==='Haute'?'b-haute':u==='Moyenne'?'b-moyenne':'b-basse'; }
 function statClass(s){ return s==='Ouvert'?'b-ouvert':s==='En cours'?'b-encours':'b-resolu'; }
-function fmtDate(d){ return new Date(d).toLocaleDateString('fr-FR',{day:'numeric',month:'short',year:'numeric'}); }
-function fmtDateShort(d){ return new Date(d).toLocaleDateString('fr-FR',{day:'numeric',month:'short'}); }
-
+function fmtDate(d) {
+  // Forcer l'interprétation locale pour les dates sans heure
+  if (typeof d === 'string' && d.length === 10) {
+    const [y, m, day] = d.split('-');
+    return new Date(y, m - 1, day).toLocaleDateString('fr-FR', {
+      day: 'numeric', month: 'short', year: 'numeric'
+    });
+  }
+  return new Date(d).toLocaleDateString('fr-FR', {
+    day: 'numeric', month: 'short', year: 'numeric'
+  });
+}
 // ========================
 // ANNUAIRE PROFESSIONNELS
 // ========================
