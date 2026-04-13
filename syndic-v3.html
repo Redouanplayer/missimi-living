@@ -1330,16 +1330,15 @@ function showApp() {
       const codeEl = document.getElementById('navResCode');
       if (codeEl) codeEl.textContent = currentUserMeta.residence_code || '';
     }
-   tabAdmin.style.display='block';
+tabAdmin.style.display = 'block';
 document.getElementById('tabResidents').style.display = 'block';
-tabNouveau.style.display='none';
-tabSuivi.style.display='none';
-// Recouvrement uniquement pour secteur résidence
-// Afficher recouvrement par défaut, masquer après sync si nécessaire
-document.getElementById('tabRecouvrement').style.display = 'block';
-// Puis après syncSecteurFromResidences(), re-vérifier
-document.getElementById('tabServices').style.display='block';
-document.getElementById('tabCompta').style.display='block';
+tabNouveau.style.display = 'none';
+tabSuivi.style.display = 'none';
+document.getElementById('tabServices').style.display = 'block';
+document.getElementById('tabCompta').style.display = 'block';
+const secteurActuel = currentUserMeta.secteur || 'residence';
+document.getElementById('tabRecouvrement').style.display =
+  ['residence', 'collectivite'].includes(secteurActuel) ? 'block' : 'none';
 showTab('admin', tabAdmin);
  } else {
     const vRes = getSecteurVocab(currentUserMeta.secteur||'residence');
@@ -1427,20 +1426,7 @@ function renderSuivi() {
           <div class="lm-author ${lastMsg.role}">${lastMsg.auteur}</div>
           <div class="lm-text">${lastMsg.message}</div>
         </div>
-        <div class="lm-time">${fmtDateShort(lastMsg.created_at)function fmtDateShort(d) {
-  const date = new Date(d);
-  const now  = new Date();
-  const diff = now - date;
-  const mins = Math.floor(diff / 60000);
-  const hrs  = Math.floor(diff / 3600000);
-  const days = Math.floor(diff / 86400000);
-
-  if (mins < 1)  return 'À l\'instant';
-  if (mins < 60) return `${mins}min`;
-  if (hrs  < 24) return `${hrs}h`;
-  if (days < 7)  return `${days}j`;
-  return date.toLocaleDateString('fr-FR', { day:'numeric', month:'short' });
-}}</div>
+        <div class="lm-time">${fmtDateShort(lastMsg.created_at)}</div>
       </div>` : '';
 
     return `
@@ -1463,6 +1449,19 @@ function renderSuivi() {
         ${lastMsgHtml}
       </div>`;
   }).join('');
+}
+function fmtDateShort(d) {
+  const date = new Date(d);
+  const now  = new Date();
+  const diff = now - date;
+  const mins = Math.floor(diff / 60000);
+  const hrs  = Math.floor(diff / 3600000);
+  const days = Math.floor(diff / 86400000);
+  if (mins < 1)  return 'À l\'instant';
+  if (mins < 60) return `${mins}min`;
+  if (hrs  < 24) return `${hrs}h`;
+  if (days < 7)  return `${days}j`;
+  return date.toLocaleDateString('fr-FR', { day:'numeric', month:'short' });
 }
 
 function updateUnreadBadge() {
@@ -2421,7 +2420,6 @@ async function loadSecteurFromResidence(resId) {
     .single();
   if (data?.secteur) applyVocabulaire(data.secteur);
 }
-}
   // ========================
 // HELPER FETCH EDGE FUNCTION
 // ========================
@@ -2934,25 +2932,12 @@ function openRecModal(residentId, nom, apt) {
 
 function selectRecStatut(statut) {
   document.getElementById('recModalStatut').value = statut;
-  document.getElementById('rsBtnPaye').style.background    = 
+  document.getElementById('rsBtnPaye').style.background    =
     statut === 'paye'     ? 'var(--green-bg)'  : 'var(--surface)';
-  document.getElementById('rsBtnPartiel').style.background = 
+  document.getElementById('rsBtnPartiel').style.background =
     statut === 'partiel'  ? 'var(--yellow-bg)' : 'var(--surface)';
-  document.getElementById('rsBtnNonPaye').style.background = 
+  document.getElementById('rsBtnNonPaye').style.background =
     statut === 'non_paye' ? 'var(--red-bg)'    : 'var(--surface)';
-}
-  });
-
-  // Activer le bouton sélectionné
-  const activeStyles = {
-    'paye':     { bg: 'var(--green-bg)' },
-    'partiel':  { bg: 'var(--yellow-bg)' },
-    'non_paye': { bg: 'var(--red-bg)' }
-  };
-
-  document.getElementById('rsBtnPaye').style.background    = statut === 'paye'     ? 'var(--green-bg)'  : 'var(--surface)';
-  document.getElementById('rsBtnPartiel').style.background = statut === 'partiel'  ? 'var(--yellow-bg)' : 'var(--surface)';
-  document.getElementById('rsBtnNonPaye').style.background = statut === 'non_paye' ? 'var(--red-bg)'    : 'var(--surface)';
 }
 
 async function saveRecPaiement() {
