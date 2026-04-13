@@ -752,12 +752,7 @@ let db, currentSector = 'residence', currentAbo = 'mensuel', lastResult = null;
 
 window.addEventListener('load', function() {
 
-  // DEBUG — confirme que JS est chargé
-  var dbg = document.createElement('div');
-  dbg.style.cssText = 'position:fixed;top:0;left:0;right:0;background:#16a34a;color:white;text-align:center;padding:6px;font-size:12px;font-weight:600;z-index:9999';
-  dbg.textContent = '✅ JS chargé — Supabase: ' + (window.supabase ? 'OK' : 'MANQUANT');
-  document.body.appendChild(dbg);
-  setTimeout(function(){ dbg.remove(); }, 4000);
+  
 
   if (!window.supabase) {
     showErr(document.getElementById('loginErr'), 'Erreur : Supabase non chargé. Vérifiez votre connexion.');
