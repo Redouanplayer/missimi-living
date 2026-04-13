@@ -288,7 +288,21 @@
   .sector-btn.active{border-color:var(--blue);background:var(--blue-bg);color:var(--blue-text);}
   .sector-btn span{font-size:11px;font-weight:600;}
 
-
+/* RESIDENTS */
+.res-card{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);padding:16px 18px;margin-bottom:10px;display:flex;align-items:center;gap:14px;transition:all 0.15s;}
+.res-card:hover{border-color:var(--border2);box-shadow:0 2px 8px rgba(0,0,0,0.06);}
+.res-avatar{width:42px;height:42px;border-radius:50%;background:var(--blue-bg);color:var(--blue-text);display:flex;align-items:center;justify-content:center;font-weight:700;font-size:16px;flex-shrink:0;border:2px solid var(--blue-border);}
+.res-info{flex:1;min-width:0;}
+.res-name{font-size:14px;font-weight:600;color:var(--text);margin-bottom:3px;}
+.res-meta{font-size:12px;color:var(--muted);display:flex;gap:10px;flex-wrap:wrap;}
+.res-actions{display:flex;gap:6px;flex-shrink:0;}
+.pending-card{background:var(--orange-bg);border:1px solid var(--orange-border);border-radius:var(--radius);padding:14px 16px;display:flex;align-items:center;gap:12px;flex-wrap:wrap;}
+.pc-info{flex:1;min-width:0;}
+.pc-name{font-size:14px;font-weight:600;color:var(--text);}
+.pc-meta{font-size:12px;color:var(--muted);margin-top:3px;}
+.pc-actions{display:flex;gap:6px;}
+.btn-approve{background:var(--green-bg);color:var(--green-text);border:1px solid var(--green-border);padding:6px 14px;border-radius:var(--radius-sm);cursor:pointer;font-size:12px;font-weight:600;font-family:'DM Sans',sans-serif;}
+.btn-reject{background:var(--red-bg);color:var(--red-text);border:1px solid var(--red-border);padding:6px 14px;border-radius:var(--radius-sm);cursor:pointer;font-size:12px;font-weight:600;font-family:'DM Sans',sans-serif;}
   @media(max-width:600px){
     .fr2{grid-template-columns:1fr;}
     .res-stats,.stats-grid{grid-template-columns:repeat(3,1fr);}
@@ -438,6 +452,7 @@
     </div>
     <div class="tab" data-tab="services" onclick="showTab('services',this)" id="tabServices" style="display:none">Annuaire</div>
     <div class="tab" data-tab="compta" onclick="showTab('compta',this)" id="tabCompta" style="display:none">Comptabilité</div>
+    <div class="tab" data-tab="residents" onclick="showTab('residents',this)" id="tabResidents" style="display:none">👥 Résidents</div>
     <div class="tab" data-tab="admin" onclick="showTab('admin',this)" id="tabAdmin" style="display:none">Administration</div>
   </div>
 
@@ -619,7 +634,80 @@
         <div id="comptaTable"></div>
       </div>
     </div>
+<!-- RESIDENTS -->
+<div class="section" id="sec-residents">
+  <div class="card" style="margin-bottom:16px">
+    <div style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:12px">
+      <div>
+        <div class="card-title">👥 Gestion des résidents</div>
+        <div class="card-sub">Résidents validés de votre espace</div>
+      </div>
+      <button onclick="toggleAddResidentForm()" id="btnAddResident" class="btn btn-primary" style="width:auto">+ Ajouter manuellement</button>
+    </div>
+  </div>
 
+  <!-- Formulaire ajout manuel -->
+  <div class="card" id="addResidentForm" style="display:none;margin-bottom:16px;border-left:3px solid var(--blue)">
+    <div class="card-title" style="margin-bottom:16px">Ajouter un résident manuellement</div>
+    <div class="fr2">
+      <div><label class="lbl">Nom complet <span class="req">*</span></label><input type="text" id="newResNom" placeholder="Mohammed Alami"></div>
+      <div><label class="lbl">Email <span class="req">*</span></label><input type="email" id="newResEmail" placeholder="resident@email.com"></div>
+    </div>
+    <div class="fr2">
+      <div><label class="lbl">Appartement <span class="req">*</span></label><input type="text" id="newResApt" placeholder="Ex : 5A"></div>
+      <div><label class="lbl">Téléphone</label><input type="tel" id="newResTel" placeholder="06 XX XX XX XX"></div>
+    </div>
+    <div class="fg">
+      <label class="lbl">Mot de passe temporaire <span class="req">*</span></label>
+      <input type="text" id="newResPwd" placeholder="Min 6 caractères" value="RedTech2026!">
+    </div>
+    <div class="alert alert-error" id="addResErr"></div>
+    <div class="alert alert-success" id="addResOk"></div>
+    <div class="btn-row">
+      <button class="btn btn-ghost" onclick="toggleAddResidentForm()">Annuler</button>
+      <button class="btn btn-primary" style="width:auto" onclick="addResidentManually()">Créer le compte →</button>
+    </div>
+  </div>
+
+  <!-- Stats -->
+  <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:12px;margin-bottom:20px">
+    <div class="stat-card"><div class="stat-num" id="resTotal" style="color:var(--blue-text)">0</div><div class="stat-label">Total résidents</div></div>
+    <div class="stat-card"><div class="stat-num" id="resPending" style="color:var(--orange-text)">0</div><div class="stat-label">En attente</div></div>
+    <div class="stat-card"><div class="stat-num" id="resApparts" style="color:var(--green-text)">0</div><div class="stat-label">Appartements</div></div>
+  </div>
+
+  <!-- Recherche -->
+  <div style="margin-bottom:16px">
+    <input type="text" id="searchResidents" placeholder="🔍 Rechercher par nom, email, appartement..." oninput="filterResidents(this.value)">
+  </div>
+
+  <!-- Liste résidents -->
+  <div id="residentsList"></div>
+</div>
+
+<!-- MODAL EDIT RESIDENT -->
+<div class="modal-overlay" id="editResidentModal" onclick="if(event.target===this)closeEditResident()">
+  <div class="modal-box" style="max-width:480px">
+    <div class="modal-header">
+      <div class="modal-title">✏️ Modifier le résident</div>
+      <button class="modal-close" onclick="closeEditResident()">×</button>
+    </div>
+    <div class="modal-body">
+      <input type="hidden" id="editResId">
+      <div class="fg"><label class="lbl">Nom complet</label><input type="text" id="editResNom" placeholder="Nom complet"></div>
+      <div class="fr2">
+        <div><label class="lbl">Appartement</label><input type="text" id="editResApt" placeholder="Ex : 5A"></div>
+        <div><label class="lbl">Téléphone</label><input type="tel" id="editResTel" placeholder="06 XX XX XX XX"></div>
+      </div>
+      <div class="alert alert-error" id="editResErr"></div>
+      <div class="alert alert-success" id="editResOk"></div>
+      <div class="btn-row">
+        <button class="btn btn-ghost" onclick="closeEditResident()">Annuler</button>
+        <button class="btn btn-primary" style="width:auto" onclick="saveEditResident()">Enregistrer →</button>
+      </div>
+    </div>
+  </div>
+</div>
     <!-- ADMIN -->
     <div class="section" id="sec-admin">
       <!-- DEMANDES EN ATTENTE -->
@@ -1043,7 +1131,7 @@ function showApp() {
       const codeEl = document.getElementById('navResCode');
       if (codeEl) codeEl.textContent = currentUserMeta.residence_code || '';
     }
-    tabAdmin.style.display='block'; tabNouveau.style.display='none'; tabSuivi.style.display='none';
+    tabAdmin.style.display='block';document.getElementById('tabResidents').style.display = 'block'; tabNouveau.style.display='none'; tabSuivi.style.display='none';
     document.getElementById('tabServices').style.display='block';
     document.getElementById('tabCompta').style.display='block';
     showTab('admin', tabAdmin);
@@ -2087,7 +2175,129 @@ async function loadSecteurFromResidence(resNomOrId) {
     applyVocabulaire(data.secteur);
   }
 }
+// ========================
+// GESTION RESIDENTS
+// ========================
+let allResidents = [];
+let residentsFiltered = [];
 
+async function loadAndRenderResidents() {
+  document.getElementById('residentsList').innerHTML = '<div class="empty-state">Chargement...</div>';
+  try {
+    // Récupérer la résidence de l'admin
+    const { data: myRes } = await db.from('residences')
+      .select('id,nom,code_residence')
+      .eq('admin_id', currentUser.id)
+      .single();
+    if (!myRes) {
+      document.getElementById('residentsList').innerHTML = '<div class="empty-state">❌ Résidence introuvable</div>';
+      return;
+    }
+
+    // Appeler Edge Function pour lister les résidents
+    const resp = await fetch('https://nwusjraxjfirsonbndfy.supabase.co/functions/v1/clever-handler', {
+      method: 'POST',
+      headers: {
+        'Content-Type':   'application/json',
+        'x-internal-key': 'redtech-2026-xK9mP2vL7nQ4'
+      },
+      body: JSON.stringify({
+        type:         'list_residents',
+        residence_id: myRes.id
+      })
+    });
+    const result = await resp.json();
+    if (!result.success) {
+      document.getElementById('residentsList').innerHTML = '<div class="empty-state">❌ Erreur chargement</div>';
+      return;
+    }
+    allResidents = result.residents || [];
+    residentsFiltered = [...allResidents];
+    renderResidents();
+  } catch(e) {
+    document.getElementById('residentsList').innerHTML = `<div class="empty-state">❌ ${e.message}</div>`;
+  }
+}
+
+function renderResidents() {
+  const validated = residentsFiltered.filter(r => r.role === 'resident');
+  const pending   = residentsFiltered.filter(r => r.role === 'resident_pending');
+
+  document.getElementById('resTotal').textContent   = validated.length;
+  document.getElementById('resPending').textContent = pending.length;
+  const apparts = [...new Set(validated.map(r => r.appartement).filter(Boolean))];
+  document.getElementById('resApparts').textContent = apparts.length;
+
+  const el = document.getElementById('residentsList');
+  if (!residentsFiltered.length) {
+    el.innerHTML = '<div class="empty-state"><div class="empty-icon">👥</div>Aucun résident trouvé</div>';
+    return;
+  }
+
+  let html = '';
+
+  // Résidents validés
+  if (validated.length) {
+    html += `<div class="section-heading" style="margin-bottom:12px">✅ Résidents validés (${validated.length})</div>`;
+    html += validated.map(r => {
+      const initiale = (r.nom || r.email || '?')[0].toUpperCase();
+      return `
+      <div class="res-card">
+        <div class="res-avatar">${initiale}</div>
+        <div class="res-info">
+          <div class="res-name">${r.nom || 'Sans nom'}</div>
+          <div class="res-meta">
+            <span>📧 ${r.email}</span>
+            ${r.appartement ? `<span>🏠 Apt ${r.appartement}</span>` : ''}
+            ${r.telephone   ? `<span>📞 ${r.telephone}</span>`       : ''}
+          </div>
+        </div>
+        <div class="res-actions">
+          <button class="btn-xs btn-green" onclick="openEditResident('${r.id}','${(r.nom||'').replace(/'/g,"\\'")}','${r.appartement||''}','${r.telephone||''}')">✏️ Modifier</button>
+          <button class="btn-xs" style="background:var(--red-bg);color:var(--red-text);border-color:var(--red-border)" onclick="deleteResident('${r.id}','${r.email}')">🗑️</button>
+        </div>
+      </div>`;
+    }).join('');
+  }
+
+  // Résidents en attente
+  if (pending.length) {
+    html += `<div class="section-heading" style="margin:20px 0 12px">⏳ En attente de validation (${pending.length})</div>`;
+    html += pending.map(r => `
+      <div class="pending-card">
+        <div style="width:42px;height:42px;border-radius:50%;background:var(--orange-bg);color:var(--orange-text);display:flex;align-items:center;justify-content:center;font-weight:700;font-size:16px;flex-shrink:0;border:2px solid var(--orange-border)">
+          ${(r.nom||r.email||'?')[0].toUpperCase()}
+        </div>
+        <div class="pc-info">
+          <div class="pc-name">${r.nom || 'Sans nom'}</div>
+          <div class="pc-meta">📧 ${r.email} · 🏠 Apt ${r.appartement||'?'} · 📞 ${r.telephone||'?'}</div>
+        </div>
+        <div class="pc-actions">
+          <button class="btn-approve" onclick="approveResident('${r.id}','${r.email}')">✅ Approuver</button>
+          <button class="btn-reject"  onclick="rejectResident('${r.id}','${r.email}')">❌ Refuser</button>
+        </div>
+      </div>`).join('');
+  }
+
+  el.innerHTML = html;
+}
+
+function filterResidents(query) {
+  const q = query.toLowerCase().trim();
+  if (!q) {
+    residentsFiltered = [...allResidents];
+  } else {
+    residentsFiltered = allResidents.filter(r =>
+      (r.nom         && r.nom.toLowerCase().includes(q))         ||
+      (r.email       && r.email.toLowerCase().includes(q))       ||
+      (r.appartement && r.appartement.toLowerCase().includes(q)) ||
+      (r.telephone   && r.telephone.includes(q))
+    );
+  }
+  renderResidents();
+}
+
+function toggleAddResidentForm
 // ========================
 // TOGGLE PASSWORD VISIBILITY
 // ========================
