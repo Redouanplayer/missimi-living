@@ -856,7 +856,7 @@
       <div style="margin-bottom:16px">
         <label class="lbl">Statut du paiement</label>
         <div style="display:flex;gap:8px;margin-top:6px">
-                    <button onclick="selectRecStatut('paye')"
+          <button onclick="selectRecStatut('paye')"
             style="flex:1;padding:10px;border-radius:var(--radius-sm);border:2px solid var(--green-border);background:var(--green-bg);color:var(--green-text);cursor:pointer;font-weight:600;font-size:12px;font-family:'DM Sans',sans-serif"
             id="rsBtnPaye">✅ Payé</button>
           <button onclick="selectRecStatut('partiel')"
@@ -1356,7 +1356,10 @@ showTab('admin', tabAdmin);
     }
     document.getElementById('navResName').textContent = currentUserMeta.residence_nom || '';
     const codeEl = document.getElementById('navResCode');
-    if (codeEl) codeEl.textContent = currentUserMeta.residence_code || '';
+    if (codeEl) {
+      codeEl.textContent = currentUserMeta.residence_code || '';
+      codeEl.style.display = currentUserMeta.residence_code ? 'inline-flex' : 'none';
+    }
     pill.className = 'role-pill pill-resident';
     // Masquer les onglets admin pour le résident
     document.getElementById('tabAdmin').style.display       = 'none';
@@ -2555,6 +2558,7 @@ function renderResidents() {
   el.innerHTML = html;
 }
 
+let _resDebounce = null;
 let _resDebounce = null;
 function filterResidents(query) {
   clearTimeout(_resDebounce);
