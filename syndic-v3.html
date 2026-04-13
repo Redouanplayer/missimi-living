@@ -3063,7 +3063,293 @@ function renderResAnnuel() {
     const initiale = (r.nom || r.email || '?')[0].toUpperCase();
 
     return `<tr style="${bgLigne};border-bottom:1px solid var(--border);transition:all 0.15s"
-      on
+            onmouseover="this.style.boxShadow='inset 0 0 0 1px var(--border2)'"
+      onmouseout="this.style.boxShadow='none'">
+      <td style="padding:8px 14px;white-space:nowrap">
+        <div style="display:flex;align-items:center;gap:8px">
+          <div style="width:32px;height:32px;border-radius:50%;background:var(--blue-bg);color:var(--blue-text);display:flex;align-items:center;justify-content:center;font-weight:700;font-size:13px;flex-shrink:0;border:2px solid var(--blue-border)">
+            ${initiale}
+          </div>
+          <div>
+            <div style="font-size:13px;font-weight:600;color:var(--text)">
+              ${suspendu ? '🔴 ' : ''}${r.nom || 'Sans nom'}
+            </div>
+            <div style="font-size:11px;color:var(--muted)">
+              ${r.appartement ? 'Apt ' + r.appartement : ''}
+              ${r.telephone ? ' · ' + r.telephone : ''}
+            </div>
+          </div>
+        </div>
+      </td>
+      ${cellules.join('')}
+      <td style="padding:6px 10px;text-align:right;font-size:12px;font-weight:700;color:var(--green-text);white-space:nowrap">
+        ${totalPaye.toLocaleString('fr-MA')} DH
+      </td>
+      <td style="padding:6px 10px;text-align:right;font-size:12px;font-weight:700;color:${reste > 0 ? 'var(--red-text)' : 'var(--green-text)'};white-space:nowrap">
+        ${reste.toLocaleString('fr-MA')} DH
+      </td>
+      <td style="padding:6px 10px;text-align:center;position:relative">
+        <button
+          onclick="openResMenu(event,'${r.id}',${JSON.stringify(r).replace(/'/g,"&apos;")})"
+          style="background:var(--bg);border:1px solid var(--border2);border-radius:6px;padding:4px 10px;cursor:pointer;font-size:16px;color:var(--muted);font-family:'DM Sans',sans-serif">
+          ⋯
+        </button>
+      </td>
+    </tr>`;
+  }).join('');
+
+  updateTotauxAnnuel(validated, anneeNow, moisActuel);
+}
+
+// ── TOTAUX LIGNE HAUTE ───────────────────────────────────────
+function updateTotauxAnnuel(validated, anneeNow, moisActuel) {
+  const dateDebutGlobal = resConfigRes.date_debut_charges
+    ? new Date(resConfigRes.date_debut_charges) : null;
+
+  for (let m = 1; m <= 12; m++) {
+    const periodeStr = `${resAnneeActive}-${String(m).padStart(2,'0')}`;
+    let nbPaye = 0, nbPartiel = 0, nbNonPaye = 0;
+
+    validated.forEach(r => {
+      if (r.role !== 'resident') return;
+      const paiementsRes = resAllPaiements[r.id] || {};
+      const paiement     = paiementsRes[periodeStr];
+
+      const dateDebutRes = r.date_debut_charges
+        ? new Date(r.date_debut_charges) : dateDebutGlobal;
+
+      let avantDebut = false;
+      if (dateDebutRes) {
+        const dA = dateDebutRes.getFullYear();
+        const dM = dateDebutRes.getMonth() + 1;
+        if (resAnneeActive < dA || (resAnneeActive === dA && m < dM)) {
+          avantDebut = true;
+        }
+      }
+      if (avantDebut && !paiement) return;
+
+      if (paiement) {
+        if (paiement.statut === 'paye')     nbPaye++;
+        else if (paiement.statut === 'partiel') nbPartiel++;
+        else nbNonPaye++;
+      } else {
+        const estFutur = resAnneeActive > anneeNow ||
+          (resAnneeActive === anneeNow && m > moisActuel);
+        if (!estFutur) nbNonPaye++;
+      }
+    });
+
+    const el = document.getElementById('tot-' + m);
+    if (el) {
+      if (nbPaye === 0 && nbPartiel === 0 && nbNonPaye === 0) {
+        el.textContent = '—';
+        el.style.color = 'var(--hint)';
+      } else {
+        el.innerHTML =
+          (nbPaye    ? `<span style="color:var(--green-text)">${nbPaye}✅</span>` : '') +
+          (nbPartiel ? `<span style="color:var(--yellow-text)">${nbPartiel}⚠️</span>` : '') +
+          (nbNonPaye ? `<span style="color:var(--red-text)">${nbNonPaye}❌</span>` : '');
+      }
+    }
+  }
+
+  // Total payé / reste global
+  let grandTotalPaye = 0;
+  let grandTotalDu   = 0;
+
+  validated.forEach(r => {
+    if (r.role !== 'resident') return;
+    const paiementsRes    = resAllPaiements[r.id] || {};
+    const dateDebutRes    = r.date_debut_charges
+      ? new Date(r.date_debut_charges) : dateDebutGlobal;
+
+    for (let m = 1; m <= 12; m++) {
+      const periodeStr = `${resAnneeActive}-${String(m).padStart(2,'0')}`;
+      const montantM   = getMontantPourMois(resAnneeActive, m);
+      const paiement   = paiementsRes[periodeStr];
+
+      let avantDebut = false;
+      if (dateDebutRes) {
+        const dA = dateDebutRes.getFullYear();
+        const dM = dateDebutRes.getMonth() + 1;
+        if (resAnneeActive < dA || (resAnneeActive === dA && m < dM)) {
+          avantDebut = true;
+        }
+      }
+      if (avantDebut && !paiement) continue;
+
+      grandTotalDu += montantM;
+      if (paiement) {
+        grandTotalPaye += parseFloat(paiement.montant_paye) || 0;
+      }
+    }
+  });
+
+  const elPaye  = document.getElementById('tot-paye');
+  const elReste = document.getElementById('tot-reste');
+  if (elPaye)  elPaye.textContent  = grandTotalPaye.toLocaleString('fr-MA') + ' DH';
+  if (elReste) elReste.textContent = Math.max(0, grandTotalDu - grandTotalPaye).toLocaleString('fr-MA') + ' DH';
+}
+
+// ── FILTRE RECHERCHE ─────────────────────────────────────────
+let _resDebounce = null;
+function filterResidents(query) {
+  clearTimeout(_resDebounce);
+  _resDebounce = setTimeout(() => { renderResAnnuel(); }, 250);
+}
+
+// ── MENU ⋯ ACTIONS ───────────────────────────────────────────
+function openResMenu(event, resId, resData) {
+  event.stopPropagation();
+  resMenuCurrentId   = resId;
+  resMenuCurrentData = resData;
+
+  const menu   = document.getElementById('resActionsMenu');
+  const nomEl  = document.getElementById('resMenuNom');
+  const suspBtn= document.getElementById('resMenuSuspendreBtn');
+  const reactBtn=document.getElementById('resMenuReactiverBtn');
+
+  if (nomEl) nomEl.textContent = resData.nom || resData.email || 'Résident';
+
+  const suspendu = resData.suspendu || false;
+  if (suspBtn)  suspBtn.style.display  = suspendu ? 'none'  : 'block';
+  if (reactBtn) reactBtn.style.display = suspendu ? 'block' : 'none';
+
+  // Positionner le menu
+  const rect = event.currentTarget.getBoundingClientRect();
+  menu.style.display = 'block';
+  menu.style.top     = (rect.bottom + window.scrollY + 4) + 'px';
+  menu.style.left    = Math.min(rect.left, window.innerWidth - 200) + 'px';
+
+  // Fermer au clic extérieur
+  setTimeout(() => {
+    document.addEventListener('click', closeResMenu, { once: true });
+  }, 10);
+}
+
+function closeResMenu() {
+  const menu = document.getElementById('resActionsMenu');
+  if (menu) menu.style.display = 'none';
+}
+
+function resMenuAction(action) {
+  closeResMenu();
+  const r = resMenuCurrentData;
+  if (!r) return;
+
+  if (action === 'edit') {
+    document.getElementById('editResId').value  = r.id;
+    document.getElementById('editResNom').value = r.nom || '';
+    document.getElementById('editResApt').value = r.appartement || '';
+    document.getElementById('editResTel').value = r.telephone || '';
+    document.getElementById('editResErr').style.display = 'none';
+    document.getElementById('editResOk').style.display  = 'none';
+    document.getElementById('editResidentModal').classList.add('open');
+  }
+
+  if (action === 'date') {
+    document.getElementById('dateDebutResId').value  = r.id;
+    document.getElementById('dateDebutNom').textContent = r.nom || r.email || '';
+    document.getElementById('dateDebutValue').value  = r.date_debut_charges || resConfigRes.date_debut_charges || '';
+    document.getElementById('dateDebutErr').style.display = 'none';
+    document.getElementById('dateDebutModal').classList.add('open');
+  }
+
+  if (action === 'suspendre') {
+    document.getElementById('suspendreResId').value = r.id;
+    document.getElementById('suspendreNom').textContent = r.nom || r.email || '';
+    document.getElementById('suspendreNote').value  = '';
+    document.getElementById('suspendreErr').style.display = 'none';
+    document.getElementById('suspendreModal').classList.add('open');
+  }
+
+  if (action === 'reactiver') {
+    document.getElementById('reactiverResId').value = r.id;
+    document.getElementById('reactiverNom').textContent = r.nom || r.email || '';
+    document.getElementById('reactiverNote').value  = '';
+    document.getElementById('reactiverErr').style.display = 'none';
+    document.getElementById('reactiverModal').classList.add('open');
+  }
+
+  if (action === 'delete') {
+    deleteResident(r.id, r.email);
+  }
+}
+
+// ── MODAL PAIEMENT MOIS ──────────────────────────────────────
+function openResMoisModal(resId, periode, nom, apt) {
+  const [annee, mois] = periode.split('-');
+  const moisNoms = ['Janvier','Février','Mars','Avril','Mai','Juin',
+                    'Juillet','Août','Septembre','Octobre','Novembre','Décembre'];
+  const moisLabel = moisNoms[parseInt(mois) - 1];
+  const montantM  = getMontantPourMois(parseInt(annee), parseInt(mois));
+
+  document.getElementById('resMoisResId').value   = resId;
+  document.getElementById('resMoisPeriode').value = periode;
+  document.getElementById('resMoisModalTitle').textContent =
+    `💳 ${moisLabel} ${annee}`;
+  document.getElementById('resMoisModalSub').textContent =
+    `${nom}${apt ? ' · Apt ' + apt : ''}`;
+
+  // Pré-remplir avec paiement existant
+  const existing = (resAllPaiements[resId] || {})[periode];
+  document.getElementById('resMoisMontant').value = existing?.montant_paye || montantM;
+  document.getElementById('resMoisDate').value    = existing?.date_paiement || new Date().toISOString().split('T')[0];
+  document.getElementById('resMoisMode').value    = existing?.mode_paiement || 'especes';
+  document.getElementById('resMoisNote').value    = existing?.note || '';
+
+  selectResMoisStatut(existing?.statut || 'paye');
+
+  document.getElementById('resMoisErr').style.display = 'none';
+  document.getElementById('resMoisOk').style.display  = 'none';
+  document.getElementById('resMoisModal').classList.add('open');
+}
+
+function selectResMoisStatut(statut) {
+  document.getElementById('resMoisStatut').value = statut;
+  const styles = {
+    paye:     { paye: 'var(--green-bg)',  partiel: 'var(--surface)', non_paye: 'var(--surface)' },
+    partiel:  { paye: 'var(--surface)',   partiel: 'var(--yellow-bg)',non_paye: 'var(--surface)' },
+    non_paye: { paye: 'var(--surface)',   partiel: 'var(--surface)', non_paye: 'var(--red-bg)'  }
+  };
+  const s = styles[statut] || styles.paye;
+  document.getElementById('rmBtnPaye').style.background    = s.paye;
+  document.getElementById('rmBtnPartiel').style.background = s.partiel;
+  document.getElementById('rmBtnNonPaye').style.background = s.non_paye;
+}
+
+function closeResMoisModal() {
+  document.getElementById('resMoisModal').classList.remove('open');
+}
+
+async function saveResMoisPaiement() {
+  const resId   = document.getElementById('resMoisResId').value;
+  const periode = document.getElementById('resMoisPeriode').value;
+  const statut  = document.getElementById('resMoisStatut').value;
+  const montant = parseFloat(document.getElementById('resMoisMontant').value) || 0;
+  const date    = document.getElementById('resMoisDate').value;
+  const mode    = document.getElementById('resMoisMode').value;
+  const note    = document.getElementById('resMoisNote').value.trim();
+  const errEl   = document.getElementById('resMoisErr');
+  const okEl    = document.getElementById('resMoisOk');
+  errEl.style.display = 'none';
+  okEl.style.display  = 'none';
+
+  const { data: myRes } = await db.from('residences')
+    .select('id').eq('admin_id', currentUser.id).single();
+  if (!myRes) {
+    errEl.textContent   = '❌ Résidence introuvable';
+    errEl.style.display = 'block';
+    return;
+  }
+
+  const { error } = await db.from('recouvrement').upsert({
+    resident_id:   resId,
+    residence_id:  myRes.id,
+    periode,
+    statut,
+    montant_paye:  montant,
+    date
 
 async function addResidentManually() {
   const nom   = document.getElementById('newResNom').value.trim();
