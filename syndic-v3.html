@@ -856,13 +856,13 @@
       <div style="margin-bottom:16px">
         <label class="lbl">Statut du paiement</label>
         <div style="display:flex;gap:8px;margin-top:6px">
-          <button onclick="selectRecStatut('paye',this)"
+                    <button onclick="selectRecStatut('paye')"
             style="flex:1;padding:10px;border-radius:var(--radius-sm);border:2px solid var(--green-border);background:var(--green-bg);color:var(--green-text);cursor:pointer;font-weight:600;font-size:12px;font-family:'DM Sans',sans-serif"
             id="rsBtnPaye">✅ Payé</button>
-          <button onclick="selectRecStatut('partiel',this)"
+          <button onclick="selectRecStatut('partiel')"
             style="flex:1;padding:10px;border-radius:var(--radius-sm);border:2px solid var(--yellow-border);background:var(--surface);color:var(--yellow-text);cursor:pointer;font-weight:600;font-size:12px;font-family:'DM Sans',sans-serif"
             id="rsBtnPartiel">⚠️ Partiel</button>
-          <button onclick="selectRecStatut('non_paye',this)"
+          <button onclick="selectRecStatut('non_paye')"
             style="flex:1;padding:10px;border-radius:var(--radius-sm);border:2px solid var(--red-border);background:var(--surface);color:var(--red-text);cursor:pointer;font-weight:600;font-size:12px;font-family:'DM Sans',sans-serif"
             id="rsBtnNonPaye">❌ Non payé</button>
         </div>
@@ -1326,9 +1326,11 @@ function showApp() {
     pill.textContent = vAdmin.adminLabel + ' · Admin'; pill.className='role-pill pill-admin';
     document.getElementById('tabAdmin').textContent = vAdmin.adminSub;
     if (currentUserMeta.residence_code || currentUserMeta.residence_nom) {
-      document.getElementById('navResName').textContent = currentUserMeta.residence_nom || 'Mon Espace';
-      const codeEl = document.getElementById('navResCode');
-      if (codeEl) codeEl.textContent = currentUserMeta.residence_code || '';
+    document.getElementById('navResName').textContent = currentUserMeta.residence_nom || '';
+    const codeEl = document.getElementById('navResCode');
+    if (codeEl) {
+      codeEl.textContent = currentUserMeta.residence_code || '';
+      codeEl.style.display = currentUserMeta.residence_code ? 'inline-flex' : 'none';
     }
 tabAdmin.style.display = 'block';
 document.getElementById('tabResidents').style.display = 'block';
@@ -1385,6 +1387,10 @@ function showTab(tab, el) {
   if(tab==='residents') loadAndRenderResidents();
 if(tab==='recouvrement') {
   if (!recMoisActuel) initRecPeriode();
+  if (!recMoisActuel || !recAnneeActuelle) {
+    console.warn('Période non initialisée');
+    return;
+  }
   loadAndRenderRecouvrement();
 }
 }
@@ -2096,6 +2102,10 @@ function downloadPDF() {
   const resNomPDF  = currentUserMeta.residence_nom  || 'RedTech';
   const resCodePDF = currentUserMeta.residence_code || '';
   const win = window.open('', '_blank');
+  if (!win) {
+    alert('⚠️ Autorisez les popups de votre navigateur pour télécharger le PDF.');
+    return;
+  }
   win.document.write(`<!DOCTYPE html><html><head><meta charset="UTF-8">
 <title>Ticket ${t.id.substring(0,8).toUpperCase()}</title>
 <style>
@@ -2545,19 +2555,19 @@ function renderResidents() {
   el.innerHTML = html;
 }
 
+let _resDebounce = null;
 function filterResidents(query) {
-  const q = query.toLowerCase().trim();
-  if (!q) {
-    residentsFiltered = [...allResidents];
-  } else {
-    residentsFiltered = allResidents.filter(r =>
+  clearTimeout(_resDebounce);
+  _resDebounce = setTimeout(() => {
+    const q = query.toLowerCase().trim();
+    residentsFiltered = !q ? [...allResidents] : allResidents.filter(r =>
       (r.nom         && r.nom.toLowerCase().includes(q))         ||
       (r.email       && r.email.toLowerCase().includes(q))       ||
       (r.appartement && r.appartement.toLowerCase().includes(q)) ||
       (r.telephone   && r.telephone.includes(q))
     );
-  }
-  renderResidents();
+    renderResidents();
+  }, 250);
 }
 
 function toggleAddResidentForm() {
@@ -3029,7 +3039,9 @@ function closeRecModal() {
 function getMoisLabel() {
   const moisNoms = ['Janvier','Février','Mars','Avril','Mai','Juin',
                     'Juillet','Août','Septembre','Octobre','Novembre','Décembre'];
-  return moisNoms[parseInt(recMoisActuel, 10) - 1] || '';
+  const idx = parseInt(recMoisActuel, 10);
+  if (isNaN(idx) || idx < 1 || idx > 12) return 'Inconnu';
+  return moisNoms[idx - 1];
 }
 
 function exportRecCSV() {
