@@ -3113,11 +3113,11 @@ init();
 
 <script>
 function showForgotModal() {
-  var overlay = document.getElementById('forgotOverlay');
-  var input   = document.getElementById('forgotEmail');
-  var msg     = document.getElementById('forgotMsg');
-  var btn     = document.getElementById('forgotBtn');
-  var loginEmail = document.getElementById('loginEmail').value.trim();
+const overlay = document.getElementById('forgotOverlay');
+  const input   = document.getElementById('forgotEmail');
+  const msg     = document.getElementById('forgotMsg');
+  const btn     = document.getElementById('forgotBtn');
+  const loginEmail = document.getElementById('loginEmail').value.trim();
   if (loginEmail) input.value = loginEmail;
   msg.style.display = 'none';
   btn.disabled = false;
