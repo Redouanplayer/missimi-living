@@ -1341,22 +1341,28 @@ document.getElementById('tabRecouvrement').style.display = 'block';
     document.getElementById('tabServices').style.display='block';
     document.getElementById('tabCompta').style.display='block';
     showTab('admin', tabAdmin);
-  } else {
+ } else {
     const vRes = getSecteurVocab(currentUserMeta.secteur||'residence');
     pill.textContent = vRes.pilLabel + (currentUserMeta.appartement||'');
-    // Update tab label
     const tabSuiviEl = document.getElementById('tabSuivi');
-if (tabSuiviEl) {
-  // Modifier uniquement le nœud texte, pas le badge
-  for (let node of tabSuiviEl.childNodes) {
-    if (node.nodeType === 3) { // Node.TEXT_NODE
-      node.textContent = vRes.userSub + ' ';
-      break;
+    if (tabSuiviEl) {
+      for (let node of tabSuiviEl.childNodes) {
+        if (node.nodeType === 3) {
+          node.textContent = vRes.userSub + ' ';
+          break;
+        }
+      }
     }
-  }
-}
+    // Afficher les bons onglets pour le résident
+    document.getElementById('navResName').textContent = currentUserMeta.residence_nom || '';
+    const codeEl = document.getElementById('navResCode');
+    if (codeEl) codeEl.textContent = currentUserMeta.residence_code || '';
+    pill.className = 'role-pill pill-resident';
+    showTab('nouveau', document.getElementById('tabNouveau'));
+  }  // ← FERMETURE du else
+}    // ← FERMETURE de showApp()
 
-function showTab(tab, el) {
+function showTab(tab, el) { 
   document.querySelectorAll('.tab').forEach(t=>t.classList.remove('active'));
   document.querySelectorAll('.section').forEach(s=>s.classList.remove('active'));
   if(el) el.classList.add('active');
@@ -2057,23 +2063,22 @@ function downloadPDF() {
 <title>Ticket ${t.id.substring(0,8).toUpperCase()}</title>
 <style>
   body{font-family:Arial,sans-serif;max-width:700px;margin:40px auto;padding:0 20px;color:#1c1c1a;}
-  .header{border-bottom:2px solid #b8975a;padding-bottom:16px;margin-bottom:24px;display:flex;justify-content:space-between;align-items:flex-end;}
-  .logo{font-size:22px;font-weight:700;letter-spacing:0.06em;}
-  .logo span{color:#b8975a;}
+  .header{border-bottom:2px solid #2563eb;padding-bottom:16px;margin-bottom:24px;display:flex;justify-content:space-between;align-items:flex-end;}
+  .logo{font-size:22px;font-weight:700;letter-spacing:0.06em;color:#0d1b2a;}
+  .logo span{color:#e63946;}
   .ref{font-size:12px;color:#78766e;}
   h1{font-size:18px;margin-bottom:20px;}
   .grid{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:20px;}
   .field{padding:10px 14px;background:#f5f4f1;border-radius:6px;}
   .fl{font-size:10px;text-transform:uppercase;letter-spacing:0.1em;color:#78766e;margin-bottom:4px;}
   .fv{font-size:14px;font-weight:500;}
-  .badge{display:inline-block;padding:4px 12px;border-radius:20px;font-size:12px;font-weight:500;}
   .desc{padding:14px;background:#f5f4f1;border-radius:6px;font-size:14px;line-height:1.65;}
   .footer{margin-top:40px;padding-top:16px;border-top:1px solid #e3e1db;font-size:11px;color:#aba9a1;text-align:center;}
   @media print{body{margin:0;}}
-
+</style>
 </head><body>
 <div class="header">
-  <div class="logo">MISSIMI <span>LIVING</span></div>
+  <div class="logo">Red<span>Tech</span> — ${resNomPDF}</div>
   <div class="ref">Ticket #${t.id.substring(0,8).toUpperCase()} · ${fmtDate(t.created_at)}</div>
 </div>
 <h1>${t.titre}</h1>
@@ -2086,7 +2091,7 @@ function downloadPDF() {
   <div class="field"><div class="fl">Date d'ouverture</div><div class="fv">${fmtDate(t.created_at)}</div></div>
 </div>
 ${t.description ? `<div class="fl" style="margin-bottom:6px">Description</div><div class="desc">${t.description}</div>` : ''}
-<div class="footer">Résidence Missimi Living — Casablanca, Maroc · missimi-living.vercel.app</div>
+<div class="footer">${resNomPDF}${resCodePDF ? ' · ' + resCodePDF : ''} — Propulsé par RedTech</div>
 <script>window.onload=()=>{window.print();}<\/script>
 </body></html>`);
   win.document.close();
