@@ -1338,9 +1338,9 @@ tabSuivi.style.display='none';
 // Afficher recouvrement par défaut, masquer après sync si nécessaire
 document.getElementById('tabRecouvrement').style.display = 'block';
 // Puis après syncSecteurFromResidences(), re-vérifier
-    document.getElementById('tabServices').style.display='block';
-    document.getElementById('tabCompta').style.display='block';
-    showTab('admin', tabAdmin);
+document.getElementById('tabServices').style.display='block';
+document.getElementById('tabCompta').style.display='block';
+showTab('admin', tabAdmin);
  } else {
     const vRes = getSecteurVocab(currentUserMeta.secteur||'residence');
     pill.textContent = vRes.pilLabel + (currentUserMeta.appartement||'');
@@ -1427,7 +1427,20 @@ function renderSuivi() {
           <div class="lm-author ${lastMsg.role}">${lastMsg.auteur}</div>
           <div class="lm-text">${lastMsg.message}</div>
         </div>
-        <div class="lm-time">${fmtDateShort(lastMsg.created_at)}</div>
+        <div class="lm-time">${fmtDateShort(lastMsg.created_at)function fmtDateShort(d) {
+  const date = new Date(d);
+  const now  = new Date();
+  const diff = now - date;
+  const mins = Math.floor(diff / 60000);
+  const hrs  = Math.floor(diff / 3600000);
+  const days = Math.floor(diff / 86400000);
+
+  if (mins < 1)  return 'À l\'instant';
+  if (mins < 60) return `${mins}min`;
+  if (hrs  < 24) return `${hrs}h`;
+  if (days < 7)  return `${days}j`;
+  return date.toLocaleDateString('fr-FR', { day:'numeric', month:'short' });
+}}</div>
       </div>` : '';
 
     return `
@@ -2256,6 +2269,9 @@ function renderPLChart() {
     ctx.parentElement.appendChild(msg);
     return;
   }
+  const recData = labels.map(m => months[m].recettes);
+const depData = labels.map(m => months[m].depenses);
+const solData = labels.map(m => months[m].recettes - months[m].depenses);
   plChartInstance = new Chart(ctx, {
     type: 'bar',
     data: {
@@ -2313,7 +2329,8 @@ function renderComptaTable() {
         <td style="padding:10px 12px;text-align:right;font-size:14px;color:${comptaFiltered.reduce((s,o)=>s+(o.type==='recette'?parseFloat(o.montant):-parseFloat(o.montant)),0)>=0?'var(--green-text)':'var(--red-text)'}">
           ${comptaFiltered.reduce((s,o)=>s+(o.type==='recette'?parseFloat(o.montant):-parseFloat(o.montant)),0).toLocaleString('fr-MA',{minimumFractionDigits:2,maximumFractionDigits:2})} DH
         </td>
-        <td></td>   //
+       <td></td>
+<td></td>
       </tr>
     </tfoot>
   </table>
@@ -2396,15 +2413,14 @@ function applyVocabulaire(secteur) {
   if (inpSpace) inpSpace.placeholder = v.spaceName + '...';
 }
 
-async function loadSecteurFromResidence(resNomOrId) {
-  if (!resNomOrId) return;
+async function loadSecteurFromResidence(resId) {
+  if (!resId) return;
   const { data } = await db.from('residences')
     .select('secteur')
-    .or(`nom.ilike.${resNomOrId},id.eq.${resNomOrId}`)
+    .eq('id', resId)
     .single();
-  if (data && data.secteur) {
-    applyVocabulaire(data.secteur);
-  }
+  if (data?.secteur) applyVocabulaire(data.secteur);
+}
 }
   // ========================
 // HELPER FETCH EDGE FUNCTION
@@ -2415,7 +2431,7 @@ async function callEdge(payload) {
     method: 'POST',
     headers: {
       'Content-Type':   'application/json',
-      'x-internal-key': 'redtech-2026-xK9mP2vL7nQ4',
+      'x-internal-key': 'redtech-2026-xK9#mP2$vL7@nQ4',
       'Authorization':  `Bearer ${ANON}`
     },
     body: JSON.stringify(payload)
@@ -2916,22 +2932,15 @@ function openRecModal(residentId, nom, apt) {
   document.getElementById('recModal').classList.add('open');
 }
 
-function selectRecStatut(statut, btn) {
+function selectRecStatut(statut) {
   document.getElementById('recModalStatut').value = statut;
-
-  // Reset tous les boutons
-  const styles = {
-    'paye':     { border: 'var(--green-border)', bg: 'var(--surface)', color: 'var(--green-text)' },
-    'partiel':  { border: 'var(--yellow-border)', bg: 'var(--surface)', color: 'var(--yellow-text)' },
-    'non_paye': { border: 'var(--red-border)', bg: 'var(--surface)', color: 'var(--red-text)' }
-  };
-
-  ['paye','partiel','non_paye'].forEach(s => {
-    const b = document.getElementById('rsBtnPaye').parentElement
-      .querySelector(`[onclick*="'${s}'"]`);
-    if (b) {
-      b.style.background = 'var(--surface)';
-    }
+  document.getElementById('rsBtnPaye').style.background    = 
+    statut === 'paye'     ? 'var(--green-bg)'  : 'var(--surface)';
+  document.getElementById('rsBtnPartiel').style.background = 
+    statut === 'partiel'  ? 'var(--yellow-bg)' : 'var(--surface)';
+  document.getElementById('rsBtnNonPaye').style.background = 
+    statut === 'non_paye' ? 'var(--red-bg)'    : 'var(--surface)';
+}
   });
 
   // Activer le bouton sélectionné
