@@ -1361,9 +1361,14 @@ showTab('admin', tabAdmin);
     document.getElementById('tabResidents').style.display   = 'none';
     document.getElementById('tabRecouvrement').style.display= 'none';
     document.getElementById('tabCompta').style.display      = 'none';
-    document.getElementById('tabServices').style.display    = 'none';
+    document.getElementById('tabServices').style.display    = 'block';
     document.getElementById('tabNouveau').style.display     = 'block';
     document.getElementById('tabSuivi').style.display       = 'block';
+    // Pré-remplir appartement dès l'ouverture
+    const fAptEl = document.getElementById('fApt');
+    if (fAptEl && currentUserMeta.appartement) {
+      fAptEl.value = currentUserMeta.appartement;
+    }
     showTab('nouveau', document.getElementById('tabNouveau'));
   }
 }
@@ -1803,10 +1808,7 @@ function openModal(id) {
     }
   }
     // Pré-remplir l'appartement dans le formulaire ticket
-    const fApt = document.getElementById('fApt');
-    if (fApt && currentUserMeta.appartement) {
-      fApt.value = currentUserMeta.appartement;
-    }
+    
   const statusSec = document.getElementById('mStatusSection');
   if (currentRole==='admin') {
     statusSec.style.display='block';
@@ -2722,11 +2724,14 @@ function initRecPeriode() {
   recMoisActuel    = moisEl.value;
   recAnneeActuelle = anneeEl.value;
 
-  const saved = localStorage.getItem('rec_montant_' + currentUser?.id);
-  if (saved) {
-    recMontantMensuel = parseFloat(saved);
-    document.getElementById('recMontantMensuel').value = saved;
-  }
+const saved = localStorage.getItem('rec_montant_' + currentUser?.id);
+if (saved) {
+  recMontantMensuel = parseFloat(saved);
+  document.getElementById('recMontantMensuel').value = saved;
+} else {
+  // Afficher la valeur par défaut
+  document.getElementById('recMontantMensuel').value = recMontantMensuel;
+}
 }
 
 function onRecPeriodeChange() {
