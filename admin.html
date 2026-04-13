@@ -1084,6 +1084,8 @@ function loadClients() {
     .order('created_at', { ascending: false })
     .then(function(res) {
       var data = res.data;
+      // Sauvegarder pour la recherche
+allClientsData = data || [];
       if (!data || !data.length) {
         tbody.innerHTML = '<tr><td colspan="10" class="empty">Aucun client</td></tr>';
         return;
