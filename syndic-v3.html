@@ -351,8 +351,6 @@
 
   @media(max-width:600px){
     .fr2{grid-template-columns:1fr;}
-  @media(max-width:600px){
-    .fr2{grid-template-columns:1fr;}
     .res-stats,.stats-grid{grid-template-columns:repeat(3,1fr);}
     .res-stat-num,.stat-num{font-size:20px;}
     .nav{padding:0 14px;}
@@ -1322,6 +1320,8 @@ function showApp() {
   const tabSuivi = document.getElementById('tabSuivi');
   const tabNouveau = document.getElementById('tabNouveau');
   if (currentRole==='admin') {
+    tabSuivi.style.display = 'none';
+    tabNouveau.style.display = 'none';
     const vAdmin = getSecteurVocab(currentUserMeta.secteur||'residence');
     pill.textContent = vAdmin.adminLabel + ' · Admin'; pill.className='role-pill pill-admin';
     document.getElementById('tabAdmin').textContent = vAdmin.adminSub;
@@ -1335,9 +1335,9 @@ document.getElementById('tabResidents').style.display = 'block';
 tabNouveau.style.display='none';
 tabSuivi.style.display='none';
 // Recouvrement uniquement pour secteur résidence
-if ((currentUserMeta.secteur || 'residence') === 'residence') {
-  document.getElementById('tabRecouvrement').style.display = 'block';
-}
+// Afficher recouvrement par défaut, masquer après sync si nécessaire
+document.getElementById('tabRecouvrement').style.display = 'block';
+// Puis après syncSecteurFromResidences(), re-vérifier
     document.getElementById('tabServices').style.display='block';
     document.getElementById('tabCompta').style.display='block';
     showTab('admin', tabAdmin);
@@ -1346,19 +1346,13 @@ if ((currentUserMeta.secteur || 'residence') === 'residence') {
     pill.textContent = vRes.pilLabel + (currentUserMeta.appartement||'');
     // Update tab label
     const tabSuiviEl = document.getElementById('tabSuivi');
-    if (tabSuiviEl) tabSuiviEl.childNodes[0].textContent = vRes.userSub + ' ';
-    pill.className='role-pill pill-resident';
-    tabAdmin.style.display='none';
-    document.getElementById('fApt').value = currentUserMeta.appartement||'';
-    document.getElementById('tabServices').style.display='block';
-    document.getElementById('tabCompta').style.display='none';
-    // Afficher le nom de la résidence dans la navbar
-    if (currentUserMeta.residence_code || currentUserMeta.residence_nom) {
-      document.getElementById('navResName').textContent = currentUserMeta.residence_nom || 'Mon Espace';
-      const codeEl = document.getElementById('navResCode');
-      if (codeEl) codeEl.textContent = currentUserMeta.residence_code || '';
+if (tabSuiviEl) {
+  // Modifier uniquement le nœud texte, pas le badge
+  for (let node of tabSuiviEl.childNodes) {
+    if (node.nodeType === 3) { // Node.TEXT_NODE
+      node.textContent = vRes.userSub + ' ';
+      break;
     }
-    showTab('nouveau', tabNouveau);
   }
 }
 
@@ -2028,7 +2022,8 @@ async function deletePro(id, nom) {
 function getTicketShareText() {
   const t = tickets.find(x => x.id === currentTicketId);
   if (!t) return '';
-  return `🏢 Missimi Living — Ticket #${t.id.substring(0,8).toUpperCase()}
+const resNom = currentUserMeta.residence_nom || 'RedTech';
+return `🏢 ${resNom} — Ticket #${t.id.substring(0,8).toUpperCase()}
 📋 ${t.titre}
 📁 Catégorie : ${t.categorie}
 🚨 Urgence : ${t.urgence}
@@ -2046,7 +2041,8 @@ function shareWhatsApp() {
 function shareEmail() {
   const t = tickets.find(x => x.id === currentTicketId);
   if (!t) return;
-  const subject = encodeURIComponent(`Ticket Missimi Living — ${t.titre}`);
+  const resNom = currentUserMeta.residence_nom || 'RedTech';
+const subject = encodeURIComponent(`Ticket ${resNom} — ${t.titre}`);
   const body = encodeURIComponent(getTicketShareText());
   window.open(`mailto:?subject=${subject}&body=${body}`, '_blank');
 }
@@ -2054,6 +2050,8 @@ function shareEmail() {
 function downloadPDF() {
   const t = tickets.find(x => x.id === currentTicketId);
   if (!t) return;
+  const resNomPDF  = currentUserMeta.residence_nom  || 'RedTech';
+  const resCodePDF = currentUserMeta.residence_code || '';
   const win = window.open('', '_blank');
   win.document.write(`<!DOCTYPE html><html><head><meta charset="UTF-8">
 <title>Ticket ${t.id.substring(0,8).toUpperCase()}</title>
@@ -2326,7 +2324,8 @@ function exportExcel() {
   const blob = new Blob(['\uFEFF' + csv], { type: 'text/csv;charset=utf-8;' });
   const a = document.createElement('a');
   a.href = URL.createObjectURL(blob);
-  a.download = `Comptabilite_Missimi_${from}_${to}.csv`;
+  const resNomExport = (currentUserMeta.residence_nom || 'Residence').replace(/\s+/g, '_');
+a.download = `Comptabilite_${resNomExport}_${from}_${to}.csv`;
   a.click();
 }
 
@@ -2671,19 +2670,6 @@ function initRecPeriode() {
   recMoisActuel    = moisEl.value;
   recAnneeActuelle = anneeEl.value;
 
-  const saved = localStorage.getItem('rec_montant_' + currentUser?.id);
-  if (saved) {
-    recMontantMensuel = parseFloat(saved);
-    document.getElementById('recMontantMensuel').value = saved;
-  }
-}
-
-  moisEl.value = String(now.getMonth() + 1).padStart(2,'0');
-  anneeEl.value = String(annee);
-  recMoisActuel  = moisEl.value;
-  recAnneeActuelle = anneeEl.value;
-
-  // Charger montant sauvegardé
   const saved = localStorage.getItem('rec_montant_' + currentUser?.id);
   if (saved) {
     recMontantMensuel = parseFloat(saved);
@@ -3048,20 +3034,6 @@ function exportRecCSV() {
   a.click();
 }
 
-function onRecPeriodeChange() {
-  recMoisActuel    = document.getElementById('recMois').value;
-  recAnneeActuelle = document.getElementById('recAnnee').value;
-  loadAndRenderRecouvrement();
-}
-
-function appliquerMontant() {
-  const val = parseFloat(document.getElementById('recMontantMensuel').value);
-  if (!val || val <= 0) { alert('⚠️ Entrez un montant valide'); return; }
-  recMontantMensuel = val;
-  localStorage.setItem('rec_montant_' + currentUser?.id, val);
-  renderRecList();
-  showToast('✅ Montant de ' + val + ' DH appliqué', 'success');
-}
 
 init();
 
