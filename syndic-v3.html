@@ -1833,7 +1833,6 @@ function openModal(id) {
       pjSection.style.display = 'none';
     }
   }
-    // Pré-remplir l'appartement dans le formulaire ticket
     
   const statusSec = document.getElementById('mStatusSection');
   if (currentRole==='admin') {
@@ -2732,13 +2731,15 @@ let recAnneeActuelle = '';
 let recMontantMensuel = 300;
 
 function initRecPeriode() {
-  const moisEl  = document.getElementById('recMois');
-  const anneeEl = document.getElementById('recAnnee');
-  if (!moisEl || !anneeEl) return;
+  const moisEl    = document.getElementById('recMois');
+  const anneeEl   = document.getElementById('recAnnee');
+  const montantEl = document.getElementById('recMontantMensuel');
+
+  if (!moisEl || !anneeEl || !montantEl) return; // ← AJOUT
 
   const moisNoms = ['Janvier','Février','Mars','Avril','Mai','Juin',
                     'Juillet','Août','Septembre','Octobre','Novembre','Décembre'];
-  moisEl.innerHTML = moisNoms.map((m,i) =>
+  moisEl.innerHTML = moisNoms.map((m, i) =>
     `<option value="${String(i+1).padStart(2,'0')}">${m}</option>`
   ).join('');
 
@@ -2754,14 +2755,13 @@ function initRecPeriode() {
   recMoisActuel    = moisEl.value;
   recAnneeActuelle = anneeEl.value;
 
-const saved = localStorage.getItem('rec_montant_' + currentUser?.id);
-if (saved) {
-  recMontantMensuel = parseFloat(saved);
-  document.getElementById('recMontantMensuel').value = saved;
-} else {
-  // Afficher la valeur par défaut
-  document.getElementById('recMontantMensuel').value = recMontantMensuel;
-}
+  const saved = localStorage.getItem('rec_montant_' + currentUser?.id);
+  if (saved) {
+    recMontantMensuel  = parseFloat(saved);
+    montantEl.value    = saved;
+  } else {
+    montantEl.value    = recMontantMensuel;
+  }
 }
 
 function onRecPeriodeChange() {
@@ -3145,17 +3145,19 @@ init();
 
 <script>
 function showForgotModal() {
-const overlay = document.getElementById('forgotOverlay');
-  const input   = document.getElementById('forgotEmail');
-  const msg     = document.getElementById('forgotMsg');
-  const btn     = document.getElementById('forgotBtn');
+  const overlay    = document.getElementById('forgotOverlay');
+  const input      = document.getElementById('forgotEmail');
+  const msg        = document.getElementById('forgotMsg');
+  const btn        = document.getElementById('forgotBtn');
   const loginEmail = document.getElementById('loginEmail').value.trim();
-  if (loginEmail) input.value = loginEmail;
+
+  input.value       = loginEmail || '';
   msg.style.display = 'none';
-  btn.disabled = false;
-  btn.textContent = 'Envoyer le lien →';
+  btn.disabled      = false;
+  btn.textContent   = 'Envoyer le lien →';
+
   overlay.classList.add('open');
-  setTimeout(function(){ input.focus(); }, 120);
+  setTimeout(() => input.focus(), 120);
 }
 
 function closeForgotModal() {
