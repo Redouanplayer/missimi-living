@@ -2176,6 +2176,22 @@ async function loadSecteurFromResidence(resNomOrId) {
     applyVocabulaire(data.secteur);
   }
 }
+  // ========================
+// HELPER FETCH EDGE FUNCTION
+// ========================
+async function callEdge(payload) {
+  const ANON = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im53dXNqcmF4amZpcnNvbmJuZGZ5Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzM2ODI5NjcsImV4cCI6MjA4OTI1ODk2N30.wqVBvGwrLv8bJfGuHJTWj1Upao63aTYQMcH-IIN7OGw';
+  const resp = await fetch('https://nwusjraxjfirsonbndfy.supabase.co/functions/v1/clever-handler', {
+    method: 'POST',
+    headers: {
+      'Content-Type':   'application/json',
+      'x-internal-key': 'redtech-2026-xK9mP2vL7nQ4',
+      'Authorization':  `Bearer ${ANON}`
+    },
+    body: JSON.stringify(payload)
+  });
+  return await resp.json();
+}
 // ========================
 // GESTION RESIDENTS
 // ========================
@@ -2185,7 +2201,6 @@ let residentsFiltered = [];
 async function loadAndRenderResidents() {
   document.getElementById('residentsList').innerHTML = '<div class="empty-state">Chargement...</div>';
   try {
-    // Récupérer la résidence de l'admin
     const { data: myRes } = await db.from('residences')
       .select('id,nom,code_residence')
       .eq('admin_id', currentUser.id)
@@ -2194,22 +2209,9 @@ async function loadAndRenderResidents() {
       document.getElementById('residentsList').innerHTML = '<div class="empty-state">❌ Résidence introuvable</div>';
       return;
     }
-
-    // Appeler Edge Function pour lister les résidents
-    const resp = await fetch('https://nwusjraxjfirsonbndfy.supabase.co/functions/v1/clever-handler', {
-      method: 'POST',
-      headers: {
-        'Content-Type':   'application/json',
-        'x-internal-key': 'redtech-2026-xK9mP2vL7nQ4'
-      },
-      body: JSON.stringify({
-        type:         'list_residents',
-        residence_id: myRes.id
-      })
-    });
-    const result = await resp.json();
+    const result = await callEdge({ type: 'list_residents', residence_id: myRes.id });
     if (!result.success) {
-      document.getElementById('residentsList').innerHTML = '<div class="empty-state">❌ Erreur chargement</div>';
+      document.getElementById('residentsList').innerHTML = `<div class="empty-state">❌ ${result.error || 'Erreur chargement'}</div>`;
       return;
     }
     allResidents = result.residents || [];
@@ -2330,31 +2332,24 @@ async function saveEditResident() {
   errEl.style.display = 'none'; okEl.style.display = 'none';
   if (!nom) { errEl.textContent = '⚠️ Le nom est obligatoire.'; errEl.style.display = 'block'; return; }
 
-  const resp = await fetch('https://nwusjraxjfirsonbndfy.supabase.co/functions/v1/clever-handler', {
-    method: 'POST',
-    headers: { 'Content-Type':'application/json', 'x-internal-key':'redtech-2026-xK9mP2vL7nQ4' },
-    body: JSON.stringify({
-      type:           'update_user_metadata',
-      admin_user_id:  id,
-      metadata:       { nom, appartement: apt, telephone: tel }
-    })
+  const result = await callEdge({
+    type:          'update_user_metadata',
+    admin_user_id: id,
+    metadata:      { nom, appartement: apt, telephone: tel }
   });
-  const result = await resp.json();
+
   if (!result.success) {
-    errEl.textContent = '❌ ' + (result.error || 'Erreur'); errEl.style.display = 'block'; return;
+    errEl.textContent = '❌ ' + (result.error || 'Erreur');
+    errEl.style.display = 'block'; return;
   }
-  okEl.textContent = '✅ Résident mis à jour !'; okEl.style.display = 'block';
+  okEl.textContent = '✅ Résident mis à jour !';
+  okEl.style.display = 'block';
   setTimeout(() => { closeEditResident(); loadAndRenderResidents(); }, 1200);
 }
 
 async function deleteResident(id, email) {
   if (!confirm(`Supprimer le compte de ${email} ?\n\nCette action est irréversible.`)) return;
-  const resp = await fetch('https://nwusjraxjfirsonbndfy.supabase.co/functions/v1/clever-handler', {
-    method: 'POST',
-    headers: { 'Content-Type':'application/json', 'x-internal-key':'redtech-2026-xK9mP2vL7nQ4' },
-    body: JSON.stringify({ type:'delete_resident', admin_user_id: id })
-  });
-  const result = await resp.json();
+  const result = await callEdge({ type: 'delete_resident', admin_user_id: id });
   if (!result.success) { alert('❌ Erreur : ' + (result.error || 'Inconnue')); return; }
   showToast('🗑️ Résident supprimé.', 'error');
   await loadAndRenderResidents();
@@ -2369,6 +2364,7 @@ async function addResidentManually() {
   const errEl = document.getElementById('addResErr');
   const okEl  = document.getElementById('addResOk');
   errEl.style.display = 'none'; okEl.style.display = 'none';
+
   if (!nom || !email || !apt || !pwd) {
     errEl.textContent = '⚠️ Remplissez les champs obligatoires (*)';
     errEl.style.display = 'block'; return;
@@ -2382,33 +2378,42 @@ async function addResidentManually() {
     .select('id,nom,code_residence')
     .eq('admin_id', currentUser.id)
     .single();
-  if (!myRes) { errEl.textContent = '❌ Résidence introuvable'; errEl.style.display = 'block'; return; }
-
-  const resp = await fetch('https://nwusjraxjfirsonbndfy.supabase.co/functions/v1/clever-handler', {
-    method: 'POST',
-    headers: { 'Content-Type':'application/json', 'x-internal-key':'redtech-2026-xK9mP2vL7nQ4' },
-    body: JSON.stringify({
-      type:     'create_resident',
-      email,
-      password: pwd,
-      metadata: {
-        nom, appartement: apt, telephone: tel,
-        role:           'resident',
-        residence_id:   myRes.id,
-        residence_nom:  myRes.nom,
-        residence_code: myRes.code_residence,
-        secteur:        currentUserMeta.secteur || 'residence'
-      }
-    })
-  });
-  const result = await resp.json();
-  if (!result.success) {
-    errEl.textContent = '❌ ' + (result.error || 'Erreur création');
+  if (!myRes) {
+    errEl.textContent = '❌ Résidence introuvable';
     errEl.style.display = 'block'; return;
   }
+
+  const btn = document.querySelector('#addResidentForm .btn-primary');
+  if (btn) { btn.disabled = true; btn.textContent = 'Création...'; }
+
+  const result = await callEdge({
+    type:     'create_resident',
+    email,
+    password: pwd,
+    metadata: {
+      nom,
+      appartement:    apt,
+      telephone:      tel,
+      role:           'resident',
+      residence_id:   myRes.id,
+      residence_nom:  myRes.nom,
+      residence_code: myRes.code_residence,
+      secteur:        currentUserMeta.secteur || 'residence'
+    }
+  });
+
+  if (btn) { btn.disabled = false; btn.textContent = 'Créer le compte →'; }
+
+  if (!result.success) {
+    errEl.textContent = '❌ ' + (result.error?.message || result.error || 'Erreur création');
+    errEl.style.display = 'block'; return;
+  }
+
   okEl.textContent = `✅ Compte créé pour ${nom} (${email}) !`;
   okEl.style.display = 'block';
-  ['newResNom','newResEmail','newResApt','newResTel'].forEach(id => document.getElementById(id).value = '');
+  ['newResNom','newResEmail','newResApt','newResTel'].forEach(id => {
+    document.getElementById(id).value = '';
+  });
   document.getElementById('newResPwd').value = 'RedTech2026!';
   setTimeout(() => { toggleAddResidentForm(); loadAndRenderResidents(); }, 1500);
 }
