@@ -453,6 +453,7 @@
     <div class="tab" data-tab="services" onclick="showTab('services',this)" id="tabServices" style="display:none">Annuaire</div>
     <div class="tab" data-tab="compta" onclick="showTab('compta',this)" id="tabCompta" style="display:none">Comptabilité</div>
     <div class="tab" data-tab="residents" onclick="showTab('residents',this)" id="tabResidents" style="display:none">👥 Résidents</div>
+<div class="tab" data-tab="recouvrement" onclick="showTab('recouvrement',this)" id="tabRecouvrement" style="display:none">💰 Recouvrement</div>
     <div class="tab" data-tab="admin" onclick="showTab('admin',this)" id="tabAdmin" style="display:none">Administration</div>
   </div>
 
@@ -704,6 +705,156 @@
       <div class="btn-row">
         <button class="btn btn-ghost" onclick="closeEditResident()">Annuler</button>
         <button class="btn btn-primary" style="width:auto" onclick="saveEditResident()">Enregistrer →</button>
+      </div>
+    </div>
+  </div>
+</div>
+    <!-- RECOUVREMENT -->
+<div class="section" id="sec-recouvrement">
+
+  <!-- EN-TÊTE -->
+  <div class="card" style="margin-bottom:16px;border-left:4px solid var(--blue)">
+    <div style="display:flex;justify-content:space-between;align-items:flex-start;flex-wrap:wrap;gap:12px">
+      <div>
+        <div class="card-title">💰 Recouvrement des charges de syndic</div>
+        <div class="card-sub" style="margin-bottom:0">Suivi mensuel des paiements par résident</div>
+      </div>
+      <div style="display:flex;gap:8px;flex-wrap:wrap;align-items:center">
+        <select id="recMois" onchange="onRecPeriodeChange()" style="width:auto;min-width:130px"></select>
+        <select id="recAnnee" onchange="onRecPeriodeChange()" style="width:auto;min-width:90px"></select>
+        <button class="btn btn-primary" style="width:auto;font-size:12px" onclick="exportRecCSV()">📥 Export CSV</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- MONTANT MENSUEL -->
+  <div class="card" style="margin-bottom:16px;background:var(--blue-bg);border-color:var(--blue-border)">
+    <div style="display:flex;align-items:flex-end;gap:16px;flex-wrap:wrap">
+      <div style="flex:1;min-width:180px">
+        <label class="lbl" style="color:var(--blue-text)">Montant mensuel des charges (DH) <span class="req">*</span></label>
+        <input type="number" id="recMontantMensuel" placeholder="Ex : 300" min="0" step="1"
+          style="border-color:var(--blue-border);background:white;font-weight:600;font-size:15px">
+      </div>
+      <button onclick="appliquerMontant()" class="btn btn-primary" style="width:auto">✅ Appliquer</button>
+      <div style="font-size:12px;color:var(--blue-text);max-width:280px;padding-bottom:2px">
+        💡 Définissez le montant mensuel à payer par chaque résident
+      </div>
+    </div>
+  </div>
+
+  <!-- STATS -->
+  <div style="display:grid;grid-template-columns:repeat(2,1fr);gap:12px;margin-bottom:16px">
+    <div class="stat-card" style="border-left:4px solid var(--green-text)">
+      <div class="stat-num" id="recNbPaye" style="color:var(--green-text)">0</div>
+      <div class="stat-label">✅ Ont payé</div>
+    </div>
+    <div class="stat-card" style="border-left:4px solid var(--red-text)">
+      <div class="stat-num" id="recNbNonPaye" style="color:var(--red-text)">0</div>
+      <div class="stat-label">❌ N'ont pas payé</div>
+    </div>
+    <div class="stat-card" style="border-left:4px solid var(--blue)">
+      <div class="stat-num" id="recMontantCollecte" style="color:var(--blue-text)">0 DH</div>
+      <div class="stat-label">💵 Montant collecté</div>
+    </div>
+    <div class="stat-card" style="border-left:4px solid var(--orange-text)">
+      <div class="stat-num" id="recMontantRestant" style="color:var(--orange-text)">0 DH</div>
+      <div class="stat-label">⏳ Reste à collecter</div>
+    </div>
+  </div>
+
+  <!-- BARRE PROGRESSION -->
+  <div class="card" style="margin-bottom:16px">
+    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px">
+      <span style="font-size:13px;font-weight:600">Taux de recouvrement</span>
+      <span id="recTaux" style="font-size:20px;font-weight:800;color:var(--blue)">0%</span>
+    </div>
+    <div style="background:var(--border);border-radius:20px;height:14px;overflow:hidden">
+      <div id="recProgressBar"
+        style="height:100%;background:linear-gradient(90deg,#2563eb,#10b981);border-radius:20px;width:0%;transition:width 0.6s ease">
+      </div>
+    </div>
+    <div style="display:flex;justify-content:space-between;margin-top:6px;font-size:11px;color:var(--muted)">
+      <span id="recInfoPaye">0 DH collectés</span>
+      <span id="recInfoRestant">0 DH restants</span>
+    </div>
+  </div>
+
+  <!-- FILTRES + RECHERCHE -->
+  <div style="display:flex;gap:8px;margin-bottom:16px;flex-wrap:wrap;align-items:center">
+    <input type="text" id="recSearch" placeholder="🔍 Rechercher un résident..."
+      oninput="filterRec()" style="flex:1;min-width:200px">
+    <button class="filter-btn active" onclick="setRecFilter(this,'all')">Tous</button>
+    <button class="filter-btn" onclick="setRecFilter(this,'paye')">✅ Payés</button>
+    <button class="filter-btn" onclick="setRecFilter(this,'non_paye')">❌ Non payés</button>
+    <button class="filter-btn" onclick="setRecFilter(this,'partiel')">⚠️ Partiels</button>
+  </div>
+
+  <!-- LISTE -->
+  <div id="recList"></div>
+
+</div>
+
+<!-- MODAL PAIEMENT -->
+<div class="modal-overlay" id="recModal" onclick="if(event.target===this)closeRecModal()">
+  <div class="modal-box" style="max-width:480px">
+    <div class="modal-header">
+      <div>
+        <div class="modal-title">💳 Paiement charges syndic</div>
+        <div style="font-size:12px;color:var(--muted);margin-top:3px" id="recModalSub"></div>
+      </div>
+      <button class="modal-close" onclick="closeRecModal()">×</button>
+    </div>
+    <div class="modal-body">
+      <input type="hidden" id="recModalResId">
+
+      <div style="margin-bottom:16px">
+        <label class="lbl">Statut du paiement</label>
+        <div style="display:flex;gap:8px;margin-top:6px">
+          <button onclick="selectRecStatut('paye',this)"
+            style="flex:1;padding:10px;border-radius:var(--radius-sm);border:2px solid var(--green-border);background:var(--green-bg);color:var(--green-text);cursor:pointer;font-weight:600;font-size:12px;font-family:'DM Sans',sans-serif"
+            id="rsBtnPaye">✅ Payé</button>
+          <button onclick="selectRecStatut('partiel',this)"
+            style="flex:1;padding:10px;border-radius:var(--radius-sm);border:2px solid var(--yellow-border);background:var(--surface);color:var(--yellow-text);cursor:pointer;font-weight:600;font-size:12px;font-family:'DM Sans',sans-serif"
+            id="rsBtnPartiel">⚠️ Partiel</button>
+          <button onclick="selectRecStatut('non_paye',this)"
+            style="flex:1;padding:10px;border-radius:var(--radius-sm);border:2px solid var(--red-border);background:var(--surface);color:var(--red-text);cursor:pointer;font-weight:600;font-size:12px;font-family:'DM Sans',sans-serif"
+            id="rsBtnNonPaye">❌ Non payé</button>
+        </div>
+        <input type="hidden" id="recModalStatut" value="paye">
+      </div>
+
+      <div class="fr2">
+        <div>
+          <label class="lbl">Montant payé (DH)</label>
+          <input type="number" id="recModalMontant" placeholder="0" min="0" step="1">
+        </div>
+        <div>
+          <label class="lbl">Date de paiement</label>
+          <input type="date" id="recModalDate">
+        </div>
+      </div>
+
+      <div class="fg">
+        <label class="lbl">Mode de paiement</label>
+        <select id="recModalMode">
+          <option value="especes">💵 Espèces</option>
+          <option value="virement">🏦 Virement bancaire</option>
+          <option value="cheque">📄 Chèque</option>
+          <option value="mobile">📱 Paiement mobile</option>
+        </select>
+      </div>
+
+      <div class="fg">
+        <label class="lbl">Note / Référence</label>
+        <input type="text" id="recModalNote" placeholder="Ex : Reçu n°123...">
+      </div>
+
+      <div class="alert alert-error" id="recModalErr"></div>
+      <div class="alert alert-success" id="recModalOk"></div>
+
+      <div class="btn-row">
+        <button class="btn btn-ghost" onclick="closeRecModal()">Annuler</button>
+        <button class="btn btn-primary" style="width:auto" onclick="saveRecPaiement()">💾 Enregistrer →</button>
       </div>
     </div>
   </div>
@@ -1131,7 +1282,14 @@ function showApp() {
       const codeEl = document.getElementById('navResCode');
       if (codeEl) codeEl.textContent = currentUserMeta.residence_code || '';
     }
-    tabAdmin.style.display='block';document.getElementById('tabResidents').style.display = 'block'; tabNouveau.style.display='none'; tabSuivi.style.display='none';
+   tabAdmin.style.display='block';
+document.getElementById('tabResidents').style.display = 'block';
+tabNouveau.style.display='none';
+tabSuivi.style.display='none';
+// Recouvrement uniquement pour secteur résidence
+if ((currentUserMeta.secteur || 'residence') === 'residence') {
+  document.getElementById('tabRecouvrement').style.display = 'block';
+}
     document.getElementById('tabServices').style.display='block';
     document.getElementById('tabCompta').style.display='block';
     showTab('admin', tabAdmin);
@@ -1166,6 +1324,7 @@ function showTab(tab, el) {
   if(tab==='services') loadAndRenderPros();
   if(tab==='compta') loadAndRenderCompta();
   if(tab==='residents') loadAndRenderResidents();
+if(tab==='recouvrement') loadAndRenderRecouvrement();
 }
 
 async function loadTickets() {
@@ -1865,7 +2024,7 @@ function downloadPDF() {
   .desc{padding:14px;background:#f5f4f1;border-radius:6px;font-size:14px;line-height:1.65;}
   .footer{margin-top:40px;padding-top:16px;border-top:1px solid #e3e1db;font-size:11px;color:#aba9a1;text-align:center;}
   @media print{body{margin:0;}}
-</style>
+
 </head><body>
 <div class="header">
   <div class="logo">MISSIMI <span>LIVING</span></div>
@@ -2431,7 +2590,326 @@ function togglePwd(inputId, btn) {
     btn.textContent = '👁';
   }
 }
+// ========================
+// RECOUVREMENT
+// ========================
+let recResidents = [];
+let recPaiements = {};
+let recFilterStatut = 'all';
+let recMoisActuel = '';
+let recAnneeActuelle = '';
+let recMontantMensuel = 300;
 
+function initRecPeriode() {
+  const moisEl  = document.getElementById('recMois');
+  const anneeEl = document.getElementById('recAnnee');
+  if (!moisEl || !anneeEl) return;
+
+  function initRecPeriode() {
+  const moisEl  = document.getElementById('recMois');
+  const anneeEl = document.getElementById('recAnnee');
+  if (!moisEl || !anneeEl) return;
+
+  const moisNoms = ['Janvier','Février','Mars','Avril','Mai','Juin',
+                    'Juillet','Août','Septembre','Octobre','Novembre','Décembre'];
+  moisEl.innerHTML = moisNoms.map((m,i) =>
+    `<option value="${String(i+1).padStart(2,'0')}">${m}</option>`
+  ).join('');
+
+  const now = new Date();
+  const annee = now.getFullYear();
+  anneeEl.innerHTML = '';
+  for (let y = annee; y >= annee - 3; y--) {
+    anneeEl.innerHTML += `<option value="${y}">${y}</option>`;
+  }
+
+  moisEl.value = String(now.getMonth() + 1).padStart(2,'0');
+  anneeEl.value = String(annee);
+  recMoisActuel  = moisEl.value;
+  recAnneeActuelle = anneeEl.value;
+
+  // Charger montant sauvegardé
+  const saved = localStorage.getItem('rec_montant_' + currentUser?.id);
+  if (saved) {
+    recMontantMensuel = parseFloat(saved);
+    document.getElementById('recMontantMensuel').value = saved;
+  }
+}
+
+function onRecPeriodeChange() {
+  recMoisActuel    = document.getElementById('recMois').value;
+  recAnneeActuelle = document.getElementById('recAnnee').value;
+  loadAndRenderRecouvrement();
+}
+
+function appliquerMontant() {
+  const val = parseFloat(document.getElementById('recMontantMensuel').value);
+  if (!val || val <= 0) { alert('⚠️ Entrez un montant valide'); return; }
+  recMontantMensuel = val;
+  localStorage.setItem('rec_montant_' + currentUser?.id, val);
+  renderRecList();
+  showToast('✅ Montant de ' + val + ' DH appliqué', 'success');
+}
+
+function setRecFilter(btn, statut) {
+  recFilterStatut = statut;
+  document.querySelectorAll('#sec-recouvrement .filter-btn').forEach(b => b.classList.remove('active'));
+  btn.classList.add('active');
+  renderRecList();
+}
+
+function filterRec() {
+  renderRecList();
+}
+
+async function loadAndRenderRecouvrement() {
+  // Initialiser période si première fois
+  if (!recMoisActuel) initRecPeriode();
+
+  document.getElementById('recList').innerHTML =
+    '<div class="empty-state">⏳ Chargement...</div>';
+
+  try {
+    // 1. Récupérer la résidence de l'admin
+    const { data: myRes } = await db.from('residences')
+      .select('id,nom,code_residence')
+      .eq('admin_id', currentUser.id)
+      .single();
+
+    if (!myRes) {
+      document.getElementById('recList').innerHTML =
+        '<div class="empty-state">❌ Résidence introuvable</div>';
+      return;
+    }
+
+    // 2. Récupérer tous les résidents validés
+    const result = await callEdge({
+      type: 'list_residents',
+      residence_id: myRes.id
+    });
+
+    if (!result.success) {
+      document.getElementById('recList').innerHTML =
+        `<div class="empty-state">❌ ${result.error || 'Erreur chargement résidents'}</div>`;
+      return;
+    }
+
+    recResidents = (result.residents || []).filter(r => r.role === 'resident');
+
+    // 3. Récupérer les paiements du mois/année sélectionné
+    const periode = `${recAnneeActuelle}-${recMoisActuel}`;
+    const { data: paiements, error: pErr } = await db
+      .from('recouvrement')
+      .select('*')
+      .eq('residence_id', myRes.id)
+      .eq('periode', periode);
+
+    if (pErr) console.warn('Erreur paiements:', pErr.message);
+
+    // Indexer par resident_id
+    recPaiements = {};
+    (paiements || []).forEach(p => {
+      recPaiements[p.resident_id] = p;
+    });
+
+    renderRecStats();
+    renderRecList();
+
+  } catch(e) {
+    document.getElementById('recList').innerHTML =
+      `<div class="empty-state">❌ ${e.message}</div>`;
+  }
+}
+
+function renderRecStats() {
+  const total   = recResidents.length;
+  const payes   = recResidents.filter(r => recPaiements[r.id]?.statut === 'paye').length;
+  const nonPaye = recResidents.filter(r => {
+    const s = recPaiements[r.id]?.statut;
+    return !s || s === 'non_paye';
+  }).length;
+
+  const montantCollecte = recResidents.reduce((sum, r) => {
+    return sum + (parseFloat(recPaiements[r.id]?.montant_paye) || 0);
+  }, 0);
+
+  const montantTotal   = total * recMontantMensuel;
+  const montantRestant = Math.max(0, montantTotal - montantCollecte);
+  const taux = total > 0 ? Math.round((payes / total) * 100) : 0;
+
+  document.getElementById('recNbPaye').textContent        = payes;
+  document.getElementById('recNbNonPaye').textContent     = nonPaye;
+  document.getElementById('recMontantCollecte').textContent = montantCollecte.toLocaleString('fr-MA') + ' DH';
+  document.getElementById('recMontantRestant').textContent  = montantRestant.toLocaleString('fr-MA') + ' DH';
+  document.getElementById('recTaux').textContent          = taux + '%';
+  document.getElementById('recProgressBar').style.width   = taux + '%';
+  document.getElementById('recInfoPaye').textContent      = montantCollecte.toLocaleString('fr-MA') + ' DH collectés';
+  document.getElementById('recInfoRestant').textContent   = montantRestant.toLocaleString('fr-MA') + ' DH restants';
+}
+
+function renderRecList() {
+  const search  = (document.getElementById('recSearch')?.value || '').toLowerCase();
+  const el      = document.getElementById('recList');
+
+  let filtered = recResidents.filter(r => {
+    // Filtre statut
+    const statut = recPaiements[r.id]?.statut || 'non_paye';
+    const matchStatut = recFilterStatut === 'all' || statut === recFilterStatut;
+
+    // Filtre recherche
+    const matchSearch = !search ||
+      (r.nom         && r.nom.toLowerCase().includes(search)) ||
+      (r.email       && r.email.toLowerCase().includes(search)) ||
+      (r.appartement && r.appartement.toLowerCase().includes(search));
+
+    return matchStatut && matchSearch;
+  });
+
+  if (!filtered.length) {
+    el.innerHTML = '<div class="empty-state"><div class="empty-icon">💰</div>Aucun résident trouvé</div>';
+    return;
+  }
+
+  // Trier : non payés en premier, puis partiels, puis payés
+  const ordre = { 'non_paye': 0, 'partiel': 1, 'paye': 2 };
+  filtered.sort((a, b) => {
+    const sa = recPaiements[a.id]?.statut || 'non_paye';
+    const sb = recPaiements[b.id]?.statut || 'non_paye';
+    return (ordre[sa] || 0) - (ordre[sb] || 0);
+  });
+
+  el.innerHTML = filtered.map(r => {
+    const p      = recPaiements[r.id];
+    const statut = p?.statut || 'non_paye';
+    const initiale = (r.nom || r.email || '?')[0].toUpperCase();
+
+    const statutLabel = {
+      'paye':     '✅ Payé',
+      'partiel':  '⚠️ Partiel',
+      'non_paye': '❌ Non payé'
+    }[statut];
+
+    const montantPaye = p?.montant_paye ? parseFloat(p.montant_paye).toLocaleString('fr-MA') + ' DH' : '—';
+    const datePaiement = p?.date_paiement
+      ? new Date(p.date_paiement).toLocaleDateString('fr-FR', {day:'numeric',month:'short',year:'numeric'})
+      : '—';
+    const modePaiement = {
+      'especes': '💵 Espèces',
+      'virement': '🏦 Virement',
+      'cheque': '📄 Chèque',
+      'mobile': '📱 Mobile'
+    }[p?.mode_paiement] || '—';
+
+    return `
+    <div class="rec-row ${statut}">
+      <div class="rec-av ${statut}">${initiale}</div>
+      <div class="rec-info">
+        <div class="rec-name">${r.nom || 'Sans nom'}</div>
+        <div class="rec-detail">
+          ${r.appartement ? `<span>🏠 Apt ${r.appartement}</span>` : ''}
+          ${r.telephone   ? `<span>📞 ${r.telephone}</span>`       : ''}
+          ${p ? `<span>💵 ${montantPaye}</span>` : ''}
+          ${p ? `<span>📅 ${datePaiement}</span>` : ''}
+          ${p ? `<span>${modePaiement}</span>` : ''}
+          ${p?.note ? `<span>📝 ${p.note}</span>` : ''}
+        </div>
+      </div>
+      <div style="display:flex;flex-direction:column;align-items:flex-end;gap:8px;flex-shrink:0">
+        <span class="rec-badge ${statut}">${statutLabel}</span>
+        <button onclick="openRecModal('${r.id}','${(r.nom||'').replace(/'/g,"\\'")}','${r.appartement||''}')"
+          style="font-size:11px;padding:5px 12px;border-radius:var(--radius-sm);border:1px solid var(--border2);background:var(--surface);cursor:pointer;color:var(--muted);font-family:'DM Sans',sans-serif;white-space:nowrap">
+          ✏️ Modifier
+        </button>
+      </div>
+    </div>`;
+  }).join('');
+}
+
+function openRecModal(residentId, nom, apt) {
+  const p = recPaiements[residentId];
+
+  document.getElementById('recModalResId').value = residentId;
+  document.getElementById('recModalSub').textContent =
+    `${nom}${apt ? ' · Apt ' + apt : ''} · ${getMoisLabel()} ${recAnneeActuelle}`;
+
+  // Pré-remplir
+  document.getElementById('recModalMontant').value =
+    p?.montant_paye || recMontantMensuel;
+  document.getElementById('recModalDate').value =
+    p?.date_paiement || new Date().toISOString().split('T')[0];
+  document.getElementById('recModalMode').value =
+    p?.mode_paiement || 'especes';
+  document.getElementById('recModalNote').value =
+    p?.note || '';
+
+  // Statut
+  const statut = p?.statut || 'paye';
+  selectRecStatut(statut, document.getElementById('rsBtnPaye'));
+
+  document.getElementById('recModalErr').style.display = 'none';
+  document.getElementById('recModalOk').style.display  = 'none';
+  document.getElementById('recModal').classList.add('open');
+}
+
+function selectRecStatut(statut, btn) {
+  document.getElementById('recModalStatut').value = statut;
+
+  // Reset tous les boutons
+  const styles = {
+    'paye':     { border: 'var(--green-border)', bg: 'var(--surface)', color: 'var(--green-text)' },
+    'partiel':  { border: 'var(--yellow-border)', bg: 'var(--surface)', color: 'var(--yellow-text)' },
+    'non_paye': { border: 'var(--red-border)', bg: 'var(--surface)', color: 'var(--red-text)' }
+  };
+
+  ['paye','partiel','non_paye'].forEach(s => {
+    const b = document.getElementById('rsBtnPaye').parentElement
+      .querySelector(`[onclick*="'${s}'"]`);
+    if (b) {
+      b.style.background = 'var(--surface)';
+    }
+  });
+
+  // Activer le bouton sélectionné
+  const activeStyles = {
+    'paye':     { bg: 'var(--green-bg)' },
+    'partiel':  { bg: 'var(--yellow-bg)' },
+    'non_paye': { bg: 'var(--red-bg)' }
+  };
+
+  document.getElementById('rsBtnPaye').style.background    = statut === 'paye'     ? 'var(--green-bg)'  : 'var(--surface)';
+  document.getElementById('rsBtnPartiel').style.background = statut === 'partiel'  ? 'var(--yellow-bg)' : 'var(--surface)';
+  document.getElementById('rsBtnNonPaye').style.background = statut === 'non_paye' ? 'var(--red-bg)'    : 'var(--surface)';
+}
+
+async function saveRecPaiement() {
+  const residentId  = document.getElementById('recModalResId').value;
+  const statut      = document.getElementById('recModalStatut').value;
+  const montant     = parseFloat(document.getElementById('recModalMontant').value) || 0;
+  const date        = document.getElementById('recModalDate').value;
+  const mode        = document.getElementById('recModalMode').value;
+  const note        = document.getElementById('recModalNote').value.trim();
+  const errEl       = document.getElementById('recModalErr');
+  const okEl        = document.getElementById('recModalOk');
+  errEl.style.display = 'none';
+  okEl.style.display  = 'none';
+
+  if (!statut) {
+    errEl.textContent = '⚠️ Sélectionnez un statut';
+    errEl.style.display = 'block'; return;
+  }
+
+  // Récupérer residence_id
+  const { data: myRes } = await db.from('residences')
+    .select('id')
+    .eq('admin_id', currentUser.id)
+    .single();
+
+  if (!myRes) {
+    errEl.textContent = '❌ Résidence introuvable';
+    errEl.style.display = 'block'; return;
+  }
+
+  const
 init();
 
 </script>
