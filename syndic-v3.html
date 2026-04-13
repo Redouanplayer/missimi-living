@@ -1312,39 +1312,52 @@ async function doLogout() {
 function showErr(el, msg) { el.textContent=msg; el.style.display='block'; }
 
 function showApp() {
-  document.getElementById('loader').style.display='none';
-  document.getElementById('loginScreen').style.display='none';
-  document.getElementById('appScreen').style.display='block';
-  const pill = document.getElementById('rolePill');
-  const tabAdmin = document.getElementById('tabAdmin');
-  const tabSuivi = document.getElementById('tabSuivi');
+  document.getElementById('loader').style.display = 'none';
+  document.getElementById('loginScreen').style.display = 'none';
+  document.getElementById('appScreen').style.display = 'block';
+
+  const pill      = document.getElementById('rolePill');
+  const tabAdmin  = document.getElementById('tabAdmin');
+  const tabSuivi  = document.getElementById('tabSuivi');
   const tabNouveau = document.getElementById('tabNouveau');
-  if (currentRole==='admin') {
-    tabSuivi.style.display = 'none';
+
+  if (currentRole === 'admin') {
+    // ── ADMIN ──────────────────────────────────────────────
+    tabSuivi.style.display   = 'none';
     tabNouveau.style.display = 'none';
-    const vAdmin = getSecteurVocab(currentUserMeta.secteur||'residence');
-    pill.textContent = vAdmin.adminLabel + ' · Admin'; pill.className='role-pill pill-admin';
-    document.getElementById('tabAdmin').textContent = vAdmin.adminSub;
-    if (currentUserMeta.residence_code || currentUserMeta.residence_nom) {
+
+    const vAdmin = getSecteurVocab(currentUserMeta.secteur || 'residence');
+    pill.textContent  = vAdmin.adminLabel + ' · Admin';
+    pill.className    = 'role-pill pill-admin';
+    tabAdmin.textContent = vAdmin.adminSub;
+
+    // Navbar résidence
     document.getElementById('navResName').textContent = currentUserMeta.residence_nom || '';
     const codeEl = document.getElementById('navResCode');
     if (codeEl) {
-      codeEl.textContent = currentUserMeta.residence_code || '';
+      codeEl.textContent   = currentUserMeta.residence_code || '';
       codeEl.style.display = currentUserMeta.residence_code ? 'inline-flex' : 'none';
     }
-tabAdmin.style.display = 'block';
-document.getElementById('tabResidents').style.display = 'block';
-tabNouveau.style.display = 'none';
-tabSuivi.style.display = 'none';
-document.getElementById('tabServices').style.display = 'block';
-document.getElementById('tabCompta').style.display = 'block';
-const secteurActuel = currentUserMeta.secteur || 'residence';
-document.getElementById('tabRecouvrement').style.display =
-  ['residence', 'collectivite'].includes(secteurActuel) ? 'block' : 'none';
-showTab('admin', tabAdmin);
+
+    // Onglets admin
+    tabAdmin.style.display = 'block';
+    document.getElementById('tabResidents').style.display = 'block';
+    document.getElementById('tabServices').style.display  = 'block';
+    document.getElementById('tabCompta').style.display    = 'block';
+
+    const secteurActuel = currentUserMeta.secteur || 'residence';
+    document.getElementById('tabRecouvrement').style.display =
+      ['residence', 'collectivite'].includes(secteurActuel) ? 'block' : 'none';
+
+    showTab('admin', tabAdmin);
+
   } else {
-    const vRes = getSecteurVocab(currentUserMeta.secteur||'residence');
-    pill.textContent = vRes.pilLabel + (currentUserMeta.appartement||'');
+    // ── RÉSIDENT ───────────────────────────────────────────
+    const vRes = getSecteurVocab(currentUserMeta.secteur || 'residence');
+    pill.textContent = vRes.pilLabel + (currentUserMeta.appartement || '');
+    pill.className   = 'role-pill pill-resident';
+
+    // Texte onglet "Mes tickets"
     const tabSuiviEl = document.getElementById('tabSuivi');
     if (tabSuiviEl) {
       for (let node of tabSuiviEl.childNodes) {
@@ -1354,26 +1367,30 @@ showTab('admin', tabAdmin);
         }
       }
     }
+
+    // Navbar résidence
     document.getElementById('navResName').textContent = currentUserMeta.residence_nom || '';
     const codeEl = document.getElementById('navResCode');
     if (codeEl) {
-      codeEl.textContent = currentUserMeta.residence_code || '';
+      codeEl.textContent   = currentUserMeta.residence_code || '';
       codeEl.style.display = currentUserMeta.residence_code ? 'inline-flex' : 'none';
     }
-    pill.className = 'role-pill pill-resident';
-    // Masquer les onglets admin pour le résident
-    document.getElementById('tabAdmin').style.display       = 'none';
-    document.getElementById('tabResidents').style.display   = 'none';
-    document.getElementById('tabRecouvrement').style.display= 'none';
-    document.getElementById('tabCompta').style.display      = 'none';
-    document.getElementById('tabServices').style.display    = 'block';
-    document.getElementById('tabNouveau').style.display     = 'block';
-    document.getElementById('tabSuivi').style.display       = 'block';
-    // Pré-remplir appartement dès l'ouverture
+
+    // Onglets résident
+    document.getElementById('tabAdmin').style.display        = 'none';
+    document.getElementById('tabResidents').style.display    = 'none';
+    document.getElementById('tabRecouvrement').style.display = 'none';
+    document.getElementById('tabCompta').style.display       = 'none';
+    document.getElementById('tabServices').style.display     = 'block';
+    document.getElementById('tabNouveau').style.display      = 'block';
+    document.getElementById('tabSuivi').style.display        = 'block';
+
+    // Pré-remplir appartement
     const fAptEl = document.getElementById('fApt');
     if (fAptEl && currentUserMeta.appartement) {
       fAptEl.value = currentUserMeta.appartement;
     }
+
     showTab('nouveau', document.getElementById('tabNouveau'));
   }
 }
@@ -2558,7 +2575,6 @@ function renderResidents() {
   el.innerHTML = html;
 }
 
-let _resDebounce = null;
 let _resDebounce = null;
 function filterResidents(query) {
   clearTimeout(_resDebounce);
