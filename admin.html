@@ -1128,7 +1128,45 @@ function renderClients(data) {
       buildClientsTable(data, tbody);
     });
 }
+// ── RECHERCHE CLIENTS ─────────────────────────────
+var allClientsData = [];
+var searchQuery = '';
 
+function filterClients(query) {
+  searchQuery = query.toLowerCase().trim();
+  var countEl = document.getElementById('searchCount');
+  
+  if (!searchQuery) {
+    // Afficher tous les clients
+    buildClientsTable(allClientsData, document.getElementById('clientsBody'));
+    if (countEl) countEl.textContent = '';
+    return;
+  }
+
+  // Filtrer selon la recherche
+  var filtered = allClientsData.filter(function(r) {
+    return (r.nom            && r.nom.toLowerCase().includes(searchQuery))
+        || (r.email_admin    && r.email_admin.toLowerCase().includes(searchQuery))
+        || (r.code_residence && r.code_residence.toLowerCase().includes(searchQuery))
+        || (r.secteur        && r.secteur.toLowerCase().includes(searchQuery))
+        || (r.nb_apparts     && String(r.nb_apparts).includes(searchQuery));
+  });
+
+  // Afficher résultats
+  buildClientsTable(filtered, document.getElementById('clientsBody'));
+  
+  // Compteur résultats
+  if (countEl) {
+    countEl.textContent = filtered.length + ' résultat(s)';
+    countEl.style.color = filtered.length === 0 ? 'var(--red)' : 'var(--muted)';
+  }
+
+  // Message si aucun résultat
+  if (!filtered.length) {
+    document.getElementById('clientsBody').innerHTML = 
+      '<tr><td colspan="9" class="empty">🔍 Aucun client trouvé pour "' + query + '"</td></tr>';
+  }
+}
 function buildClientsTable(data, tbody) {
     tbody.innerHTML = data.map(function(r) {
         var date  = r.created_at ? new Date(r.created_at).toLocaleDateString('fr-FR') : '—';
