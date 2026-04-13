@@ -1346,8 +1346,8 @@ function showApp() {
     document.getElementById('tabCompta').style.display    = 'block';
 
     const secteurActuel = currentUserMeta.secteur || 'residence';
-    document.getElementById('tabRecouvrement').style.display =
-      ['residence', 'collectivite'].includes(secteurActuel) ? 'block' : 'none';
+document.getElementById('tabRecouvrement').style.display =
+  secteurActuel === 'residence' ? 'block' : 'none';
 
     showTab('admin', tabAdmin);
 
