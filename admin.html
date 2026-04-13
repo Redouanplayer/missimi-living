@@ -1166,8 +1166,12 @@ function renderClients(data) {
       if (rpcRes.data) {
         inscriptionsMap = {};
         rpcRes.data.forEach(function(row) {
-          inscriptionsMap[row.residence_id] = row.count;
-        });
+  // Adapter selon résultat SQL :
+  // row.residence_id → colonne UUID résidence
+  // row.count OU row.nb_residents → colonne compteur
+  inscriptionsMap[row.residence_id] = 
+    row.count || row.nb_residents || 0;
+});
       }
       buildClientsTable(data, tbody);
     })
