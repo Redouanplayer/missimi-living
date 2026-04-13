@@ -2605,23 +2605,30 @@ function initRecPeriode() {
   const anneeEl = document.getElementById('recAnnee');
   if (!moisEl || !anneeEl) return;
 
-  function initRecPeriode() {
-  const moisEl  = document.getElementById('recMois');
-  const anneeEl = document.getElementById('recAnnee');
-  if (!moisEl || !anneeEl) return;
-
   const moisNoms = ['Janvier','Février','Mars','Avril','Mai','Juin',
                     'Juillet','Août','Septembre','Octobre','Novembre','Décembre'];
   moisEl.innerHTML = moisNoms.map((m,i) =>
     `<option value="${String(i+1).padStart(2,'0')}">${m}</option>`
   ).join('');
 
-  const now = new Date();
+  const now   = new Date();
   const annee = now.getFullYear();
   anneeEl.innerHTML = '';
   for (let y = annee; y >= annee - 3; y--) {
     anneeEl.innerHTML += `<option value="${y}">${y}</option>`;
   }
+
+  moisEl.value     = String(now.getMonth() + 1).padStart(2,'0');
+  anneeEl.value    = String(annee);
+  recMoisActuel    = moisEl.value;
+  recAnneeActuelle = anneeEl.value;
+
+  const saved = localStorage.getItem('rec_montant_' + currentUser?.id);
+  if (saved) {
+    recMontantMensuel = parseFloat(saved);
+    document.getElementById('recMontantMensuel').value = saved;
+  }
+}
 
   moisEl.value = String(now.getMonth() + 1).padStart(2,'0');
   anneeEl.value = String(annee);
@@ -2882,34 +2889,132 @@ function selectRecStatut(statut, btn) {
 }
 
 async function saveRecPaiement() {
-  const residentId  = document.getElementById('recModalResId').value;
-  const statut      = document.getElementById('recModalStatut').value;
-  const montant     = parseFloat(document.getElementById('recModalMontant').value) || 0;
-  const date        = document.getElementById('recModalDate').value;
-  const mode        = document.getElementById('recModalMode').value;
-  const note        = document.getElementById('recModalNote').value.trim();
-  const errEl       = document.getElementById('recModalErr');
-  const okEl        = document.getElementById('recModalOk');
+  const residentId = document.getElementById('recModalResId').value;
+  const statut     = document.getElementById('recModalStatut').value;
+  const montant    = parseFloat(document.getElementById('recModalMontant').value) || 0;
+  const date       = document.getElementById('recModalDate').value;
+  const mode       = document.getElementById('recModalMode').value;
+  const note       = document.getElementById('recModalNote').value.trim();
+  const errEl      = document.getElementById('recModalErr');
+  const okEl       = document.getElementById('recModalOk');
   errEl.style.display = 'none';
   okEl.style.display  = 'none';
 
   if (!statut) {
-    errEl.textContent = '⚠️ Sélectionnez un statut';
-    errEl.style.display = 'block'; return;
+    errEl.textContent   = '⚠️ Sélectionnez un statut';
+    errEl.style.display = 'block';
+    return;
   }
 
-  // Récupérer residence_id
   const { data: myRes } = await db.from('residences')
     .select('id')
     .eq('admin_id', currentUser.id)
     .single();
 
   if (!myRes) {
-    errEl.textContent = '❌ Résidence introuvable';
-    errEl.style.display = 'block'; return;
+    errEl.textContent   = '❌ Résidence introuvable';
+    errEl.style.display = 'block';
+    return;
   }
 
-  const
+  const periode = `${recAnneeActuelle}-${recMoisActuel}`;
+
+  const payload = {
+    resident_id:   residentId,
+    residence_id:  myRes.id,
+    periode,
+    statut,
+    montant_paye:  montant,
+    date_paiement: date || null,
+    mode_paiement: mode,
+    note:          note || null
+  };
+
+  // Upsert (insert ou update si déjà existant)
+  const { error } = await db.from('recouvrement')
+    .upsert(payload, {
+      onConflict: 'resident_id,residence_id,periode'
+    });
+
+  if (error) {
+    errEl.textContent   = '❌ ' + error.message;
+    errEl.style.display = 'block';
+    return;
+  }
+
+  okEl.textContent   = '✅ Paiement enregistré !';
+  okEl.style.display = 'block';
+
+  setTimeout(() => {
+    closeRecModal();
+    loadAndRenderRecouvrement();
+  }, 1000);
+}
+
+function closeRecModal() {
+  document.getElementById('recModal').classList.remove('open');
+}
+
+function getMoisLabel() {
+  const moisNoms = ['Janvier','Février','Mars','Avril','Mai','Juin',
+                    'Juillet','Août','Septembre','Octobre','Novembre','Décembre'];
+  return moisNoms[parseInt(recMoisActuel, 10) - 1] || '';
+}
+
+function exportRecCSV() {
+  if (!recResidents.length) {
+    alert('Aucun résident à exporter.');
+    return;
+  }
+
+  const moisLabel = getMoisLabel();
+  const rows = [
+    ['Nom', 'Email', 'Appartement', 'Téléphone', 'Statut',
+     'Montant payé (DH)', 'Date paiement', 'Mode', 'Note'],
+    ...recResidents.map(r => {
+      const p = recPaiements[r.id];
+      return [
+        r.nom          || '',
+        r.email        || '',
+        r.appartement  || '',
+        r.telephone    || '',
+        p?.statut      === 'paye'     ? 'Payé'
+          : p?.statut  === 'partiel'  ? 'Partiel'
+          : 'Non payé',
+        p?.montant_paye || 0,
+        p?.date_paiement || '',
+        p?.mode_paiement || '',
+        p?.note          || ''
+      ];
+    })
+  ];
+
+  const csv = rows
+    .map(r => r.map(c => `"${String(c).replace(/"/g, '""')}"`).join(','))
+    .join('\n');
+
+  const blob = new Blob(['\uFEFF' + csv], { type: 'text/csv;charset=utf-8;' });
+  const a    = document.createElement('a');
+  a.href     = URL.createObjectURL(blob);
+  a.download = `Recouvrement_${moisLabel}_${recAnneeActuelle}.csv`;
+  a.click();
+}
+
+function onRecPeriodeChange() {
+  recMoisActuel    = document.getElementById('recMois').value;
+  recAnneeActuelle = document.getElementById('recAnnee').value;
+  loadAndRenderRecouvrement();
+}
+
+function appliquerMontant() {
+  const val = parseFloat(document.getElementById('recMontantMensuel').value);
+  if (!val || val <= 0) { alert('⚠️ Entrez un montant valide'); return; }
+  recMontantMensuel = val;
+  localStorage.setItem('rec_montant_' + currentUser?.id, val);
+  renderRecList();
+  showToast('✅ Montant de ' + val + ' DH appliqué', 'success');
+}
+
 init();
 
 </script>
