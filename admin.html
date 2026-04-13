@@ -300,6 +300,32 @@ tr:hover td{background:#fafafa;}
       <div class="stat"><div class="stat-num s-blue" id="statInactive">—</div><div class="stat-lbl">Inactifs</div></div>
     </div>
 
+      <div style="display:grid;
+            grid-template-columns:repeat(4,1fr);
+            gap:10px;margin-bottom:20px">
+  <div class="stat" style="border-top:3px solid var(--green)">
+    <div class="stat-num s-green" 
+         id="kpiTicketsOuverts">—</div>
+    <div class="stat-lbl">🎫 Tickets ouverts</div>
+  </div>
+  <div class="stat" style="border-top:3px solid var(--red)">
+    <div class="stat-num s-red" 
+         id="kpiTicketsUrgents">—</div>
+    <div class="stat-lbl">🚨 Tickets urgents</div>
+  </div>
+  <div class="stat" style="border-top:3px solid var(--blue)">
+    <div class="stat-num s-blue" 
+         id="kpiResidents">—</div>
+    <div class="stat-lbl">👥 Résidents actifs</div>
+  </div>
+  <div class="stat" 
+       style="border-top:3px solid var(--orange,#ea580c)">
+    <div class="stat-num" 
+         style="color:var(--orange,#ea580c)"
+         id="kpiExpiration">—</div>
+    <div class="stat-lbl">⏰ Expirent ≤ 10j</div>
+  </div>
+</div>
     <!-- DASHBOARD STOCKAGE -->
     <div class="dash-section">
       <div class="dash-title">Dashboard — Capacité &amp; Stockage</div>
@@ -461,6 +487,12 @@ tr:hover td{background:#fafafa;}
     <div class="card-sub">Tous les espaces</div>
   </div>
   <button class="act-btn" id="refreshBtn">↻ Actualiser</button>
+<button class="act-btn"
+  style="color:var(--green);
+         border-color:var(--green-border)"
+  onclick="exportClientsCSV()">
+  📥 CSV
+</button>
 </div>
 <!-- BARRE DE RECHERCHE -->
 <div style="padding:12px 16px;border-bottom:1px solid var(--border);background:var(--bg)">
@@ -488,6 +520,7 @@ tr:hover td{background:#fafafa;}
                 <th>Secteur</th>
                 <th>Nb unités</th>
                 <th>Inscriptions</th>
+                '<th>Recouvrement</th>'
                 <th>Abonnement</th>
                 <th>Statut</th>
                 <th>Actions</th>
@@ -871,7 +904,19 @@ function enterApp(user) {
   loadStats();
   loadClients();
   loadDashboard();
+  loadKPIGlobaux();
   initActuPreview();
+
+  // ← AJOUTER : Auto-refresh 5 minutes
+  setInterval(function() {
+    loadStats();
+    loadKPIGlobaux();
+    var activeTab = document.querySelector('.nav-tab.active');
+    if (!activeTab) return;
+    var txt = activeTab.textContent.trim();
+    if (txt.includes('Abonnements'))   loadAbonnements();
+    if (txt.includes('Notifications')) loadNotifications();
+  }, 5 * 60 * 1000);
 }
 
 function doLogin() {
@@ -1204,6 +1249,14 @@ function buildClientsTable(data, tbody) {
           '</td>' +
           '<td style="font-family:\'DM Mono\',monospace;font-size:12px;text-align:center">' + (r.nb_apparts || '—') + '</td>' +
           '<td style="text-align:center">' + inscBadge + '</td>' +
+'<td style="text-align:center">' +
+  (r.secteur === 'residence'
+    ? '<span id="rec-' + r.id + '" ' +
+      'style="font-size:11px;color:var(--muted)">⏳</span>'
+    : '<span style="font-size:11px;' +
+      'color:var(--muted)">—</span>'
+  ) +
+'</td>'
           '<td>' + badge + '</td>' +
           '<td style="position:relative">' +
             '<button class="actions-trigger" onclick="toggleMenu(\'' + r.id + '\')">⋯</button>' +
@@ -1219,6 +1272,46 @@ function buildClientsTable(data, tbody) {
           '</td>' +
           '</tr>';
       }).join('');
+}
+   loadRecStatsForAdmin();
+}
+
+// ET AJOUTER cette nouvelle fonction :
+async function loadRecStatsForAdmin() {
+  const mois = new Date().toISOString().slice(0, 7);
+
+  const residences = allClientsData
+    .filter(r => r.secteur === 'residence' && r.actif);
+
+  for (const r of residences) {
+    const el = document.getElementById('rec-' + r.id);
+    if (!el) continue;
+
+    const { data: stats } = await db
+      .rpc('get_stats_recouvrement', {
+        p_residence_id: r.id,
+        p_periode:      mois
+      });
+
+    if (stats?.[0]) {
+      const s   = stats[0];
+      const t   = s.taux_recouvrement || 0;
+      const col = t >= 80
+        ? 'var(--green)'
+        : t >= 50
+        ? 'var(--orange,#ea580c)'
+        : 'var(--red)';
+
+      el.innerHTML =
+        '<span style="font-weight:700;color:' + col + '">'
+        + t + '%</span>' +
+        '<span style="color:var(--muted);font-size:10px">' +
+        ' (' + s.nb_payes + '/' + s.total_residents + ')' +
+        '</span>';
+    } else {
+      el.textContent = '—';
+    }
+  }
 }
 
 function updateExpPreview() {
@@ -1378,6 +1471,47 @@ function deleteClient(id, nom, adminId) {
 }
 
 // ── DASHBOARD STOCKAGE ────────────────────────────────
+  async function loadKPIGlobaux() {
+  const today = new Date();
+  today.setHours(0, 0, 0, 0);
+
+  const [tickets, residences] = await Promise.all([
+    db.from('tickets').select('statut,urgence'),
+    db.from('residences')
+      .select('date_expiration,actif')
+      .eq('actif', true)
+  ]);
+
+  const ouverts = (tickets.data || [])
+    .filter(t => t.statut !== 'Résolu').length;
+
+  const urgents = (tickets.data || [])
+    .filter(t => t.urgence === 'Haute' 
+              && t.statut !== 'Résolu').length;
+
+  const expBientot = (residences.data || [])
+    .filter(r => {
+      if (!r.date_expiration) return false;
+      const diff = Math.round(
+        (new Date(r.date_expiration) - today) / 86400000
+      );
+      return diff >= 0 && diff <= 10;
+    }).length;
+
+  document.getElementById(
+    'kpiTicketsOuverts').textContent = ouverts;
+  document.getElementById(
+    'kpiTicketsUrgents').textContent = urgents;
+  document.getElementById(
+    'kpiExpiration').textContent     = expBientot;
+
+  const { data: counts } = await db
+    .rpc('count_residents_by_residence');
+  const total = (counts || [])
+    .reduce((s, r) => s + parseInt(r.count || 0), 0);
+  document.getElementById('kpiResidents').textContent =
+    total.toLocaleString('fr-FR');
+}
 function loadDashboard() {
   var tables = [
     { id: 'dTickets',    t: 'tickets' },
@@ -1950,7 +2084,59 @@ function updateActuPreview() {
     '<div style="font-size:14px;font-weight:700;margin-bottom:8px">' + (titre || '—') + '</div>' +
     '<div style="font-size:12px;color:var(--muted);line-height:1.7">' + (contenu || '').substring(0,200) + (contenu.length > 200 ? '...' : '') + '</div>';
 }
+function exportClientsCSV() {
+  if (!allClientsData.length) {
+    toast('⚠️ Aucune donnée à exporter');
+    return;
+  }
 
+  const today = new Date();
+  today.setHours(0, 0, 0, 0);
+
+  const headers = [
+    'Code','Nom','Email Admin','Secteur',
+    'Nb Unités','Abonnement',
+    'Expiration','Jours Restants','Statut'
+  ];
+
+  const rows = allClientsData.map(function(r) {
+    const diff = r.date_expiration
+      ? Math.round(
+          (new Date(r.date_expiration) - today) / 86400000
+        )
+      : '—';
+    return [
+      r.code_residence || '',
+      r.nom            || '',
+      r.email_admin    || '',
+      r.secteur        || '',
+      r.nb_apparts     || 0,
+      r.abonnement     || '',
+      r.date_expiration
+        ? new Date(r.date_expiration)
+            .toLocaleDateString('fr-FR')
+        : '',
+      diff,
+      r.actif ? 'Actif' : 'Suspendu'
+    ].map(function(v) {
+      return '"' + String(v).replace(/"/g,'""') + '"';
+    }).join(',');
+  });
+
+  const csv  = [headers.join(','), ...rows].join('\n');
+  const blob = new Blob(
+    ['\uFEFF' + csv],
+    { type: 'text/csv;charset=utf-8;' }
+  );
+  const url  = URL.createObjectURL(blob);
+  const link = document.createElement('a');
+  link.href     = url;
+  link.download = 'redtech_clients_' +
+    new Date().toISOString().slice(0,10) + '.csv';
+  link.click();
+  URL.revokeObjectURL(url);
+  toast('📥 Export CSV téléchargé');
+}
 function setStorageBar(prefix, usedMB, limitMB, pct) {
   var bar   = document.getElementById(prefix + 'Bar');
   var usedEl= document.getElementById(prefix + 'Used');
