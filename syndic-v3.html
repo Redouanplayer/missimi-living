@@ -2230,7 +2230,6 @@ function renderCompta() {
 }
 
 function renderPLChart() {
-  // Group by month
   const months = {};
   comptaFiltered.forEach(op => {
     const m = op.date_op.substring(0, 7);
@@ -2239,13 +2238,24 @@ function renderPLChart() {
     else months[m].depenses += parseFloat(op.montant);
   });
   const labels = Object.keys(months).sort();
-  const recData = labels.map(m => Math.round(months[m].recettes));
-  const depData = labels.map(m => Math.round(months[m].depenses));
-  const solData = labels.map(m => Math.round(months[m].recettes - months[m].depenses));
+
   const ctx = document.getElementById('plChart');
   if (!ctx) return;
+
+  // Supprimer l'ancien message si présent
+  const existingMsg = ctx.parentElement.querySelector('.no-data-msg');
+  if (existingMsg) existingMsg.remove();
+
   if (plChartInstance) { plChartInstance.destroy(); plChartInstance = null; }
-  if (!labels.length) { ctx.parentElement.innerHTML += '<p style="text-align:center;color:var(--muted);font-size:13px;padding:20px 0">Aucune donnée à afficher</p>'; return; }
+
+  if (!labels.length) {
+    const msg = document.createElement('p');
+    msg.className = 'no-data-msg';
+    msg.style.cssText = 'text-align:center;color:var(--muted);font-size:13px;padding:20px 0';
+    msg.textContent = 'Aucune donnée à afficher';
+    ctx.parentElement.appendChild(msg);
+    return;
+  }
   plChartInstance = new Chart(ctx, {
     type: 'bar',
     data: {
