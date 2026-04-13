@@ -3349,7 +3349,380 @@ async function saveResMoisPaiement() {
     periode,
     statut,
     montant_paye:  montant,
-    date
+    date_paiement: date || null,
+    mode_paiement: mode,
+    note:          note || null
+  }, { onConflict: 'resident_id,residence_id,periode' });
+
+  if (error) {
+    errEl.textContent   = '❌ ' + error.message;
+    errEl.style.display = 'block';
+    return;
+  }
+
+  okEl.textContent   = '✅ Paiement enregistré !';
+  okEl.style.display = 'block';
+
+  // Mettre à jour le cache local
+  if (!resAllPaiements[resId]) resAllPaiements[resId] = {};
+  resAllPaiements[resId][periode] = {
+    resident_id:   resId,
+    residence_id:  myRes.id,
+    periode,
+    statut,
+    montant_paye:  montant,
+    date_paiement: date || null,
+    mode_paiement: mode,
+    note:          note || null
+  };
+
+  setTimeout(() => {
+    closeResMoisModal();
+    renderResAnnuel();
+  }, 800);
+}
+
+// ── SUSPENDRE ────────────────────────────────────────────────
+function closeSuspendreModal() {
+  document.getElementById('suspendreModal').classList.remove('open');
+}
+
+async function confirmerSuspendre() {
+  const resId = document.getElementById('suspendreResId').value;
+  const note  = document.getElementById('suspendreNote').value.trim();
+  const errEl = document.getElementById('suspendreErr');
+  errEl.style.display = 'none';
+
+  if (!note) {
+    errEl.textContent   = '⚠️ Le motif de suspension est obligatoire.';
+    errEl.style.display = 'block';
+    return;
+  }
+
+  const result = await callEdge({
+    type:          'update_user_metadata',
+    admin_user_id: resId,
+    metadata: {
+      suspendu:         true,
+      suspension_note:  note,
+      suspension_date:  new Date().toISOString().split('T')[0],
+      reactivation_note: null
+    }
+  });
+
+  if (!result.success) {
+    errEl.textContent   = '❌ ' + (result.error || 'Erreur');
+    errEl.style.display = 'block';
+    return;
+  }
+
+  closeSuspendreModal();
+  showToast('⏸ Résident suspendu.', 'error');
+  await loadAndRenderResidents();
+}
+
+// ── RÉACTIVER ────────────────────────────────────────────────
+function closeReactiverModal() {
+  document.getElementById('reactiverModal').classList.remove('open');
+}
+
+async function confirmerReactiver() {
+  const resId = document.getElementById('reactiverResId').value;
+  const note  = document.getElementById('reactiverNote').value.trim();
+  const errEl = document.getElementById('reactiverErr');
+  errEl.style.display = 'none';
+
+  if (!note) {
+    errEl.textContent   = '⚠️ Le commentaire de réactivation est obligatoire.';
+    errEl.style.display = 'block';
+    return;
+  }
+
+  const result = await callEdge({
+    type:          'update_user_metadata',
+    admin_user_id: resId,
+    metadata: {
+      suspendu:          false,
+      suspension_note:   null,
+      suspension_date:   null,
+      reactivation_note: note,
+      reactivation_date: new Date().toISOString().split('T')[0]
+    }
+  });
+
+  if (!result.success) {
+    errEl.textContent   = '❌ ' + (result.error || 'Erreur');
+    errEl.style.display = 'block';
+    return;
+  }
+
+  closeReactiverModal();
+  showToast('▶️ Résident réactivé !', 'success');
+  await loadAndRenderResidents();
+}
+
+// ── DATE DÉBUT RÉSIDENT ──────────────────────────────────────
+function closeDateDebutModal() {
+  document.getElementById('dateDebutModal').classList.remove('open');
+}
+
+async function confirmerDateDebut() {
+  const resId = document.getElementById('dateDebutResId').value;
+  const date  = document.getElementById('dateDebutValue').value;
+  const errEl = document.getElementById('dateDebutErr');
+  errEl.style.display = 'none';
+
+  if (!date) {
+    errEl.textContent   = '⚠️ La date est obligatoire.';
+    errEl.style.display = 'block';
+    return;
+  }
+
+  const result = await callEdge({
+    type:          'update_user_metadata',
+    admin_user_id: resId,
+    metadata:      { date_debut_charges: date }
+  });
+
+  if (!result.success) {
+    errEl.textContent   = '❌ ' + (result.error || 'Erreur');
+    errEl.style.display = 'block';
+    return;
+  }
+
+  closeDateDebutModal();
+  showToast('📅 Date de début enregistrée !', 'success');
+  await loadAndRenderResidents();
+}
+
+// ── EDIT RÉSIDENT ────────────────────────────────────────────
+function closeEditResident() {
+  document.getElementById('editResidentModal').classList.remove('open');
+}
+
+async function saveEditResident() {
+  const id  = document.getElementById('editResId').value;
+  const nom = document.getElementById('editResNom').value.trim();
+  const apt = document.getElementById('editResApt').value.trim();
+  const tel = document.getElementById('editResTel').value.trim();
+  const errEl = document.getElementById('editResErr');
+  const okEl  = document.getElementById('editResOk');
+  errEl.style.display = 'none';
+  okEl.style.display  = 'none';
+
+  if (!nom) {
+    errEl.textContent   = '⚠️ Le nom est obligatoire.';
+    errEl.style.display = 'block';
+    return;
+  }
+
+  const result = await callEdge({
+    type:          'update_user_metadata',
+    admin_user_id: id,
+    metadata:      { nom, appartement: apt, telephone: tel }
+  });
+
+  if (!result.success) {
+    errEl.textContent   = '❌ ' + (result.error || 'Erreur');
+    errEl.style.display = 'block';
+    return;
+  }
+
+  okEl.textContent   = '✅ Résident mis à jour !';
+  okEl.style.display = 'block';
+  setTimeout(() => {
+    closeEditResident();
+    loadAndRenderResidents();
+  }, 1000);
+}
+
+// ── AJOUTER RÉSIDENT MANUELLEMENT ───────────────────────────
+function toggleAddResidentForm() {
+  const form = document.getElementById('addResidentForm');
+  const btn  = document.getElementById('btnAddResident');
+  const isVisible = form && form.style.display !== 'none';
+  if (form) form.style.display = isVisible ? 'none' : 'block';
+  if (btn)  btn.textContent    = isVisible ? '+ Ajouter' : '✕ Fermer';
+  if (!isVisible && document.getElementById('newResNom')) {
+    document.getElementById('newResNom').focus();
+  }
+}
+
+async function addResidentManually() {
+  const nom   = document.getElementById('newResNom').value.trim();
+  const email = document.getElementById('newResEmail').value.trim();
+  const apt   = document.getElementById('newResApt').value.trim();
+  const tel   = document.getElementById('newResTel').value.trim();
+  const pwd   = document.getElementById('newResPwd').value.trim();
+  const errEl = document.getElementById('addResErr');
+  const okEl  = document.getElementById('addResOk');
+  errEl.style.display = 'none';
+  okEl.style.display  = 'none';
+
+  if (!nom || !email || !apt || !pwd) {
+    errEl.textContent   = '⚠️ Remplissez les champs obligatoires (*)';
+    errEl.style.display = 'block';
+    return;
+  }
+  if (pwd.length < 6) {
+    errEl.textContent   = '⚠️ Mot de passe minimum 6 caractères';
+    errEl.style.display = 'block';
+    return;
+  }
+
+  const { data: myRes } = await db.from('residences')
+    .select('id,nom,code_residence')
+    .eq('admin_id', currentUser.id)
+    .single();
+
+  if (!myRes) {
+    errEl.textContent   = '❌ Résidence introuvable';
+    errEl.style.display = 'block';
+    return;
+  }
+
+  const btn = document.querySelector('#addResidentForm .btn-primary');
+  if (btn) { btn.disabled = true; btn.textContent = 'Création...'; }
+
+  const result = await callEdge({
+    type:     'create_resident',
+    email,
+    password: pwd,
+    metadata: {
+      nom,
+      appartement:    apt,
+      telephone:      tel,
+      role:           'resident',
+      residence_id:   myRes.id,
+      residence_nom:  myRes.nom,
+      residence_code: myRes.code_residence,
+      secteur:        currentUserMeta.secteur || 'residence',
+      date_debut_charges: resConfigRes.date_debut_charges || null
+    }
+  });
+
+  if (btn) { btn.disabled = false; btn.textContent = 'Créer le compte →'; }
+
+  if (!result.success) {
+    errEl.textContent   = '❌ ' + (result.error?.message || result.error || 'Erreur création');
+    errEl.style.display = 'block';
+    return;
+  }
+
+  okEl.textContent   = `✅ Compte créé pour ${nom} (${email}) !`;
+  okEl.style.display = 'block';
+
+  ['newResNom','newResEmail','newResApt','newResTel'].forEach(id => {
+    const el = document.getElementById(id);
+    if (el) el.value = '';
+  });
+  document.getElementById('newResPwd').value = 'RedTech2026!';
+
+  setTimeout(() => {
+    toggleAddResidentForm();
+    loadAndRenderResidents();
+  }, 1500);
+}
+
+// ── SUPPRIMER RÉSIDENT ───────────────────────────────────────
+async function deleteResident(id, email) {
+  if (!confirm(`Supprimer le compte de ${email} ?\n\nCette action est irréversible.`)) return;
+  const result = await callEdge({ type: 'delete_resident', admin_user_id: id });
+  if (!result.success) {
+    alert('❌ Erreur : ' + (result.error || 'Inconnue'));
+    return;
+  }
+  showToast('🗑️ Résident supprimé.', 'error');
+  await loadAndRenderResidents();
+}
+
+// ── EXPORT CSV ANNUEL ────────────────────────────────────────
+function exportResCSV() {
+  const validated = allResidents.filter(r => r.role === 'resident');
+  if (!validated.length) {
+    alert('Aucun résident à exporter.');
+    return;
+  }
+
+  const moisNoms = ['Jan','Fév','Mar','Avr','Mai','Jun',
+                    'Jul','Aoû','Sep','Oct','Nov','Déc'];
+
+  const headers = [
+    'Nom','Email','Appartement','Téléphone','Statut',
+    ...moisNoms,
+    'Total Payé (DH)','Reste (DH)','Taux (%)'
+  ];
+
+  const dateDebutGlobal = resConfigRes.date_debut_charges
+    ? new Date(resConfigRes.date_debut_charges) : null;
+
+  const rows = validated.map(r => {
+    const paiementsRes = resAllPaiements[r.id] || {};
+    const dateDebutRes = r.date_debut_charges
+      ? new Date(r.date_debut_charges) : dateDebutGlobal;
+
+    let totalPaye = 0;
+    let totalDu   = 0;
+    const moisCells = [];
+
+    for (let m = 1; m <= 12; m++) {
+      const periodeStr = `${resAnneeActive}-${String(m).padStart(2,'0')}`;
+      const montantM   = getMontantPourMois(resAnneeActive, m);
+      const paiement   = paiementsRes[periodeStr];
+
+      let avantDebut = false;
+      if (dateDebutRes) {
+        const dA = dateDebutRes.getFullYear();
+        const dM = dateDebutRes.getMonth() + 1;
+        if (resAnneeActive < dA || (resAnneeActive === dA && m < dM)) {
+          avantDebut = true;
+        }
+      }
+
+      if (avantDebut && !paiement) {
+        moisCells.push('N/A');
+        continue;
+      }
+
+      totalDu += montantM;
+      if (paiement) {
+        totalPaye += parseFloat(paiement.montant_paye) || 0;
+        moisCells.push(
+          paiement.statut === 'paye'    ? 'Payé' :
+          paiement.statut === 'partiel' ? 'Partiel' : 'Non payé'
+        );
+      } else {
+        moisCells.push('Non payé');
+      }
+    }
+
+    const taux  = totalDu > 0 ? Math.round((totalPaye / totalDu) * 100) : 0;
+    const reste = Math.max(0, totalDu - totalPaye);
+
+    return [
+      r.nom          || '',
+      r.email        || '',
+      r.appartement  || '',
+      r.telephone    || '',
+      r.suspendu     ? 'Suspendu' : 'Actif',
+      ...moisCells,
+      totalPaye,
+      reste,
+      taux + '%'
+    ];
+  });
+
+  const csv = [headers, ...rows]
+    .map(r => r.map(c => `"${String(c).replace(/"/g,'""')}"`).join(','))
+    .join('\n');
+
+  const blob = new Blob(['\uFEFF' + csv], { type: 'text/csv;charset=utf-8;' });
+  const a    = document.createElement('a');
+  a.href     = URL.createObjectURL(blob);
+  const resNomExp = (currentUserMeta.residence_nom || 'Residence').replace(/\s+/g,'_');
+  a.download = `Residents_${resNomExp}_${resAnneeActive}.csv`;
+  a.click();
+}
 
 async function addResidentManually() {
   const nom   = document.getElementById('newResNom').value.trim();
