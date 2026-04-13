@@ -527,8 +527,8 @@ tr:hover td{background:#fafafa;}
               </tr>
             </thead>
             <tbody id="clientsBody">
-              <tr><td colspan="7" class="empty">Chargement...</td></tr>
-            </tbody>
+  <tr><td colspan="10" class="empty">Chargement...</td></tr>
+</tbody>
           </table>
         </div>
       </div>
@@ -1216,7 +1216,7 @@ function filterClients(query) {
   // Message si aucun résultat
   if (!filtered.length) {
     document.getElementById('clientsBody').innerHTML = 
-      '<tr><td colspan="9" class="empty">🔍 Aucun client trouvé pour "' + query + '"</td></tr>';
+  '<tr><td colspan="10" class="empty">🔍 Aucun client trouvé pour "' + query + '"</td></tr>';
   }
 }
 function buildClientsTable(data, tbody) {
@@ -1298,7 +1298,8 @@ function buildClientsTable(data, tbody) {
         + 'font-size:12px;text-align:center">'
         + (r.nb_apparts || '—') + '</td>'
       + '<td style="text-align:center">' + inscBadge + '</td>'
-      + '<td style="text-align:center">' + recCell + '</td>'
+ + '<td style="text-align:center">' + recCell + '</td>'
+      + '<td style="text-align:center">' + aboBadge + '</td>'
       + '<td>' + badge + '</td>'
       + '<td style="position:relative">'
         + '<button class="actions-trigger" '
@@ -1322,14 +1323,17 @@ function buildClientsTable(data, tbody) {
   }).join('');
 
   // Charger stats recouvrement après rendu
-  loadRecStatsForAdmin();
+  loadRecStatsForAdmin(data);
 }
 
 // ET AJOUTER cette nouvelle fonction :
-async function loadRecStatsForAdmin() {
+async function loadRecStatsForAdmin(sourceData) {
   const mois = new Date().toISOString().slice(0, 7);
 
-  const residences = allClientsData
+  // Utiliser sourceData si fourni, sinon allClientsData
+  var base = sourceData || allClientsData;
+
+  const residences = base
     .filter(function(r) {
       return r.secteur === 'residence' && r.actif;
     });
@@ -1697,7 +1701,7 @@ function renouvelerClient(id, nom) {
       .then(function(r) {
         var emailAdmin = r.data && r.data.email_admin;
         if (!emailAdmin) return;
-        var sbKey = (typeof SB_KEY !== 'undefined' && SB_KEY) ? SB_KEY : '';
+        var sbKey = SB_KEY || '';
         fetch('https://nwusjraxjfirsonbndfy.supabase.co/functions/v1/clever-handler', {
           method: 'POST',
           headers: {
