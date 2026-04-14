@@ -1753,8 +1753,10 @@ function filterRes(btn, f) {
 // ========================
 async function loadAndRenderAdmin() {
   document.getElementById('adminList').innerHTML = '<div class="empty-state">Chargement...</div>';
-  await loadTickets();
-  await loadPendingResidents();
+  await Promise.all([
+    loadTickets(),
+    loadPendingResidents()
+  ]);
   renderAdmin();
 }
 
@@ -1813,24 +1815,21 @@ async function approveResident(userId, email) {
   showToast('✅ ' + email + ' approuvé !', 'success');
   await loadAndRenderAdmin();
 
-  // Email de confirmation au résident
+    // Email de confirmation au résident
   try {
-    const resNom = currentUserMeta.residence_nom || 'votre résidence';
+    const resNom  = currentUserMeta.residence_nom  || 'Résidence';
     const resCode = currentUserMeta.residence_code || '';
-    await fetch('https://nwusjraxjfirsonbndfy.supabase.co/functions/v1/clever-handler', {
-      method: 'POST',
-      headers: {
-        'Content-Type':   'application/json',
-        'x-internal-key': 'NOUVELLE_CLE_SECRETE_2025',
-        'Authorization':  'Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im53dXNqcmF4amZpcnNvbmJuZGZ5Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzM2ODI5NjcsImV4cCI6MjA4OTI1ODk2N30.wqVBvGwrLv8bJfGuHJTWj1Upao63aTYQMcH-IIN7OGw'
-      },
-      body: JSON.stringify({
-        type:           'inscription_approuvee',
-        email:          email,
-        nom:            resNom,
-        code_residence: resCode
-      })
+    const result  = await callEdge({
+      type:           'inscription_approuvee',
+      email:          email,
+      nom:            resNom,
+      code_residence: resCode
     });
+    if (!result.success) {
+      console.warn('Email approbation échoué:', result.error);
+    } else {
+      console.log('✅ Email approbation envoyé à', email);
+    }
   } catch(e) { console.warn('Email approbation:', e.message); }
 }
 
@@ -2699,16 +2698,26 @@ async function loadSecteurFromResidence(resId) {
 // ========================
 async function callEdge(payload) {
   const ANON = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im53dXNqcmF4amZpcnNvbmJuZGZ5Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzM2ODI5NjcsImV4cCI6MjA4OTI1ODk2N30.wqVBvGwrLv8bJfGuHJTWj1Upao63aTYQMcH-IIN7OGw';
-  const resp = await fetch('https://nwusjraxjfirsonbndfy.supabase.co/functions/v1/clever-handler', {
-    method: 'POST',
-    headers: {
-      'Content-Type':   'application/json',
-      'x-internal-key': 'NOUVELLE_CLE_SECRETE_2025',
-      'Authorization':  `Bearer ${ANON}`
-    },
-    body: JSON.stringify(payload)
-  });
-  return await resp.json();
+  try {
+    const resp = await fetch('https://nwusjraxjfirsonbndfy.supabase.co/functions/v1/clever-handler', {
+      method: 'POST',
+      headers: {
+        'Content-Type':   'application/json',
+        'x-internal-key': 'NOUVELLE_CLE_SECRETE_2025',
+        'Authorization':  `Bearer ${ANON}`
+      },
+      body: JSON.stringify(payload)
+    });
+    if (!resp.ok) {
+      const text = await resp.text();
+      console.error('callEdge HTTP error:', resp.status, text);
+      return { success: false, error: `Erreur serveur (${resp.status})` };
+    }
+    return await resp.json();
+  } catch(e) {
+    console.error('callEdge network error:', e.message);
+    return { success: false, error: 'Erreur réseau : ' + e.message };
+  }
 }
 // ========================
 // GESTION RESIDENTS ANNUEL
@@ -3560,9 +3569,18 @@ async function addResidentManually() {
 
   if (btn) { btn.disabled = false; btn.textContent = 'Créer le compte →'; }
 
-  if (!result.success) {
-    errEl.textContent   = '❌ ' + (result.error?.message || result.error || 'Erreur création');
+    if (!result.success) {
+    const msg = result.error?.message || result.error || 'Erreur inconnue';
+    // Message lisible selon type d'erreur
+    if (msg.toLowerCase().includes('already')) {
+      errEl.textContent = '❌ Cet email est déjà utilisé. Vérifiez la liste des résidents.';
+    } else if (msg.toLowerCase().includes('network')) {
+      errEl.textContent = '❌ Erreur réseau. Vérifiez votre connexion et réessayez.';
+    } else {
+      errEl.textContent = '❌ ' + msg;
+    }
     errEl.style.display = 'block';
+    console.error('addResidentManually:', msg);
     return;
   }
 
@@ -3787,22 +3805,18 @@ async function loadAndRenderRecouvrement() {
     '<div class="empty-state">⏳ Chargement...</div>';
 
   try {
-    // 1. Récupérer la résidence de l'admin
-    const { data: myRes } = await db.from('residences')
-      .select('id,nom,code_residence')
-      .eq('admin_id', currentUser.id)
-      .single();
-
-    if (!myRes) {
+        // 1. Utiliser residence_id depuis currentUserMeta (déjà chargé)
+    const residenceId = currentUserMeta.residence_id;
+    if (!residenceId) {
       document.getElementById('recList').innerHTML =
-        '<div class="empty-state">❌ Résidence introuvable</div>';
+        '<div class="empty-state">❌ Résidence introuvable. Reconnectez-vous.</div>';
       return;
     }
 
     // 2. Récupérer tous les résidents validés
     const result = await callEdge({
       type: 'list_residents',
-      residence_id: myRes.id
+      residence_id: residenceId
     });
 
     if (!result.success) {
@@ -4003,13 +4017,9 @@ async function saveRecPaiement() {
     return;
   }
 
-  const { data: myRes } = await db.from('residences')
-    .select('id')
-    .eq('admin_id', currentUser.id)
-    .single();
-
-  if (!myRes) {
-    errEl.textContent   = '❌ Résidence introuvable';
+    const residenceId = currentUserMeta.residence_id;
+  if (!residenceId) {
+    errEl.textContent   = '❌ Résidence introuvable. Reconnectez-vous.';
     errEl.style.display = 'block';
     return;
   }
@@ -4018,7 +4028,7 @@ async function saveRecPaiement() {
 
   const payload = {
     resident_id:   residentId,
-    residence_id:  myRes.id,
+    residence_id:  residenceId,
     periode,
     statut,
     montant_paye:  montant,
@@ -4027,15 +4037,17 @@ async function saveRecPaiement() {
     note:          note || null
   };
 
-  // Upsert (insert ou update si déjà existant)
+    // Upsert (insert ou update si déjà existant)
   const { error } = await db.from('recouvrement')
     .upsert(payload, {
-      onConflict: 'resident_id,residence_id,periode'
+      onConflict: 'resident_id,residence_id,periode',
+      ignoreDuplicates: false
     });
 
   if (error) {
-    errEl.textContent   = '❌ ' + error.message;
+    errEl.textContent   = '❌ Erreur enregistrement : ' + error.message;
     errEl.style.display = 'block';
+    console.error('saveRecPaiement upsert:', error);
     return;
   }
 
