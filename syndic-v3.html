@@ -1631,7 +1631,7 @@ function showTab(tab, el) {
   if(tab==='compta') loadAndRenderCompta();
   if(tab==='residents') loadAndRenderResidents();
 if(tab==='recouvrement') {
-  initRecPeriode();
+  if (!recMoisActuel) initRecPeriode();
   loadAndRenderRecouvrement();
 }
 }
@@ -3284,9 +3284,9 @@ async function saveResMoisPaiement() {
   errEl.style.display = 'none';
   okEl.style.display  = 'none';
 
-  const { data: myRes } = await db.from('residences')
-    .select('id').eq('admin_id', currentUser.id).single();
-  if (!myRes) {
+  // Utiliser residence_id depuis currentUserMeta (évite une requête inutile)
+  const residenceId = currentUserMeta.residence_id;
+  if (!residenceId) {
     errEl.textContent   = '❌ Résidence introuvable';
     errEl.style.display = 'block';
     return;
@@ -3294,7 +3294,7 @@ async function saveResMoisPaiement() {
 
   const { error } = await db.from('recouvrement').upsert({
     resident_id:   resId,
-    residence_id:  myRes.id,
+    residence_id:  residenceId,
     periode,
     statut,
     montant_paye:  montant,
@@ -3316,7 +3316,7 @@ async function saveResMoisPaiement() {
   if (!resAllPaiements[resId]) resAllPaiements[resId] = {};
   resAllPaiements[resId][periode] = {
     resident_id:   resId,
-    residence_id:  myRes.id,
+    residence_id:  residenceId,
     periode,
     statut,
     montant_paye:  montant,
@@ -3918,7 +3918,7 @@ function renderRecList() {
       </div>
       <div style="display:flex;flex-direction:column;align-items:flex-end;gap:8px;flex-shrink:0">
         <span class="rec-badge ${statut}">${statutLabel}</span>
-        <button onclick="openRecModal('${r.id}','${(r.nom||'').replace(/'/g,"\\'")}','${r.appartement||''}')"
+            <button onclick="openRecModal('${r.id}','${(r.nom||'').replace(/'/g,"\\'")}','${(r.appartement||'').replace(/'/g,"\\'")}')"
           style="font-size:11px;padding:5px 12px;border-radius:var(--radius-sm);border:1px solid var(--border2);background:var(--surface);cursor:pointer;color:var(--muted);font-family:'DM Sans',sans-serif;white-space:nowrap">
           ✏️ Modifier
         </button>
