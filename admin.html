@@ -790,12 +790,46 @@ tr:hover td{background:#fafafa;}
 <script>
 
 // ── CONFIG ───────────────────────────────────────────
-const SB_URL = 'https://nwusjraxjfirsonbndfy.supabase.co';
-const SB_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im53dXNqcmF4amZpcnNvbmJuZGZ5Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzM2ODI5NjcsImV4cCI6MjA4OTI1ODk2N30.wqVBvGwrLv8bJfGuHJTWj1Upao63aTYQMcH-IIN7OGw';
-// Remplace par ta service_role key (Supabase → Settings → API)
-const SB_SERVICE = ''; // Supprimé — géré côté Edge Function
+const SB_URL      = 'https://nwusjraxjfirsonbndfy.supabase.co';
+const SB_KEY      = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im53dXNqcmF4amZpcnNvbmJuZGZ5Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzM2ODI5NjcsImV4cCI6MjA4OTI1ODk2N30.wqVBvGwrLv8bJfGuHJTWj1Upao63aTYQMcH-IIN7OGw';
+
+// ✅ Clé interne — une seule déclaration centralisée
+const INT_KEY     = 'RT-2026-xK9mP2vL7nQ4rZ8sW3jY6bV1cX5mA2pE0'; 
 
 const OWNER_EMAILS = ['idberka@live.com', 'redouane.idberka@impbrands.com'];
+
+// ── FONCTION CENTRALISÉE EDGE ─────────────────────────
+async function callEdge(payload) {
+  try {
+    const { data: { session } } = await db.auth.getSession();
+    const token = session?.access_token || SB_KEY;
+
+    const resp = await fetch(
+      SB_URL + '/functions/v1/clever-handler',
+      {
+        method:  'POST',
+        headers: {
+          'Content-Type':   'application/json',
+          'x-internal-key': INT_KEY,
+          'Authorization':  'Bearer ' + token
+        },
+        body: JSON.stringify(payload)
+      }
+    );
+
+    if (!resp.ok) {
+      const text = await resp.text();
+      console.error('[callEdge] HTTP ' + resp.status + ':', text);
+      return { success: false, error: 'Erreur serveur (' + resp.status + ')' };
+    }
+
+    return await resp.json();
+
+  } catch(e) {
+    console.error('[callEdge] Erreur réseau:', e.message);
+    return { success: false, error: 'Erreur réseau : ' + e.message };
+  }
+}
 
 // ── INIT ─────────────────────────────────────────────
 let db, currentSector = 'residence', currentAbo = 'mensuel', lastResult = null;
