@@ -3574,19 +3574,16 @@ async function addResidentManually() {
 
 // ── SUPPRIMER RÉSIDENT ───────────────────────────────────────
 async function deleteResident(id, email) {
-  if (!confirm(`⚠️ Supprimer ${email} ?\n\nIrréversible.`)) return;
-  // Optionnel : demander de taper "SUPPRIMER"
-  const confirm2 = prompt(`Tapez "SUPPRIMER" pour confirmer`);
+  if (!confirm(`⚠️ Supprimer ${email} ?\n\nCette action est irréversible.`)) return;
+  const confirm2 = prompt(`Tapez "SUPPRIMER" pour confirmer la suppression de ${email}`);
   if (confirm2 !== 'SUPPRIMER') {
     showToast('❌ Suppression annulée', 'error');
     return;
   }
-  const result = await callEdge({ 
-    type: 'delete_resident', 
-    admin_user_id: id 
+  const result = await callEdge({
+    type: 'delete_resident',
+    admin_user_id: id
   });
-  // ...
-}
   if (!result.success) {
     alert('❌ Erreur : ' + (result.error || 'Inconnue'));
     return;
@@ -3594,7 +3591,6 @@ async function deleteResident(id, email) {
   showToast('🗑️ Résident supprimé.', 'error');
   await loadAndRenderResidents();
 }
-
 // ── EXPORT CSV ANNUEL ────────────────────────────────────────
 function exportResCSV() {
   const validated = allResidents.filter(r => r.role === 'resident');
