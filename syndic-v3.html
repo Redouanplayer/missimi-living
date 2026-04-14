@@ -1272,9 +1272,10 @@ async function syncSecteurFromResidences() {
   try {
     if (currentRole === 'admin') {
       const { data } = await db.from('residences')
-        .select('secteur,nom,code_residence')
+        .select('id,secteur,nom,code_residence')
         .eq('admin_id', currentUser.id).single();
       if (data && data.secteur) {
+        currentUserMeta.residence_id   = data.id;
         currentUserMeta.secteur        = data.secteur;
         currentUserMeta.residence_nom  = data.nom;
         currentUserMeta.residence_code = data.code_residence;
@@ -1323,7 +1324,9 @@ async function doLogin() {
   }
   // Vérifier si la résidence est active (admin seulement)
   if (currentRole === 'admin') {
-    const { data: res } = await db.from('residences').select('actif,nom,code_residence,abonnement,date_expiration,secteur').eq('admin_id', currentUser.id).single();
+    const { data: res } = await db.from('residences')
+      .select('id,actif,nom,code_residence,abonnement,date_expiration,secteur')
+      .eq('admin_id', currentUser.id).single();
     if (res && !res.actif) {
       await db.auth.signOut();
       var expMsg = '';
@@ -1574,6 +1577,10 @@ function showApp() {
     const secteurActuel = currentUserMeta.secteur || 'residence';
 document.getElementById('tabRecouvrement').style.display =
   secteurActuel === 'residence' ? 'block' : 'none';
+
+if (secteurActuel === 'residence') {
+  initRecPeriode();
+}
 
     showTab('admin', tabAdmin);
 
@@ -3286,9 +3293,9 @@ async function saveResMoisPaiement() {
   okEl.style.display  = 'none';
 
   // Utiliser residence_id depuis currentUserMeta (évite une requête inutile)
-  const residenceId = currentUserMeta.residence_id;
+    const residenceId = currentUserMeta.residence_id;
   if (!residenceId) {
-    errEl.textContent   = '❌ Résidence introuvable';
+    errEl.textContent   = '❌ Résidence introuvable. Reconnectez-vous.';
     errEl.style.display = 'block';
     return;
   }
@@ -3600,6 +3607,9 @@ function exportResCSV() {
     alert('Aucun résident à exporter.');
     return;
   }
+  if (!resAnneeActive) {
+    resAnneeActive = new Date().getFullYear();
+  }
 
   const moisNoms = ['Jan','Fév','Mar','Avr','Mai','Jun',
                     'Jul','Aoû','Sep','Oct','Nov','Déc'];
@@ -3710,7 +3720,7 @@ function initRecPeriode() {
   const anneeEl   = document.getElementById('recAnnee');
   const montantEl = document.getElementById('recMontantMensuel');
 
-  if (!moisEl || !anneeEl || !montantEl) return; // ← AJOUT
+  if (!moisEl || !anneeEl || !montantEl) return;
 
   const moisNoms = ['Janvier','Février','Mars','Avril','Mai','Juin',
                     'Juillet','Août','Septembre','Octobre','Novembre','Décembre'];
@@ -3730,15 +3740,19 @@ function initRecPeriode() {
   recMoisActuel    = moisEl.value;
   recAnneeActuelle = anneeEl.value;
 
-  const saved = localStorage.getItem('rec_montant_' + currentUser?.id);
-  if (saved) {
-    recMontantMensuel  = parseFloat(saved);
-    montantEl.value    = saved;
+  // Priorité : config résidence > localStorage
+  const montantConfig = resConfigRes?.montant_mensuel;
+  const saved         = localStorage.getItem('rec_montant_' + currentUser?.id);
+  if (montantConfig) {
+    recMontantMensuel = parseFloat(montantConfig);
+    montantEl.value   = montantConfig;
+  } else if (saved) {
+    recMontantMensuel = parseFloat(saved);
+    montantEl.value   = saved;
   } else {
-    montantEl.value    = recMontantMensuel;
+    montantEl.value   = recMontantMensuel;
   }
 }
-
 function onRecPeriodeChange() {
   recMoisActuel    = document.getElementById('recMois').value;
   recAnneeActuelle = document.getElementById('recAnnee').value;
@@ -3797,7 +3811,14 @@ async function loadAndRenderRecouvrement() {
       return;
     }
 
-    recResidents = (result.residents || []).filter(r => r.role === 'resident');
+        recResidents = (result.residents || []).filter(r => r.role === 'resident');
+
+    // Synchroniser montant mensuel depuis config résidence
+    if (resConfigRes?.montant_mensuel) {
+      recMontantMensuel = parseFloat(resConfigRes.montant_mensuel);
+      const montantEl = document.getElementById('recMontantMensuel');
+      if (montantEl) montantEl.value = recMontantMensuel;
+    }
 
     // 3. Récupérer les paiements du mois/année sélectionné
     const periode = `${recAnneeActuelle}-${recMoisActuel}`;
