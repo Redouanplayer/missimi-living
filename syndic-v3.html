@@ -2945,7 +2945,7 @@ function renderResAnnuel() {
           <span style="font-size:16px;opacity:0.4" title="Non dû">✅</span>
         </td>`;
         // Ne compte pas dans les totaux
-      } else if (paiement) {
+            } else if (paiement) {
         // Paiement enregistré
         totalDu  += montantM;
         totalPaye += parseFloat(paiement.montant_paye) || 0;
@@ -2964,7 +2964,7 @@ function renderResAnnuel() {
         const title = `${icon} ${montantAff}${dateAff ? ' · ' + dateAff : ''}`;
 
         cellHtml = `<td style="padding:4px;text-align:center">
-          <span onclick="openResMoisModal('${r.id}','${periodeStr}','${(r.nom||'').replace(/'/g,"\\'")}','${r.appartement||''}')"
+          <span onclick="openResMoisModal('${r.id}','${periodeStr}','${(r.nom||'').replace(/'/g,"\\'")}','${(r.appartement||'').replace(/'/g,"\\'")}')"
             style="font-size:16px;cursor:pointer;display:inline-block;transition:transform 0.1s"
             onmouseover="this.style.transform='scale(1.3)'"
             onmouseout="this.style.transform='scale(1)'"
@@ -2974,7 +2974,7 @@ function renderResAnnuel() {
         // Futur — cliquable pour anticipé
         totalDu += montantM;
         cellHtml = `<td style="padding:4px;text-align:center">
-          <span onclick="openResMoisModal('${r.id}','${periodeStr}','${(r.nom||'').replace(/'/g,"\\'")}','${r.appartement||''}')"
+          <span onclick="openResMoisModal('${r.id}','${periodeStr}','${(r.nom||'').replace(/'/g,"\\'")}','${(r.appartement||'').replace(/'/g,"\\'")}')"
             style="font-size:13px;cursor:pointer;color:var(--hint);display:inline-block;transition:transform 0.1s"
             onmouseover="this.style.transform='scale(1.2)';this.style.color='var(--blue)'"
             onmouseout="this.style.transform='scale(1)';this.style.color='var(--hint)'"
@@ -2984,14 +2984,14 @@ function renderResAnnuel() {
         // Mois passé non payé
         totalDu += montantM;
         cellHtml = `<td style="padding:4px;text-align:center">
-          <span onclick="openResMoisModal('${r.id}','${periodeStr}','${(r.nom||'').replace(/'/g,"\\'")}','${r.appartement||''}')"
+          <span onclick="openResMoisModal('${r.id}','${periodeStr}','${(r.nom||'').replace(/'/g,"\\'")}','${(r.appartement||'').replace(/'/g,"\\'")}')"
             style="font-size:16px;cursor:pointer;display:inline-block;transition:transform 0.1s"
             onmouseover="this.style.transform='scale(1.3)'"
             onmouseout="this.style.transform='scale(1)'"
             title="Non payé — cliquer pour enregistrer">❌</span>
         </td>`;
       }
-      cellules.push(cellHtml);
+        cellules.push(cellHtml);
     }
 
     // Couleur ligne selon taux
@@ -3036,9 +3036,9 @@ function renderResAnnuel() {
       <td style="padding:6px 10px;text-align:right;font-size:12px;font-weight:700;color:${reste > 0 ? 'var(--red-text)' : 'var(--green-text)'};white-space:nowrap">
         ${reste.toLocaleString('fr-MA')} DH
       </td>
-      <td style="padding:6px 10px;text-align:center;position:relative">
+            <td style="padding:6px 10px;text-align:center;position:relative">
         <button
-          onclick="openResMenu(event,'${r.id}',${JSON.stringify(r).replace(/'/g,"&apos;")})"
+          onclick="openResMenu(event,'${r.id}')"
           style="background:var(--bg);border:1px solid var(--border2);border-radius:6px;padding:4px 10px;cursor:pointer;font-size:16px;color:var(--muted);font-family:'DM Sans',sans-serif">
           ⋯
         </button>
@@ -3147,19 +3147,21 @@ function filterResidents(query) {
 }
 
 // ── MENU ⋯ ACTIONS ───────────────────────────────────────────
-function openResMenu(event, resId, resData) {
+function openResMenu(event, resId) {
   event.stopPropagation();
   resMenuCurrentId   = resId;
-  resMenuCurrentData = resData;
+  resMenuCurrentData = allResidents.find(r => r.id === resId) || null;
 
-  const menu   = document.getElementById('resActionsMenu');
-  const nomEl  = document.getElementById('resMenuNom');
-  const suspBtn= document.getElementById('resMenuSuspendreBtn');
-  const reactBtn=document.getElementById('resMenuReactiverBtn');
+  if (!resMenuCurrentData) return;
 
-  if (nomEl) nomEl.textContent = resData.nom || resData.email || 'Résident';
+  const menu    = document.getElementById('resActionsMenu');
+  const nomEl   = document.getElementById('resMenuNom');
+  const suspBtn = document.getElementById('resMenuSuspendreBtn');
+  const reactBtn= document.getElementById('resMenuReactiverBtn');
 
-  const suspendu = resData.suspendu || false;
+  if (nomEl) nomEl.textContent = resMenuCurrentData.nom || resMenuCurrentData.email || 'Résident';
+
+  const suspendu = resMenuCurrentData.suspendu || false;
   if (suspBtn)  suspBtn.style.display  = suspendu ? 'none'  : 'block';
   if (reactBtn) reactBtn.style.display = suspendu ? 'block' : 'none';
 
@@ -3174,7 +3176,6 @@ function openResMenu(event, resId, resData) {
     document.addEventListener('click', closeResMenu, { once: true });
   }, 10);
 }
-
 function closeResMenu() {
   const menu = document.getElementById('resActionsMenu');
   if (menu) menu.style.display = 'none';
