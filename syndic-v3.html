@@ -2863,10 +2863,10 @@ async function loadAndRenderResidents() {
 
     // Résidents
     const result = await callEdge({
-      type: 'list_residents',
-      residence_id: myRes.id
-    });
-
+  type:         'delete_resident',
+  admin_user_id: id,
+  residence_id:  currentUserMeta.residence_id  // ✅ Ajout obligatoire
+});
     if (!result.success) {
       if (tbody) tbody.innerHTML =
         `<tr><td colspan="16" style="padding:32px;text-align:center;color:var(--red-text)">❌ ${result.error}</td></tr>`;
