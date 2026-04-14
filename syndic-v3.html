@@ -1482,7 +1482,7 @@ async function doRegister() {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
-          'x-internal-key': 'NOUVELLE_CLE_SECRETE_2025',
+          'x-internal-key': 'RT-2026-xK9mP2vL7nQ4rZ8sW3jY6bV1cX5mA2pE0',
           'Authorization': 'Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im53dXNqcmF4amZpcnNvbmJuZGZ5Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzM2ODI5NjcsImV4cCI6MjA4OTI1ODk2N30.wqVBvGwrLv8bJfGuHJTWj1Upao63aTYQMcH-IIN7OGw'
         },
         body: JSON.stringify({
@@ -1522,7 +1522,7 @@ async function doRegister() {
         method: 'POST',
         headers: {
           'Content-Type':   'application/json',
-          'x-internal-key': 'NOUVELLE_CLE_SECRETE_2025',
+          'x-internal-key': 'RT-2026-xK9mP2vL7nQ4rZ8sW3jY6bV1cX5mA2pE0',
           'Authorization':  'Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im53dXNqcmF4amZpcnNvbmJuZGZ5Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzM2ODI5NjcsImV4cCI6MjA4OTI1ODk2N30.wqVBvGwrLv8bJfGuHJTWj1Upao63aTYQMcH-IIN7OGw'
         },
         body: JSON.stringify({
@@ -1864,7 +1864,7 @@ async function rejectResident(userId, email) {
       method: 'POST',
       headers: {
         'Content-Type':   'application/json',
-        'x-internal-key': 'NOUVELLE_CLE_SECRETE_2025',
+        'x-internal-key': 'RT-2026-xK9mP2vL7nQ4rZ8sW3jY6bV1cX5mA2pE0',
         'Authorization':  'Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im53dXNqcmF4amZpcnNvbmJuZGZ5Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzM2ODI5NjcsImV4cCI6MjA4OTI1ODk2N30.wqVBvGwrLv8bJfGuHJTWj1Upao63aTYQMcH-IIN7OGw'
       },
       body: JSON.stringify({
@@ -1992,7 +1992,7 @@ async function submitTicket() {
 
     await fetch('https://nwusjraxjfirsonbndfy.supabase.co/functions/v1/clever-handler', {
       method: 'POST',
-      headers: {'Content-Type':'application/json','x-internal-key': 'NOUVELLE_CLE_SECRETE_2025','Authorization':'Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im53dXNqcmF4amZpcnNvbmJuZGZ5Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzM2ODI5NjcsImV4cCI6MjA4OTI1ODk2N30.wqVBvGwrLv8bJfGuHJTWj1Upao63aTYQMcH-IIN7OGw'},
+      headers: {'Content-Type':'application/json','x-internal-key': 'RT-2026-xK9mP2vL7nQ4rZ8sW3jY6bV1cX5mA2pE0','Authorization':'Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im53dXNqcmF4amZpcnNvbmJuZGZ5Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzM2ODI5NjcsImV4cCI6MjA4OTI1ODk2N30.wqVBvGwrLv8bJfGuHJTWj1Upao63aTYQMcH-IIN7OGw'},
       body: JSON.stringify({
         type:            urgence === 'Haute' ? 'ticket_urgent' : 'nouvelle_reclamation',
         email:           'lookup',
@@ -2153,7 +2153,7 @@ async function notifyProReponse(ticket, message) {
       method: 'POST',
       headers: {
         'Content-Type':   'application/json',
-        'x-internal-key': 'NOUVELLE_CLE_SECRETE_2025',
+        'x-internal-key': 'RT-2026-xK9mP2vL7nQ4rZ8sW3jY6bV1cX5mA2pE0',
         'Authorization':  'Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im53dXNqcmF4amZpcnNvbmJuZGZ5Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzM2ODI5NjcsImV4cCI6MjA4OTI1ODk2N30.wqVBvGwrLv8bJfGuHJTWj1Upao63aTYQMcH-IIN7OGw'
       },
       body: JSON.stringify({
@@ -2496,10 +2496,18 @@ async function saveCompta() {
 
 async function loadAndRenderCompta() {
   const resId = currentUserMeta.residence_id || null;
-  let query = db.from('comptabilite').select('*').order('date_op', { ascending: false });
+  let query = db.from('comptabilite')
+    .select('*')
+    .order('date_op', { ascending: false })
+    .limit(500);
   if (resId) query = query.eq('residence_id', resId);
   const { data, error } = await query;
-  if (!error && data) comptaData = data;
+  if (error) {
+    console.error('loadAndRenderCompta:', error.message);
+    showToast('❌ Erreur chargement comptabilité : ' + error.message, 'error');
+    return;
+  }
+  if (data) comptaData = data;
   comptaFiltered = [...comptaData];
   renderCompta();
 }
@@ -2720,7 +2728,7 @@ async function callEdge(payload) {
       method: 'POST',
       headers: {
         'Content-Type':   'application/json',
-        'x-internal-key': 'NOUVELLE_CLE_SECRETE_2025',
+        'x-internal-key': 'RT-2026-xK9mP2vL7nQ4rZ8sW3jY6bV1cX5mA2pE0',
         'Authorization':  `Bearer ${ANON}`
       },
       body: JSON.stringify(payload)
@@ -3986,12 +3994,12 @@ async function loadAndRenderRecouvrement() {
       if (montantEl) montantEl.value = recMontantMensuel;
     }
 
-    // 3. Récupérer les paiements du mois/année sélectionné
+        // 3. Récupérer les paiements du mois/année sélectionné
     const periode = `${recAnneeActuelle}-${recMoisActuel}`;
     const { data: paiements, error: pErr } = await db
       .from('recouvrement')
       .select('*')
-      .eq('residence_id', myRes.id)
+      .eq('residence_id', residenceId)
       .eq('periode', periode);
 
     if (pErr) console.warn('Erreur paiements:', pErr.message);
