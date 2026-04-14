@@ -568,10 +568,17 @@
         <div class="card-title" style="margin-bottom:4px">Gérer l'annuaire</div>
         <div class="card-sub">Ajouter ou supprimer un professionnel</div>
         <div class="fr2">
-          <div><label class="lbl">Nom <span class="req">*</span></label><input type="text" id="proNom" placeholder="Hassan Benmoussa"></div>
-          <div><label class="lbl">Téléphone <span class="req">*</span></label><input type="tel" id="proTel" placeholder="06 61 23 45 67"></div>
-          <div><label class="lbl">Email (notifications)</label><input type="email" id="proEmail" placeholder="pro@exemple.com"></div>
-        </div>
+  <div><label class="lbl">Nom <span class="req">*</span></label>
+    <input type="text" id="proNom" placeholder="Hassan Benmoussa">
+  </div>
+  <div><label class="lbl">Téléphone <span class="req">*</span></label>
+    <input type="tel" id="proTel" placeholder="06 61 23 45 67">
+  </div>
+</div>
+<div class="fg">
+  <label class="lbl">Email (notifications)</label>
+  <input type="email" id="proEmail" placeholder="pro@exemple.com">
+</div>
         <div class="fr2">
           <div>
             <label class="lbl">Catégorie <span class="req">*</span></label>
@@ -1624,11 +1631,7 @@ function showTab(tab, el) {
   if(tab==='compta') loadAndRenderCompta();
   if(tab==='residents') loadAndRenderResidents();
 if(tab==='recouvrement') {
-  if (!recMoisActuel) initRecPeriode();
-  if (!recMoisActuel || !recAnneeActuelle) {
-    console.warn('Période non initialisée');
-    return;
-  }
+  initRecPeriode();
   loadAndRenderRecouvrement();
 }
 }
@@ -3571,8 +3574,19 @@ async function addResidentManually() {
 
 // ── SUPPRIMER RÉSIDENT ───────────────────────────────────────
 async function deleteResident(id, email) {
-  if (!confirm(`Supprimer le compte de ${email} ?\n\nCette action est irréversible.`)) return;
-  const result = await callEdge({ type: 'delete_resident', admin_user_id: id });
+  if (!confirm(`⚠️ Supprimer ${email} ?\n\nIrréversible.`)) return;
+  // Optionnel : demander de taper "SUPPRIMER"
+  const confirm2 = prompt(`Tapez "SUPPRIMER" pour confirmer`);
+  if (confirm2 !== 'SUPPRIMER') {
+    showToast('❌ Suppression annulée', 'error');
+    return;
+  }
+  const result = await callEdge({ 
+    type: 'delete_resident', 
+    admin_user_id: id 
+  });
+  // ...
+}
   if (!result.success) {
     alert('❌ Erreur : ' + (result.error || 'Inconnue'));
     return;
