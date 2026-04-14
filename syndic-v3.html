@@ -1337,6 +1337,7 @@ async function doLogin() {
       return;
     }
     if (res) {
+      currentUserMeta.residence_id   = res.id;
       currentUserMeta.residence_nom  = res.nom;
       currentUserMeta.residence_code = res.code_residence || currentUserMeta.residence_code;
       if (res.secteur) { currentUserMeta.secteur = res.secteur; applyVocabulaire(res.secteur); }
@@ -2984,11 +2985,11 @@ function renderResAnnuel() {
         // Mois passé non payé
         totalDu += montantM;
         cellHtml = `<td style="padding:4px;text-align:center">
-          <span onclick="openResMoisModal('${r.id}','${periodeStr}','${(r.nom||'').replace(/'/g,"\\'")}','${(r.appartement||'').replace(/'/g,"\\'")}')"
-            style="font-size:16px;cursor:pointer;display:inline-block;transition:transform 0.1s"
-            onmouseover="this.style.transform='scale(1.3)'"
-            onmouseout="this.style.transform='scale(1)'"
-            title="Non payé — cliquer pour enregistrer">❌</span>
+            <span onclick="openResMoisModal('${r.id}','${periodeStr}','${(r.nom||'').replace(/'/g,"\\'")}','${(r.appartement||'').replace(/'/g,"\\'")}')"
+              style="font-size:16px;cursor:pointer;display:inline-block;transition:transform 0.1s"
+              onmouseover="this.style.transform='scale(1.3)'"
+              onmouseout="this.style.transform='scale(1)'"
+              title="Non payé — cliquer pour enregistrer">❌</span>
         </td>`;
       }
         cellules.push(cellHtml);
