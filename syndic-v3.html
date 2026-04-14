@@ -879,6 +879,23 @@
         <label class="lbl">Note / Référence</label>
         <input type="text" id="resMoisNote" placeholder="Ex : Reçu n°123...">
       </div>
+            <!-- PAIEMENT GLOBAL MULTI-MOIS -->
+      <div style="margin-top:16px;padding:14px;background:var(--blue-bg);border:1px solid var(--blue-border);border-radius:var(--radius-sm)">
+        <label class="lbl" style="color:var(--blue-text)">💰 Paiement global (plusieurs mois d'un coup)</label>
+        <div style="display:flex;gap:8px;margin-top:6px;align-items:center">
+          <input type="number" id="resMoisGlobalMontant" placeholder="Ex : 8400" min="0" step="1"
+            style="flex:1;border-color:var(--blue-border);font-weight:600">
+          <span style="font-size:12px;color:var(--blue-text);white-space:nowrap">DH total</span>
+        </div>
+        <div id="resMoisNbMois" style="font-size:12px;color:var(--muted);margin-top:6px;font-weight:600">
+          0 mois couverts
+        </div>
+        <div id="resMoisGlobalInfo" style="font-size:11px;color:var(--blue-text);margin-top:6px;line-height:1.6;display:none"></div>
+        <div style="font-size:11px;color:var(--muted);margin-top:6px">
+          💡 Laissez vide pour enregistrer un seul mois
+        </div>
+      </div>
+
       <div class="alert alert-error" id="resMoisErr"></div>
       <div class="alert alert-success" id="resMoisOk"></div>
       <div class="btn-row">
@@ -2932,7 +2949,7 @@ function renderResAnnuel() {
     let totalDu    = 0;
     let nbPayes    = 0;
 
-    const cellules = [];
+        const cellules = [];
     for (let m = 1; m <= 12; m++) {
       const periodeStr = `${resAnneeActive}-${String(m).padStart(2,'0')}`;
       const montantM   = getMontantPourMois(resAnneeActive, m);
@@ -2957,28 +2974,33 @@ function renderResAnnuel() {
       let statut   = paiement?.statut || null;
 
       if (avantDebut && !paiement) {
-        // Avant date début = non dû = vert automatique
+        // Avant date début = non dû = gris automatique
         cellHtml = `<td style="padding:4px;text-align:center">
-          <span style="font-size:16px;opacity:0.4" title="Non dû">✅</span>
+          <span style="font-size:16px;opacity:0.3" title="Non dû avant date début">—</span>
         </td>`;
         // Ne compte pas dans les totaux
-            } else if (paiement) {
-        // Paiement enregistré
-        totalDu  += montantM;
+
+      } else if (paiement) {
+        // Paiement enregistré (y compris paiements anticipés futurs)
+        totalDu   += montantM;
         totalPaye += parseFloat(paiement.montant_paye) || 0;
         if (statut === 'paye') nbPayes++;
 
-        const icon  = statut === 'paye' ? '✅' : statut === 'partiel' ? '⚠️' : '❌';
-        const color = statut === 'paye'
-          ? 'var(--green-text)' : statut === 'partiel'
-          ? 'var(--yellow-text)' : 'var(--red-text)';
+        const icon = statut === 'paye' ? '✅' : statut === 'partiel' ? '⚠️' : '❌';
+
         const montantAff = paiement.montant_paye
           ? parseFloat(paiement.montant_paye).toLocaleString('fr-MA') + ' DH'
           : '';
         const dateAff = paiement.date_paiement
           ? new Date(paiement.date_paiement).toLocaleDateString('fr-FR',{day:'numeric',month:'short'})
           : '';
-        const title = `${icon} ${montantAff}${dateAff ? ' · ' + dateAff : ''}`;
+
+        // Badge "anticipé" si mois futur payé
+        const anticipeBadge = estFutur && statut === 'paye'
+          ? `<span style="font-size:8px;background:var(--blue-bg);color:var(--blue-text);border-radius:4px;padding:1px 3px;display:block;margin-top:1px">anticipé</span>`
+          : '';
+
+        const title = `${icon} ${montantAff}${dateAff ? ' · ' + dateAff : ''}${estFutur ? ' · Paiement anticipé' : ''}`;
 
         cellHtml = `<td style="padding:4px;text-align:center">
           <span onclick="openResMoisModal('${r.id}','${periodeStr}','${(r.nom||'').replace(/'/g,"\\'")}','${(r.appartement||'').replace(/'/g,"\\'")}')"
@@ -2986,9 +3008,11 @@ function renderResAnnuel() {
             onmouseover="this.style.transform='scale(1.3)'"
             onmouseout="this.style.transform='scale(1)'"
             title="${title}">${icon}</span>
+          ${anticipeBadge}
         </td>`;
+
       } else if (estFutur) {
-        // Futur — cliquable pour anticipé
+        // Futur non payé — cliquable pour anticipé
         totalDu += montantM;
         cellHtml = `<td style="padding:4px;text-align:center">
           <span onclick="openResMoisModal('${r.id}','${periodeStr}','${(r.nom||'').replace(/'/g,"\\'")}','${(r.appartement||'').replace(/'/g,"\\'")}')"
@@ -2997,18 +3021,19 @@ function renderResAnnuel() {
             onmouseout="this.style.transform='scale(1)';this.style.color='var(--hint)'"
             title="Paiement anticipé possible">—</span>
         </td>`;
+
       } else {
         // Mois passé non payé
         totalDu += montantM;
         cellHtml = `<td style="padding:4px;text-align:center">
-            <span onclick="openResMoisModal('${r.id}','${periodeStr}','${(r.nom||'').replace(/'/g,"\\'")}','${(r.appartement||'').replace(/'/g,"\\'")}')"
-              style="font-size:16px;cursor:pointer;display:inline-block;transition:transform 0.1s"
-              onmouseover="this.style.transform='scale(1.3)'"
-              onmouseout="this.style.transform='scale(1)'"
-              title="Non payé — cliquer pour enregistrer">❌</span>
+          <span onclick="openResMoisModal('${r.id}','${periodeStr}','${(r.nom||'').replace(/'/g,"\\'")}','${(r.appartement||'').replace(/'/g,"\\'")}')"
+            style="font-size:16px;cursor:pointer;display:inline-block;transition:transform 0.1s"
+            onmouseover="this.style.transform='scale(1.3)'"
+            onmouseout="this.style.transform='scale(1)'"
+            title="Non payé — cliquer pour enregistrer">❌</span>
         </td>`;
       }
-        cellules.push(cellHtml);
+      cellules.push(cellHtml);
     }
 
     // Couleur ligne selon taux
@@ -3266,11 +3291,53 @@ function openResMoisModal(resId, periode, nom, apt) {
 
   selectResMoisStatut(existing?.statut || 'paye');
 
+  // ── PAIEMENT GLOBAL MULTI-MOIS ──────────────────────────
+  const montantParMois = montantM;
+  const globalEl = document.getElementById('resMoisGlobalMontant');
+  const nbMoisEl = document.getElementById('resMoisNbMois');
+  const infoEl   = document.getElementById('resMoisGlobalInfo');
+
+  if (globalEl) globalEl.value = '';
+  if (nbMoisEl) nbMoisEl.textContent = '0 mois couverts';
+  if (infoEl)   infoEl.style.display = 'none';
+
+  // Calcul dynamique nb mois couverts
+  if (globalEl) {
+    globalEl.oninput = function() {
+      const total = parseFloat(this.value) || 0;
+      const nb    = total > 0 ? Math.floor(total / montantParMois) : 0;
+      const reste = total > 0 ? (total % montantParMois).toFixed(2) : 0;
+      if (nbMoisEl) {
+        nbMoisEl.textContent = nb > 0
+          ? `✅ ${nb} mois couverts${parseFloat(reste) > 0 ? ' · Reste : ' + reste + ' DH' : ''}`
+          : '0 mois couverts';
+        nbMoisEl.style.color = nb > 0 ? 'var(--green-text)' : 'var(--muted)';
+      }
+      if (infoEl) {
+        if (nb > 0) {
+          // Calculer les mois couverts
+          const moisCouverts = [];
+          let a = parseInt(annee), m2 = parseInt(mois);
+          for (let i = 0; i < nb; i++) {
+            moisCouverts.push(
+              moisNoms[m2 - 1] + ' ' + a
+            );
+            m2++;
+            if (m2 > 12) { m2 = 1; a++; }
+          }
+          infoEl.innerHTML = `📅 Mois couverts : <strong>${moisCouverts.join(', ')}</strong>`;
+          infoEl.style.display = 'block';
+        } else {
+          infoEl.style.display = 'none';
+        }
+      }
+    };
+  }
+
   document.getElementById('resMoisErr').style.display = 'none';
   document.getElementById('resMoisOk').style.display  = 'none';
   document.getElementById('resMoisModal').classList.add('open');
 }
-
 function selectResMoisStatut(statut) {
   document.getElementById('resMoisStatut').value = statut;
   const styles = {
@@ -3289,52 +3356,138 @@ function closeResMoisModal() {
 }
 
 async function saveResMoisPaiement() {
-  const resId   = document.getElementById('resMoisResId').value;
-  const periode = document.getElementById('resMoisPeriode').value;
-  const statut  = document.getElementById('resMoisStatut').value;
-  const montant = parseFloat(document.getElementById('resMoisMontant').value) || 0;
-  const date    = document.getElementById('resMoisDate').value;
-  const mode    = document.getElementById('resMoisMode').value;
-  const note    = document.getElementById('resMoisNote').value.trim();
-  const errEl   = document.getElementById('resMoisErr');
-  const okEl    = document.getElementById('resMoisOk');
+  const resId        = document.getElementById('resMoisResId').value;
+  const periodeDebut = document.getElementById('resMoisPeriode').value;
+  const statut       = document.getElementById('resMoisStatut').value;
+  const montant      = parseFloat(document.getElementById('resMoisMontant').value) || 0;
+  const date         = document.getElementById('resMoisDate').value;
+  const mode         = document.getElementById('resMoisMode').value;
+  const note         = document.getElementById('resMoisNote').value.trim();
+  const globalMontant= parseFloat(document.getElementById('resMoisGlobalMontant')?.value) || 0;
+  const errEl        = document.getElementById('resMoisErr');
+  const okEl         = document.getElementById('resMoisOk');
   errEl.style.display = 'none';
   okEl.style.display  = 'none';
 
-  // Utiliser residence_id depuis currentUserMeta (évite une requête inutile)
-    const residenceId = currentUserMeta.residence_id;
+  const residenceId = currentUserMeta.residence_id;
   if (!residenceId) {
     errEl.textContent   = '❌ Résidence introuvable. Reconnectez-vous.';
     errEl.style.display = 'block';
     return;
   }
 
+  const [anneeDebut, moisDebut] = periodeDebut.split('-').map(Number);
+
+  // ── CAS PAIEMENT GLOBAL MULTI-MOIS ──────────────────────
+  if (globalMontant > 0) {
+    const montantParMois = getMontantPourMois(anneeDebut, moisDebut);
+    const nbMois         = Math.floor(globalMontant / montantParMois);
+    const reste          = parseFloat((globalMontant % montantParMois).toFixed(2));
+
+    if (nbMois === 0) {
+      errEl.textContent   = `⚠️ Montant insuffisant. Minimum : ${montantParMois} DH pour 1 mois.`;
+      errEl.style.display = 'block';
+      return;
+    }
+
+    // Construire les upserts pour chaque mois
+    const upserts = [];
+    let a = anneeDebut, m = moisDebut;
+    for (let i = 0; i < nbMois; i++) {
+      const periodeStr = `${a}-${String(m).padStart(2,'0')}`;
+      const montantMois = getMontantPourMois(a, m);
+      // Dernier mois : ajouter le reste si > 0
+      const montantFinal = (i === nbMois - 1 && reste > 0)
+        ? montantMois + reste
+        : montantMois;
+
+      upserts.push({
+        resident_id:   resId,
+        residence_id:  residenceId,
+        periode:       periodeStr,
+        statut:        'paye',
+        montant_paye:  montantFinal,
+        date_paiement: date || null,
+        mode_paiement: mode,
+        note:          note
+          ? `Paiement global ${globalMontant} DH · ${note}`
+          : `Paiement global ${globalMontant} DH · ${nbMois} mois`
+      });
+
+      // Mettre à jour cache local
+      if (!resAllPaiements[resId]) resAllPaiements[resId] = {};
+      resAllPaiements[resId][periodeStr] = upserts[upserts.length - 1];
+
+      // Incrémenter mois
+      m++;
+      if (m > 12) { m = 1; a++; }
+    }
+
+    // Upsert en batch
+    const { error } = await db.from('recouvrement')
+      .upsert(upserts, {
+        onConflict:       'resident_id,residence_id,periode',
+        ignoreDuplicates: false
+      });
+
+    if (error) {
+      errEl.textContent   = '❌ Erreur enregistrement : ' + error.message;
+      errEl.style.display = 'block';
+      console.error('saveResMoisPaiement multi:', error);
+      return;
+    }
+
+    const moisNoms = ['Janvier','Février','Mars','Avril','Mai','Juin',
+                      'Juillet','Août','Septembre','Octobre','Novembre','Décembre'];
+    const dernierMois = (() => {
+      let fa = anneeDebut, fm = moisDebut + nbMois - 1;
+      while (fm > 12) { fm -= 12; fa++; }
+      return moisNoms[fm - 1] + ' ' + fa;
+    })();
+
+    okEl.innerHTML = `✅ ${nbMois} mois enregistrés !<br>
+      <small>De <strong>${moisNoms[moisDebut-1]} ${anneeDebut}</strong>
+      à <strong>${dernierMois}</strong> · ${globalMontant} DH</small>`;
+    okEl.style.display = 'block';
+
+    setTimeout(() => {
+      closeResMoisModal();
+      renderResAnnuel();
+    }, 1500);
+    return;
+  }
+
+  // ── CAS PAIEMENT MOIS UNIQUE ─────────────────────────────
   const { error } = await db.from('recouvrement').upsert({
     resident_id:   resId,
     residence_id:  residenceId,
-    periode,
+    periode:       periodeDebut,
     statut,
     montant_paye:  montant,
     date_paiement: date || null,
     mode_paiement: mode,
     note:          note || null
-  }, { onConflict: 'resident_id,residence_id,periode' });
+  }, {
+    onConflict:       'resident_id,residence_id,periode',
+    ignoreDuplicates: false
+  });
 
   if (error) {
-    errEl.textContent   = '❌ ' + error.message;
+    errEl.textContent   = '❌ Erreur enregistrement : ' + error.message;
     errEl.style.display = 'block';
+    console.error('saveResMoisPaiement single:', error);
     return;
   }
 
   okEl.textContent   = '✅ Paiement enregistré !';
   okEl.style.display = 'block';
 
-  // Mettre à jour le cache local
+  // Mettre à jour cache local
   if (!resAllPaiements[resId]) resAllPaiements[resId] = {};
-  resAllPaiements[resId][periode] = {
+  resAllPaiements[resId][periodeDebut] = {
     resident_id:   resId,
     residence_id:  residenceId,
-    periode,
+    periode:       periodeDebut,
     statut,
     montant_paye:  montant,
     date_paiement: date || null,
@@ -3347,7 +3500,6 @@ async function saveResMoisPaiement() {
     renderResAnnuel();
   }, 800);
 }
-
 // ── SUSPENDRE ────────────────────────────────────────────────
 function closeSuspendreModal() {
   document.getElementById('suspendreModal').classList.remove('open');
