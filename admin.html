@@ -1547,12 +1547,18 @@ function deleteClient(id, nom, adminId) {
   document.getElementById(
     'kpiExpiration').textContent     = expBientot;
 
-  const { data: counts } = await db
-    .rpc('count_residents_by_residence');
-  const total = (counts || [])
-    .reduce((s, r) => s + parseInt(r.count || 0), 0);
-  document.getElementById('kpiResidents').textContent =
-    total.toLocaleString('fr-FR');
+  const { data: counts, error: rpcErr } = await db
+  .rpc('count_residents_by_residence');
+
+console.log('[KPI] Résidents counts:', counts, rpcErr);
+
+const total = (counts || [])
+  .reduce(function(s, r) { 
+    return s + parseInt(r.count || r.nb_residents || 0); 
+  }, 0);
+
+document.getElementById('kpiResidents').textContent =
+  total.toLocaleString('fr-FR');
 }
 function loadDashboard() {
   var tables = [
