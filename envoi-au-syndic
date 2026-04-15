@@ -2,6 +2,7 @@
 <html lang="fr">
 <head>
     <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Réclamations - Résidence</title>
     <style>
 
@@ -118,16 +119,48 @@
             background: #128C7E;
         }
 
+        /* ===== BOUTON RETOUR ===== */
+        .btn-retour {
+            width: 100%;
+            padding: 12px;
+            background: #95a5a6;
+            color: white;
+            border: none;
+            border-radius: 10px;
+            font-size: 14px;
+            cursor: pointer;
+            transition: background 0.3s;
+            margin-top: 10px;
+        }
+
+        .btn-retour:hover {
+            background: #7f8c8d;
+        }
+
         /* ===== ÉTAPES ===== */
         .etapes {
             display: flex;
             justify-content: space-between;
             margin-bottom: 30px;
+            position: relative;
+        }
+
+        .etapes::before {
+            content: '';
+            position: absolute;
+            top: 17px;
+            left: 15%;
+            right: 15%;
+            height: 2px;
+            background: #ddd;
+            z-index: 0;
         }
 
         .etape {
             text-align: center;
             flex: 1;
+            position: relative;
+            z-index: 1;
         }
 
         .etape-cercle {
@@ -141,6 +174,7 @@
             justify-content: center;
             margin: 0 auto 5px;
             font-weight: bold;
+            transition: background 0.3s;
         }
 
         .etape.active .etape-cercle {
@@ -171,6 +205,17 @@
             margin-bottom: 10px;
         }
 
+        .apercu-message {
+            background: white;
+            border-radius: 8px;
+            padding: 12px;
+            font-size: 13px;
+            line-height: 1.6;
+            white-space: pre-wrap;
+            border: 1px solid #e0e0e0;
+            margin-bottom: 15px;
+        }
+
         /* ===== SUCCÈS ===== */
         .succes {
             text-align: center;
@@ -188,10 +233,15 @@
             margin-bottom: 10px;
         }
 
+        .succes p {
+            color: #7f8c8d;
+            margin-bottom: 5px;
+        }
+
         /* ===== CHARGEMENT ===== */
         .chargement {
             text-align: center;
-            padding: 20px;
+            padding: 40px 20px;
             display: none;
         }
 
@@ -208,6 +258,28 @@
         @keyframes spin {
             0% { transform: rotate(0deg); }
             100% { transform: rotate(360deg); }
+        }
+
+        /* ===== ERREUR ===== */
+        .erreur {
+            background: #ffeaea;
+            border: 1px solid #e74c3c;
+            border-radius: 10px;
+            padding: 15px;
+            color: #c0392b;
+            margin-bottom: 15px;
+            display: none;
+        }
+
+        /* ===== NUMÉRO DE TICKET ===== */
+        .ticket {
+            background: #eaf4fb;
+            border-radius: 8px;
+            padding: 10px 15px;
+            margin: 10px 0;
+            font-size: 13px;
+            color: #2980b9;
+            font-weight: bold;
         }
 
     </style>
@@ -236,6 +308,11 @@
             <div class="etape-cercle">3</div>
             <p>Envoi WhatsApp</p>
         </div>
+    </div>
+
+    <!-- MESSAGE D'ERREUR -->
+    <div class="erreur" id="erreur">
+        ⚠️ <span id="texte-erreur"></span>
     </div>
 
     <!-- ================================ -->
@@ -323,9 +400,7 @@ Ex: L'ampoule du couloir du 3ème étage est cassée depuis 3 jours">
     <!-- ================================ -->
     <div class="chargement" id="chargement">
         <div class="spinner"></div>
-        <p id="texte-chargement">
-            🤖 L'IA analyse votre réclamation...
-        </p>
+        <p id="texte-chargement">🤖 L'IA analyse votre réclamation...</p>
     </div>
 
     <!-- ================================ -->
@@ -333,10 +408,12 @@ Ex: L'ampoule du couloir du 3ème étage est cassée depuis 3 jours">
     <!-- ================================ -->
     <div class="apercu" id="apercu">
         <h3>📱 Message qui sera envoyé au Syndic :</h3>
-        <p id="contenu-apercu"></p>
-        <br>
+        <div class="apercu-message" id="contenu-apercu"></div>
         <button class="btn-envoyer" onclick="envoyerWhatsApp()">
             ✅ Confirmer et Envoyer sur WhatsApp
+        </button>
+        <button class="btn-retour" onclick="retourFormulaire()">
+            ✏️ Modifier ma réclamation
         </button>
     </div>
 
@@ -348,6 +425,7 @@ Ex: L'ampoule du couloir du 3ème étage est cassée depuis 3 jours">
         <h2>Réclamation Envoyée !</h2>
         <p>Le syndic a été notifié sur WhatsApp.</p>
         <p>Vous recevrez une réponse bientôt.</p>
+        <div class="ticket" id="numero-ticket"></div>
         <br>
         <button 
             class="btn-envoyer" 
@@ -364,93 +442,32 @@ Ex: L'ampoule du couloir du 3ème étage est cassée depuis 3 jours">
     // CONFIGURATION
     // ================================
     
-    // Ta clé API Blackbox
+    // Clé API Blackbox
     const API_KEY = "sk-iu9NUvMo-BIArkIl4wZ7ww";
     
-    // ⚠️ IMPORTANT : Numéro WhatsApp du Syndic
-    // Format : Code pays + numéro SANS espaces ni +
-    // Exemple Algérie : 213XXXXXXXXX
-    // Exemple France  : 33XXXXXXXXX
+    // Numéro WhatsApp du Syndic (format international sans + ni espaces)
     const WHATSAPP_SYNDIC = "212649491945";
 
-    // Niveau d'urgence sélectionné
+    // Variables globales
     let urgenceSelectionnee = "";
-    
-    // Message final généré par l'IA
     let messageFinal = "";
 
     // ================================
     // SÉLECTIONNER L'URGENCE
     // ================================
     function selectionnerUrgence(niveau, bouton) {
-        // Enlever la sélection de tous les boutons
         document.querySelectorAll(".urgence-btn")
             .forEach(btn => btn.classList.remove("selected"));
-        
-        // Sélectionner le bouton cliqué
         bouton.classList.add("selected");
         urgenceSelectionnee = niveau;
     }
 
     // ================================
-    // TRAITER LA RÉCLAMATION
+    // METTRE À JOUR LES ÉTAPES
     // ================================
-    async function traiterReclamation() {
-
-        // Récupérer les valeurs
-        const nom = document.getElementById("nom").value.trim();
-        const appartement = document.getElementById("appartement").value.trim();
-        const type = document.getElementById("type").value;
-        const description = document.getElementById("description").value.trim();
-
-        // Vérifier que tout est rempli
-        if (!nom || !appartement || !type || 
-            !description || !urgenceSelectionnee) {
-            alert("⚠️ Veuillez remplir tous les champs !");
-            return;
-        }
-
-        // Afficher le chargement
-        document.getElementById("formulaire").style.display = "none";
-        document.getElementById("chargement").style.display = "block";
-        
-        // Mettre à jour les étapes
-        mettreAJourEtapes(2);
-
-        // Demander à l'IA d'améliorer la réclamation
-        try {
-            const prompt = `
-                Tu es un assistant pour une résidence.
-                Un résident a soumis une réclamation.
-                
-                Informations :
-                - Nom : ${nom}
-                - Appartement : ${appartement}
-                - Type : ${type}
-                - Urgence : ${urgenceSelectionnee}
-                - Description : ${description}
-                - Date : ${new Date().toLocaleDateString('fr-FR')}
-                - Heure : ${new Date().toLocaleTimeString('fr-FR')}
-                
-                Génère un message WhatsApp professionnel et clair
-                pour informer le syndic de cette réclamation.
-                Le message doit être court, structuré avec des emojis
-                et facile à lire sur téléphone.
-                Écris UNIQUEMENT le message, rien d'autre.
-            `;
-
-            const reponse = await fetch(
-                "https://api.blackbox.ai/v1/chat/completions",
-                {
-                    method: "POST",
-                    headers: {
-                        "Authorization": `Bearer ${API_KEY}`,
-                        "Content-Type": "application/json"
-                    },
-                    body: JSON.stringify({
-                        messages: [
-                            { role: "user", content: prompt }
-                        ],
-                        model: "blackboxai"
-                    })
-                
+    function mettreAJourEtapes(etapeActive) {
+        for (let i = 1; i <= 3; i++) {
+            const etape = document.getElementById(`etape${i}`);
+            etape.classList.remove("active", "done");
+            if (i < etapeActive) {
+                etape.classList.add("done");
