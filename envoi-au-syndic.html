@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Réclamations - Résidence</title>
+    <title>Envoi au Syndic</title>
     <style>
         * { margin: 0; padding: 0; box-sizing: border-box; }
         body { font-family: Arial, sans-serif; background: #f0f4f8; padding: 20px; }
@@ -77,7 +77,6 @@
         ⚠️ <span id="texte-erreur"></span>
     </div>
 
-    <!-- FORMULAIRE -->
     <div id="formulaire">
         <div class="form-group">
             <label>👤 Votre Nom Complet</label>
@@ -118,13 +117,11 @@
         </button>
     </div>
 
-    <!-- CHARGEMENT -->
     <div class="chargement" id="chargement">
         <div class="spinner"></div>
         <p id="texte-chargement">🤖 L'IA analyse votre réclamation...</p>
     </div>
 
-    <!-- APERÇU -->
     <div class="apercu" id="apercu">
         <h3>📱 Message qui sera envoyé au Syndic :</h3>
         <div class="apercu-message" id="contenu-apercu"></div>
@@ -136,7 +133,6 @@
         </button>
     </div>
 
-    <!-- SUCCÈS -->
     <div class="succes" id="succes">
         <div class="icone">✅</div>
         <h2>Réclamation Envoyée !</h2>
@@ -153,83 +149,56 @@
 
 <script>
 
-    // ================================
-    // CONFIGURATION
-    // ================================
-    const API_KEY = "sk-iu9NUvMo-BIArkIl4wZ7ww";
     const WHATSAPP_SYNDIC = "212649491945";
-
     let urgenceSelectionnee = "";
     let messageFinal = "";
 
-    // ================================
-    // SÉLECTIONNER L'URGENCE
-    // ================================
     function selectionnerUrgence(niveau, bouton) {
-        document.querySelectorAll(".urgence-btn")
-            .forEach(btn => btn.classList.remove("selected"));
+        document.querySelectorAll(".urgence-btn").forEach(btn => btn.classList.remove("selected"));
         bouton.classList.add("selected");
         urgenceSelectionnee = niveau;
     }
 
-    // ================================
-    // METTRE À JOUR LES ÉTAPES
-    // ================================
     function mettreAJourEtapes(etapeActive) {
         for (let i = 1; i <= 3; i++) {
-            const etape = document.getElementById(`etape${i}`);
+            const etape = document.getElementById("etape" + i);
             etape.classList.remove("active", "done");
-            if (i < etapeActive) {
-                etape.classList.add("done");
-            } else if (i === etapeActive) {
-                etape.classList.add("active");
-            }
+            if (i < etapeActive) etape.classList.add("done");
+            else if (i === etapeActive) etape.classList.add("active");
         }
     }
 
-    // ================================
-    // AFFICHER UNE ERREUR
-    // ================================
     function afficherErreur(message) {
-        const erreur = document.getElementById("erreur");
         document.getElementById("texte-erreur").textContent = message;
-        erreur.style.display = "block";
-        setTimeout(() => { erreur.style.display = "none"; }, 5000);
+        document.getElementById("erreur").style.display = "block";
+        setTimeout(() => { document.getElementById("erreur").style.display = "none"; }, 5000);
     }
 
-    // ================================
-    // GÉNÉRER UN NUMÉRO DE TICKET
-    // ================================
     function genererTicket() {
-        const date = new Date();
-        const ticket = `REC-${date.getFullYear()}${String(date.getMonth()+1).padStart(2,'0')}${String(date.getDate()).padStart(2,'0')}-${Math.floor(Math.random()*9000)+1000}`;
-        return ticket;
+        const d = new Date();
+        return "REC-" + d.getFullYear() +
+            String(d.getMonth()+1).padStart(2,'0') +
+            String(d.getDate()).padStart(2,'0') +
+            "-" + (Math.floor(Math.random()*9000)+1000);
     }
 
-    // ================================
-    // TRAITER LA RÉCLAMATION
-    // ================================
     async function traiterReclamation() {
 
-        // Récupérer les valeurs
         const nom = document.getElementById("nom").value.trim();
         const appartement = document.getElementById("appartement").value.trim();
         const type = document.getElementById("type").value;
         const description = document.getElementById("description").value.trim();
 
-        // Vérifications
         if (!nom) { afficherErreur("Veuillez entrer votre nom complet."); return; }
         if (!appartement) { afficherErreur("Veuillez entrer votre numéro d'appartement."); return; }
         if (!type) { afficherErreur("Veuillez choisir le type de réclamation."); return; }
         if (!urgenceSelectionnee) { afficherErreur("Veuillez sélectionner le niveau d'urgence."); return; }
         if (!description) { afficherErreur("Veuillez décrire votre problème."); return; }
 
-        // Afficher chargement
         document.getElementById("formulaire").style.display = "none";
         document.getElementById("chargement").style.display = "block";
         mettreAJourEtapes(2);
 
-        // Labels lisibles
         const typesLabels = {
             panne: "Panne / Réparation",
             bruit: "Nuisance Sonore",
@@ -244,4 +213,110 @@
         const urgenceLabels = {
             faible: "🟢 Faible",
             moyenne: "🟡 Moyenne",
-            haute: "🔴 
+            haute: "🔴 URGENTE"
+        };
+
+        const now = new Date();
+        const dateStr = now.toLocaleDateString('fr-FR');
+        const heureStr = now.toLocaleTimeString('fr-FR', {hour:'2-digit', minute:'2-digit'});
+
+        // Message sans IA - direct et professionnel
+        messageFinal =
+"🏘️ NOUVELLE RÉCLAMATION\n" +
+"Résidence Les Jardins\n" +
+"━━━━━━━━━━━━━━━━━━━━\n\n" +
+"👤 Résident : " + nom + "\n" +
+"🏠 Appartement : " + appartement + "\n" +
+"📋 Type : " + typesLabels[type] + "\n" +
+"🚨 Urgence : " + urgenceLabels[urgenceSelectionnee] + "\n\n" +
+"📝 Description :\n" + description + "\n\n" +
+"━━━━━━━━━━━━━━━━━━━━\n" +
+"📅 Date : " + dateStr + " à " + heureStr + "\n" +
+"🎫 Ticket : " + genererTicket();
+
+        // Essayer l'API IA
+        try {
+            document.getElementById("texte-chargement").textContent = "🤖 L'IA améliore votre message...";
+
+            const reponse = await fetch            ("https://api.blackbox.ai/v1/chat/completions", {
+                method: "POST",
+                headers: {
+                    "Content-Type": "application/json",
+                    "Authorization": "Bearer sk-iu9NUvMo-BIArkIl4wZ7ww"
+                },
+                body: JSON.stringify({
+                    model: "blackboxai",
+                    messages: [{
+                        role: "user",
+                        content: "Améliore ce message WhatsApp pour un syndic de résidence, garde les emojis et la structure, rends-le plus professionnel, écris UNIQUEMENT le message final :\n\n" + messageFinal
+                    }]
+                })
+            });
+
+            if (reponse.ok) {
+                const data = await reponse.json();
+                const messageIA = data.choices[0].message.content.trim();
+                if (messageIA && messageIA.length > 50) {
+                    messageFinal = messageIA;
+                }
+            }
+
+        } catch (erreurIA) {
+            console.log("IA non disponible, message standard utilisé.");
+        }
+
+        // Afficher l'aperçu
+        document.getElementById("chargement").style.display = "none";
+        document.getElementById("apercu").style.display = "block";
+        document.getElementById("contenu-apercu").textContent = messageFinal;
+        mettreAJourEtapes(3);
+    }
+
+    // ================================
+    // ENVOYER SUR WHATSAPP
+    // ================================
+    function envoyerWhatsApp() {
+        const messageEncode = encodeURIComponent(messageFinal);
+        const urlWhatsApp = "https://wa.me/" + WHATSAPP_SYNDIC + "?text=" + messageEncode;
+        window.open(urlWhatsApp, "_blank");
+
+        // Afficher succès
+        document.getElementById("apercu").style.display = "none";
+        document.getElementById("succes").style.display = "block";
+        document.getElementById("numero-ticket").textContent = "🎫 " + genererTicket();
+        mettreAJourEtapes(3);
+    }
+
+    // ================================
+    // RETOUR AU FORMULAIRE
+    // ================================
+    function retourFormulaire() {
+        document.getElementById("apercu").style.display = "none";
+        document.getElementById("formulaire").style.display = "block";
+        mettreAJourEtapes(1);
+    }
+
+    // ================================
+    // NOUVELLE RÉCLAMATION
+    // ================================
+    function nouvelleReclamation() {
+        // Vider les champs
+        document.getElementById("nom").value = "";
+        document.getElementById("appartement").value = "";
+        document.getElementById("type").value = "";
+        document.getElementById("description").value = "";
+        
+        // Réinitialiser urgence
+        document.querySelectorAll(".urgence-btn").forEach(btn => btn.classList.remove("selected"));
+        urgenceSelectionnee = "";
+        messageFinal = "";
+
+        // Afficher formulaire
+        document.getElementById("succes").style.display = "none";
+        document.getElementById("formulaire").style.display = "block";
+        mettreAJourEtapes(1);
+    }
+
+</script>
+</body>
+</html>
