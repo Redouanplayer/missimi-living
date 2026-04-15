@@ -1029,7 +1029,7 @@ function doCreate() {
   document.getElementById('submitIco').textContent = '⏳';
   document.getElementById('submitTxt').textContent = 'Création en cours...';
 
-    function step2() {
+  function step2() {
     document.getElementById('submitTxt').textContent = 'Création de la résidence...';
     db.rpc('create_and_link_admin', {
       p_email:       email,
@@ -1080,6 +1080,37 @@ function doCreate() {
     step2();
   });
 
+} // ← FIN doCreate ✅
+  function showResult(d, pwd, adminNom) {
+  document.getElementById('rCode').textContent    = d.code;
+  document.getElementById('rNom').textContent     = d.espace;
+  document.getElementById('rSecteur').textContent = d.secteur;
+  var rAboEl = document.getElementById('rAbo');
+  var rExpEl = document.getElementById('rExp');
+  if (rAboEl) rAboEl.textContent = d.abonnement || currentAbo;
+  if (rExpEl && d.date_expiration) {
+    var expDate = new Date(d.date_expiration);
+    rExpEl.textContent = expDate.toLocaleDateString('fr-FR', {
+      day:'2-digit', month:'long', year:'numeric'
+    });
+  }
+  document.getElementById('rEmail').textContent  = d.admin_email;
+  document.getElementById('rPwd').textContent    = pwd;
+  document.getElementById('emailBody').innerHTML =
+    'Objet : ✅ Votre espace RedTech est prêt !\n\n' +
+    'Bonjour ' + adminNom + ',\n\n' +
+    '🔐 Code résidence : ' + d.code + '\n' +
+    '🌐 Lien : missimi-living.vercel.app/syndic-v3\n' +
+    '📧 Email : ' + d.admin_email + '\n' +
+    '🔑 Mot de passe : ' + pwd + '\n\n' +
+    '⚠️ Changez votre mot de passe à la première connexion.\n' +
+    'Transmettez le code à vos résidents pour leur inscription.\n\n' +
+    'Cordialement, RedTech';
+  document.getElementById('resultBox').style.display = 'block';
+  document.getElementById('resultBox').scrollIntoView({
+    behavior: 'smooth', block: 'start'
+  });
+}
 function showResult(d, pwd, adminNom) {
   document.getElementById('rCode').textContent    = d.code;
   document.getElementById('rNom').textContent     = d.espace;
