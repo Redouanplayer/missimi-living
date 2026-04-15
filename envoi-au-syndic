@@ -1,0 +1,456 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <title>Réclamations - Résidence</title>
+    <style>
+
+        /* ===== STYLE GÉNÉRAL ===== */
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: Arial, sans-serif;
+            background: #f0f4f8;
+            padding: 20px;
+        }
+
+        /* ===== CONTENEUR PRINCIPAL ===== */
+        .container {
+            max-width: 650px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 20px;
+            padding: 30px;
+            box-shadow: 0 5px 20px rgba(0,0,0,0.1);
+        }
+
+        /* ===== EN-TÊTE ===== */
+        .header {
+            text-align: center;
+            margin-bottom: 30px;
+        }
+
+        .header h1 {
+            color: #2c3e50;
+            font-size: 24px;
+        }
+
+        .header p {
+            color: #7f8c8d;
+            margin-top: 5px;
+        }
+
+        /* ===== FORMULAIRE ===== */
+        .form-group {
+            margin-bottom: 20px;
+        }
+
+        label {
+            display: block;
+            font-weight: bold;
+            color: #2c3e50;
+            margin-bottom: 8px;
+        }
+
+        input, select, textarea {
+            width: 100%;
+            padding: 12px;
+            border: 2px solid #ddd;
+            border-radius: 10px;
+            font-size: 14px;
+            outline: none;
+            transition: border 0.3s;
+        }
+
+        input:focus, select:focus, textarea:focus {
+            border-color: #3498db;
+        }
+
+        textarea {
+            height: 120px;
+            resize: vertical;
+        }
+
+        /* ===== URGENCE ===== */
+        .urgence-buttons {
+            display: flex;
+            gap: 10px;
+            flex-wrap: wrap;
+        }
+
+        .urgence-btn {
+            padding: 8px 20px;
+            border: 2px solid #ddd;
+            border-radius: 20px;
+            cursor: pointer;
+            background: white;
+            font-size: 13px;
+            transition: all 0.3s;
+        }
+
+        .urgence-btn.faible { border-color: #27ae60; color: #27ae60; }
+        .urgence-btn.moyenne { border-color: #f39c12; color: #f39c12; }
+        .urgence-btn.haute { border-color: #e74c3c; color: #e74c3c; }
+
+        .urgence-btn.selected.faible { background: #27ae60; color: white; }
+        .urgence-btn.selected.moyenne { background: #f39c12; color: white; }
+        .urgence-btn.selected.haute { background: #e74c3c; color: white; }
+
+        /* ===== BOUTON ENVOYER ===== */
+        .btn-envoyer {
+            width: 100%;
+            padding: 15px;
+            background: #25D366;
+            color: white;
+            border: none;
+            border-radius: 10px;
+            font-size: 16px;
+            font-weight: bold;
+            cursor: pointer;
+            transition: background 0.3s;
+        }
+
+        .btn-envoyer:hover {
+            background: #128C7E;
+        }
+
+        /* ===== ÉTAPES ===== */
+        .etapes {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 30px;
+        }
+
+        .etape {
+            text-align: center;
+            flex: 1;
+        }
+
+        .etape-cercle {
+            width: 35px;
+            height: 35px;
+            border-radius: 50%;
+            background: #ddd;
+            color: white;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin: 0 auto 5px;
+            font-weight: bold;
+        }
+
+        .etape.active .etape-cercle {
+            background: #3498db;
+        }
+
+        .etape.done .etape-cercle {
+            background: #27ae60;
+        }
+
+        .etape p {
+            font-size: 11px;
+            color: #7f8c8d;
+        }
+
+        /* ===== APERÇU ===== */
+        .apercu {
+            background: #f8f9fa;
+            border-radius: 10px;
+            padding: 15px;
+            margin: 20px 0;
+            border-left: 4px solid #25D366;
+            display: none;
+        }
+
+        .apercu h3 {
+            color: #25D366;
+            margin-bottom: 10px;
+        }
+
+        /* ===== SUCCÈS ===== */
+        .succes {
+            text-align: center;
+            padding: 30px;
+            display: none;
+        }
+
+        .succes .icone {
+            font-size: 60px;
+            margin-bottom: 15px;
+        }
+
+        .succes h2 {
+            color: #27ae60;
+            margin-bottom: 10px;
+        }
+
+        /* ===== CHARGEMENT ===== */
+        .chargement {
+            text-align: center;
+            padding: 20px;
+            display: none;
+        }
+
+        .spinner {
+            width: 40px;
+            height: 40px;
+            border: 4px solid #f3f3f3;
+            border-top: 4px solid #3498db;
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+            margin: 0 auto 15px;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+    </style>
+</head>
+<body>
+
+<div class="container">
+
+    <!-- EN-TÊTE -->
+    <div class="header">
+        <h1>🏘️ Espace Réclamations</h1>
+        <p>Résidence Les Jardins</p>
+    </div>
+
+    <!-- ÉTAPES -->
+    <div class="etapes">
+        <div class="etape active" id="etape1">
+            <div class="etape-cercle">1</div>
+            <p>Formulaire</p>
+        </div>
+        <div class="etape" id="etape2">
+            <div class="etape-cercle">2</div>
+            <p>Analyse IA</p>
+        </div>
+        <div class="etape" id="etape3">
+            <div class="etape-cercle">3</div>
+            <p>Envoi WhatsApp</p>
+        </div>
+    </div>
+
+    <!-- ================================ -->
+    <!-- FORMULAIRE                       -->
+    <!-- ================================ -->
+    <div id="formulaire">
+
+        <!-- Nom du résident -->
+        <div class="form-group">
+            <label>👤 Votre Nom Complet</label>
+            <input 
+                type="text" 
+                id="nom" 
+                placeholder="Ex: Mohamed Benali"
+            />
+        </div>
+
+        <!-- Numéro d'appartement -->
+        <div class="form-group">
+            <label>🏠 Numéro d'Appartement</label>
+            <input 
+                type="text" 
+                id="appartement" 
+                placeholder="Ex: Appartement 12 - Bâtiment B"
+            />
+        </div>
+
+        <!-- Type de réclamation -->
+        <div class="form-group">
+            <label>📋 Type de Réclamation</label>
+            <select id="type">
+                <option value="">-- Choisissez --</option>
+                <option value="panne">🔧 Panne / Réparation</option>
+                <option value="bruit">🔊 Nuisance Sonore</option>
+                <option value="proprete">🧹 Propreté des Parties Communes</option>
+                <option value="ascenseur">🛗 Problème Ascenseur</option>
+                <option value="eau">💧 Problème d'Eau</option>
+                <option value="electricite">⚡ Problème Électricité</option>
+                <option value="securite">🔒 Sécurité</option>
+                <option value="autre">📝 Autre</option>
+            </select>
+        </div>
+
+        <!-- Niveau d'urgence -->
+        <div class="form-group">
+            <label>🚨 Niveau d'Urgence</label>
+            <div class="urgence-buttons">
+                <button 
+                    class="urgence-btn faible" 
+                    onclick="selectionnerUrgence('faible', this)">
+                    🟢 Faible
+                </button>
+                <button 
+                    class="urgence-btn moyenne" 
+                    onclick="selectionnerUrgence('moyenne', this)">
+                    🟡 Moyenne
+                </button>
+                <button 
+                    class="urgence-btn haute" 
+                    onclick="selectionnerUrgence('haute', this)">
+                    🔴 Urgente
+                </button>
+            </div>
+        </div>
+
+        <!-- Description -->
+        <div class="form-group">
+            <label>✍️ Décrivez votre Problème</label>
+            <textarea 
+                id="description" 
+                placeholder="Décrivez votre problème en quelques mots...
+Ex: L'ampoule du couloir du 3ème étage est cassée depuis 3 jours">
+            </textarea>
+        </div>
+
+        <!-- Bouton Envoyer -->
+        <button class="btn-envoyer" onclick="traiterReclamation()">
+            📱 Envoyer au Syndic via WhatsApp
+        </button>
+
+    </div>
+
+    <!-- ================================ -->
+    <!-- CHARGEMENT                       -->
+    <!-- ================================ -->
+    <div class="chargement" id="chargement">
+        <div class="spinner"></div>
+        <p id="texte-chargement">
+            🤖 L'IA analyse votre réclamation...
+        </p>
+    </div>
+
+    <!-- ================================ -->
+    <!-- APERÇU DU MESSAGE                -->
+    <!-- ================================ -->
+    <div class="apercu" id="apercu">
+        <h3>📱 Message qui sera envoyé au Syndic :</h3>
+        <p id="contenu-apercu"></p>
+        <br>
+        <button class="btn-envoyer" onclick="envoyerWhatsApp()">
+            ✅ Confirmer et Envoyer sur WhatsApp
+        </button>
+    </div>
+
+    <!-- ================================ -->
+    <!-- MESSAGE DE SUCCÈS                -->
+    <!-- ================================ -->
+    <div class="succes" id="succes">
+        <div class="icone">✅</div>
+        <h2>Réclamation Envoyée !</h2>
+        <p>Le syndic a été notifié sur WhatsApp.</p>
+        <p>Vous recevrez une réponse bientôt.</p>
+        <br>
+        <button 
+            class="btn-envoyer" 
+            onclick="nouvelleReclamation()">
+            📝 Nouvelle Réclamation
+        </button>
+    </div>
+
+</div>
+
+<script>
+
+    // ================================
+    // CONFIGURATION
+    // ================================
+    
+    // Ta clé API Blackbox
+    const API_KEY = "sk-iu9NUvMo-BIArkIl4wZ7ww";
+    
+    // ⚠️ IMPORTANT : Numéro WhatsApp du Syndic
+    // Format : Code pays + numéro SANS espaces ni +
+    // Exemple Algérie : 213XXXXXXXXX
+    // Exemple France  : 33XXXXXXXXX
+    const WHATSAPP_SYNDIC = "212649491945";
+
+    // Niveau d'urgence sélectionné
+    let urgenceSelectionnee = "";
+    
+    // Message final généré par l'IA
+    let messageFinal = "";
+
+    // ================================
+    // SÉLECTIONNER L'URGENCE
+    // ================================
+    function selectionnerUrgence(niveau, bouton) {
+        // Enlever la sélection de tous les boutons
+        document.querySelectorAll(".urgence-btn")
+            .forEach(btn => btn.classList.remove("selected"));
+        
+        // Sélectionner le bouton cliqué
+        bouton.classList.add("selected");
+        urgenceSelectionnee = niveau;
+    }
+
+    // ================================
+    // TRAITER LA RÉCLAMATION
+    // ================================
+    async function traiterReclamation() {
+
+        // Récupérer les valeurs
+        const nom = document.getElementById("nom").value.trim();
+        const appartement = document.getElementById("appartement").value.trim();
+        const type = document.getElementById("type").value;
+        const description = document.getElementById("description").value.trim();
+
+        // Vérifier que tout est rempli
+        if (!nom || !appartement || !type || 
+            !description || !urgenceSelectionnee) {
+            alert("⚠️ Veuillez remplir tous les champs !");
+            return;
+        }
+
+        // Afficher le chargement
+        document.getElementById("formulaire").style.display = "none";
+        document.getElementById("chargement").style.display = "block";
+        
+        // Mettre à jour les étapes
+        mettreAJourEtapes(2);
+
+        // Demander à l'IA d'améliorer la réclamation
+        try {
+            const prompt = `
+                Tu es un assistant pour une résidence.
+                Un résident a soumis une réclamation.
+                
+                Informations :
+                - Nom : ${nom}
+                - Appartement : ${appartement}
+                - Type : ${type}
+                - Urgence : ${urgenceSelectionnee}
+                - Description : ${description}
+                - Date : ${new Date().toLocaleDateString('fr-FR')}
+                - Heure : ${new Date().toLocaleTimeString('fr-FR')}
+                
+                Génère un message WhatsApp professionnel et clair
+                pour informer le syndic de cette réclamation.
+                Le message doit être court, structuré avec des emojis
+                et facile à lire sur téléphone.
+                Écris UNIQUEMENT le message, rien d'autre.
+            `;
+
+            const reponse = await fetch(
+                "https://api.blackbox.ai/v1/chat/completions",
+                {
+                    method: "POST",
+                    headers: {
+                        "Authorization": `Bearer ${API_KEY}`,
+                        "Content-Type": "application/json"
+                    },
+                    body: JSON.stringify({
+                        messages: [
+                            { role: "user", content: prompt }
+                        ],
+                        model: "blackboxai"
+                    })
+                
