@@ -779,7 +779,7 @@ tr:hover td{background:#fafafa;}
     </div>
     <div style="display:flex;gap:10px;justify-content:flex-end">
       <button class="mbtn mbtn-cancel" id="renewCancel" onclick="closeRenewModal()">Annuler</button>
-      <button class="mbtn mbtn-info" id="renewConfirm" onclick="confirmRenew()">🔄 Renouveler</button>
+      <button class="mbtn mbtn-info" id="renewConfirm">🔄 Renouveler</button>
     </div>
   </div>
 </div>
@@ -917,9 +917,161 @@ window.addEventListener('load', function() {
   document.getElementById('renewOverlay').addEventListener('click', function(e) {
     if (e.target === this) closeRenewModal();
   });
-  document.getElementById('renewConfirm').addEventListener('click', function() {
-    if (renewId) renouvelerClient(renewId, '');
+ // ── MODAL RENOUVELLEMENT ──────────────────────────────
+var renewId = null, renewAbo = 'mensuel', renewNom = '';
+
+function selectRenewAbo(btn) {
+  document.querySelectorAll('.renew-abo-btn').forEach(function(b) {
+    b.classList.remove('active');
   });
+  btn.classList.add('active');
+  renewAbo = btn.dataset.abo;
+  updateRenewPreview();
+}
+
+function showRenewModal(id, nom, aboActuel) {
+  renewId  = id;
+  renewNom = nom;
+  renewAbo = aboActuel || 'mensuel';
+
+  document.getElementById('renewDesc').textContent =
+    'Choisissez l\'abonnement pour : ' + nom;
+
+  // Reset boutons — sélectionner l'abonnement actuel
+  document.querySelectorAll('.renew-abo-btn').forEach(function(b) {
+    b.classList.toggle('active', b.dataset.abo === renewAbo);
+  });
+
+  updateRenewPreview();
+  document.getElementById('renewOverlay').classList.add('open');
+}
+
+function updateRenewPreview() {
+  var durations = { mensuel: 30, trimestriel: 90, annuel: 365 };
+  var days = durations[renewAbo] || 30;
+  var exp  = new Date();
+  exp.setDate(exp.getDate() + days);
+  var el = document.getElementById('renewExpDate');
+  if (el) el.textContent =
+    exp.toLocaleDateString('fr-FR', {
+      day:'2-digit', month:'long', year:'numeric'
+    }) + ' (' + days + ' jours)';
+}
+
+function closeRenewModal() {
+  document.getElementById('renewOverlay').classList.remove('open');
+  renewId  = null;
+  renewNom = '';
+}
+
+// ✅ UNE SEULE FONCTION — appelée par le bouton HTML onclick="confirmRenew()"
+function confirmRenew() {
+  if (!renewId) {
+    toast('❌ Aucun client sélectionné');
+    return;
+  }
+  renouvelerClient(renewId, renewNom);
+}
+
+function renouvelerClient(id, nom) {
+  // Sécurité : vérifier que renewAbo est valide
+  var validAbos = ['mensuel', 'trimestriel', 'annuel'];
+  if (validAbos.indexOf(renewAbo) === -1) renewAbo = 'mensuel';
+
+  var abo        = renewAbo;
+  var confirmBtn = document.getElementById('renewConfirm');
+
+  // Désactiver le bouton pendant l'opération
+  if (confirmBtn) {
+    confirmBtn.disabled    = true;
+    confirmBtn.textContent = '⏳ En cours...';
+  }
+
+  var durations = { mensuel: 30, trimestriel: 90, annuel: 365 };
+  var days   = durations[abo] || 30;
+  var newExp = new Date();
+  newExp.setDate(newExp.getDate() + days);
+  var expStr = newExp.toISOString().split('T')[0];
+
+  console.log('[Renouvellement] ID:', id, '| Nom:', nom,
+              '| Abo:', abo, '| Exp:', expStr);
+
+  // ── Étape 1 : Mise à jour en base ──────────────────
+  db.from('residences')
+    .update({
+      actif:           true,
+      abonnement:      abo,
+      date_debut:      new Date().toISOString().split('T')[0],
+      date_expiration: expStr,
+      statut_notif:    'renewed'
+    })
+    .eq('id', id)
+    .then(function(res) {
+
+      // Réactiver le bouton
+      if (confirmBtn) {
+        confirmBtn.disabled    = false;
+        confirmBtn.textContent = '🔄 Renouveler';
+      }
+
+      if (res.error) {
+        console.error('[Renouvellement] Erreur DB:', res.error);
+        toast('❌ Erreur : ' + res.error.message);
+        return;
+      }
+
+      // ✅ Succès
+      var fmt = newExp.toLocaleDateString('fr-FR', {
+        day:'2-digit', month:'long', year:'numeric'
+      });
+      toast('✅ ' + (nom || 'Client') + ' renouvelé — expire le ' + fmt);
+      closeRenewModal();
+
+      // Rafraîchir les données
+      aboData = [];
+      loadClients();
+      loadStats();
+      loadAbonnements();
+
+      // ── Étape 2 : Email de confirmation ────────────
+      db.from('residences')
+        .select('email_admin')
+        .eq('id', id)
+        .maybeSingle()
+        .then(function(r) {
+          var emailAdmin = r.data && r.data.email_admin;
+          if (!emailAdmin) {
+            console.warn('[Renouvellement] Pas d\'email admin trouvé');
+            return;
+          }
+
+          callEdge({
+            type:            'renouvellement',
+            email:           emailAdmin,
+            nom:             nom || 'Client',
+            abonnement:      abo,
+            date_expiration: expStr,
+            jours_restants:  days
+          }).then(function(data) {
+            if (data.success) {
+              toast('📧 Email envoyé à ' + emailAdmin);
+            } else {
+              console.warn('[Renouvellement] Email échoué:', data);
+              toast('⚠️ Renouvelé mais email échoué');
+            }
+          });
+        });
+
+    })
+    .catch(function(e) {
+      if (confirmBtn) {
+        confirmBtn.disabled    = false;
+        confirmBtn.textContent = '🔄 Renouveler';
+      }
+      console.error('[Renouvellement] Exception:', e);
+      toast('❌ Exception : ' + e.message);
+    });
+}
   // renew-abo-btn géré via onclick
 
   // Vérifier session existante
