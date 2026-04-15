@@ -1029,9 +1029,7 @@ function doCreate() {
   document.getElementById('submitIco').textContent = '⏳';
   document.getElementById('submitTxt').textContent = 'Création en cours...';
 
-  var serviceKeyOk = SB_SERVICE && SB_SERVICE !== 'REMPLACE_PAR_TA_SERVICE_ROLE_KEY';
-
-  function step2() {
+    function step2() {
     document.getElementById('submitTxt').textContent = 'Création de la résidence...';
     db.rpc('create_and_link_admin', {
       p_email:       email,
@@ -1046,15 +1044,12 @@ function doCreate() {
       btn.disabled = false;
       document.getElementById('submitIco').textContent = '🚀';
       document.getElementById('submitTxt').textContent = 'Créer le client';
-
       if (res.error) { showErr(errEl, '❌ ' + res.error.message); return; }
       var d = res.data;
       if (!d || !d.success) { showErr(errEl, '❌ ' + (d && d.error || 'Erreur SQL')); return; }
-
       showResult(d, pwd, adminNom);
       toast('✅ ' + d.code + ' créé !');
-      loadStats();
-      loadClients();
+      loadStats(); loadClients();
       ['fNom','fVille','fUnites','fAdresse','fAdminNom','fEmail','fPwd'].forEach(function(id) {
         var el = document.getElementById(id);
         if (el) el.value = '';
@@ -1067,58 +1062,23 @@ function doCreate() {
     });
   }
 
-  if (serviceKeyOk) {
-    // API Admin — crée compte + step2
-    fetch(SB_URL + '/auth/v1/admin/users', {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        'apikey': SB_SERVICE,
-        'Authorization': 'Bearer ' + SB_SERVICE
-      },
-      body: JSON.stringify({
-        email: email,
-        password: pwd,
-        email_confirm: true,
-        user_metadata: { role: 'admin', nom: adminNom }
-      })
-    })
-    .then(function(r) { return r.json(); })
-    .then(function(authData) {
-      if (!authData.id && !authData.email) {
-        var msg = authData.msg || authData.message || '';
-        if (!msg.toLowerCase().includes('already')) {
-          throw new Error(msg || 'Erreur création compte');
-        }
-      }
-      step2();
-    })
-    .catch(function(e) {
+  // Créer compte via Edge Function puis step2
+  callEdge({
+    type:     'create_resident',
+    email:    email,
+    password: pwd,
+    metadata: { role: 'admin', nom: adminNom, residence_id: 'pending' }
+  }).then(function(authData) {
+    if (!authData.success &&
+        !String(authData.error || '').toLowerCase().includes('already')) {
       btn.disabled = false;
       document.getElementById('submitIco').textContent = '🚀';
       document.getElementById('submitTxt').textContent = 'Créer le client';
-      showErr(errEl, '❌ ' + e.message);
-    });
-  } else {
-    // Fallback signUp si pas de service key
-    db.auth.signUp({
-      email: email,
-      password: pwd,
-      options: { data: { role: 'admin', nom: adminNom } }
-    }).then(function(res) {
-      if (res.error && !res.error.message.toLowerCase().includes('already')) {
-        throw new Error(res.error.message);
-      }
-      return new Promise(function(resolve) { setTimeout(resolve, 800); });
-    }).then(step2)
-    .catch(function(e) {
-      btn.disabled = false;
-      document.getElementById('submitIco').textContent = '🚀';
-      document.getElementById('submitTxt').textContent = 'Créer le client';
-      showErr(errEl, '❌ ' + e.message);
-    });
-  }
-}
+      showErr(errEl, '❌ ' + JSON.stringify(authData.error || authData));
+      return;
+    }
+    step2();
+  });
 
 function showResult(d, pwd, adminNom) {
   document.getElementById('rCode').textContent    = d.code;
