@@ -1685,7 +1685,7 @@ function closeRenewModal() {
 }
 
 function renouvelerClient(id, nom) {
-  var abo = renewAbo || 'mensuel';
+  var abo        = renewAbo || 'mensuel';
   var confirmBtn = document.getElementById('renewConfirm');
   if (confirmBtn) { confirmBtn.disabled = true; confirmBtn.textContent = '⏳...'; }
 
@@ -1695,7 +1695,7 @@ function renouvelerClient(id, nom) {
   newExp.setDate(newExp.getDate() + days);
   var expStr = newExp.toISOString().split('T')[0];
 
-  // Étape 1 : renouveler (indépendant de l'email)
+  // Étape 1 : renouveler en base (direct DB — pas besoin de service key)
   db.from('residences').update({
     actif:           true,
     abonnement:      abo,
@@ -1706,40 +1706,38 @@ function renouvelerClient(id, nom) {
     if (confirmBtn) { confirmBtn.disabled = false; confirmBtn.textContent = '🔄 Renouveler'; }
     if (res.error) { toast('❌ ' + res.error.message); return; }
 
-    var fmt = newExp.toLocaleDateString('fr-FR', { day:'2-digit', month:'long', year:'numeric' });
+    var fmt = newExp.toLocaleDateString('fr-FR', {
+      day:'2-digit', month:'long', year:'numeric'
+    });
     toast('✅ ' + (nom||'Client') + ' renouvelé — expire le ' + fmt);
     closeRenewModal();
     aboData = [];
     loadClients(); loadStats(); loadAbonnements();
 
-    // Étape 2 : email notification (optionnel)
-    db.from('residences').select('email_admin').eq('id', id).maybeSingle()
+    // Étape 2 : email via Edge Function centralisée
+    db.from('residences')
+      .select('email_admin')
+      .eq('id', id)
+      .maybeSingle()
       .then(function(r) {
         var emailAdmin = r.data && r.data.email_admin;
         if (!emailAdmin) return;
-        var sbKey = SB_KEY || '';
-        fetch('https://nwusjraxjfirsonbndfy.supabase.co/functions/v1/clever-handler', {
-          method: 'POST',
-          headers: {
-            'Content-Type':   'application/json',
-            'x-internal-key': 'NOUVELLE_CLE_SECRETE_2025',
-            'Authorization':  'Bearer ' + sbKey
-          },
-          body: JSON.stringify({
-            type:            'renouvellement',
-            email:           emailAdmin,
-            nom:             nom || 'Client',
-            abonnement:      abo,
-            date_expiration: expStr,
-            jours_restants:  days
-          })
-        })
-        .then(function(resp) { return resp.json(); })
-        .then(function(data) {
-          if (data.success) toast('📧 Email envoyé à ' + emailAdmin);
-          else toast('⚠️ Email échoué : ' + JSON.stringify(data.error||data).substring(0,60));
-        })
-        .catch(function(e) { toast('⚠️ Email échoué : ' + e.message); });
+
+        callEdge({
+          type:            'renouvellement',
+          email:           emailAdmin,
+          nom:             nom || 'Client',
+          abonnement:      abo,
+          date_expiration: expStr,
+          jours_restants:  days
+        }).then(function(data) {
+          if (data.success) {
+            toast('📧 Email envoyé à ' + emailAdmin);
+          } else {
+            toast('⚠️ Email échoué : ' +
+              JSON.stringify(data.error || data).substring(0, 60));
+          }
+        });
       });
 
   }).catch(function(e) {
@@ -1905,17 +1903,23 @@ function loadNotifications() {
 
 // Envoyer une notification individuelle
 function sendNotif(id, type) {
-  db.from('residences').select('nom,email_admin,abonnement,date_expiration').eq('id', id).single()
+  db.from('residences')
+    .select('nom,email_admin,abonnement,date_expiration')
+    .eq('id', id)
+    .single()
     .then(function(res) {
       var r = res.data;
       if (!r || !r.email_admin) { toast('❌ Email admin manquant'); return; }
 
       var today = new Date();
-      var diff = r.date_expiration
-        ? Math.round((new Date(r.date_expiration) - today) / 86400000) : 10;
+      var diff  = r.date_expiration
+        ? Math.round((new Date(r.date_expiration) - today) / 86400000)
+        : 10;
 
       var payload = {
-        type:            type === 'j10' ? 'expiration_warning' : type === 'relance' ? 'expiration_warning' : 'suspension',
+        type: type === 'j10'    ? 'expiration_warning'
+            : type === 'relance' ? 'expiration_warning'
+            : 'suspension',
         email:           r.email_admin,
         nom:             r.nom,
         abonnement:      r.abonnement || 'mensuel',
@@ -1924,26 +1928,19 @@ function sendNotif(id, type) {
       };
 
       toast('📧 Envoi en cours...');
-      fetch('https://nwusjraxjfirsonbndfy.supabase.co/functions/v1/clever-handler', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json', 'x-internal-key': 'NOUVELLE_CLE_SECRETE_2025', 'Authorization': 'Bearer ' + SB_KEY },
-        body: JSON.stringify(payload)
-      })
-      .then(function(resp) { return resp.json(); })
-      .then(function(data) {
+      callEdge(payload).then(function(data) {
         if (data.success) {
           toast('✅ Email envoyé à ' + r.email_admin);
-          // Marquer comme notifié
-          db.from('residences').update({ statut_notif: 'notified' }).eq('id', id)
+          db.from('residences')
+            .update({ statut_notif: 'notified' })
+            .eq('id', id)
             .then(function() { loadNotifications(); });
         } else {
           toast('❌ ' + JSON.stringify(data.error || data));
         }
-      })
-      .catch(function(e) { toast('❌ ' + e.message); });
+      });
     });
 }
-
 // Envoi groupé
 function sendBulkNotif(type) {
   var today = new Date(); today.setHours(0,0,0,0);
@@ -1953,10 +1950,11 @@ function sendBulkNotif(type) {
       var targets = (res.data || []).filter(function(r) {
         if (!r.email_admin) return false;
         var diff = r.date_expiration
-          ? Math.round((new Date(r.date_expiration) - today) / 86400000) : null;
-        if (type === 'j10')    return r.actif && diff !== null && diff >= 0 && diff <= 10;
-        if (type === 'j30')    return r.actif && diff !== null && diff >= 28 && diff <= 32;
-        if (type === 'j1')     return r.actif && diff !== null && diff >= 0 && diff <= 1;
+          ? Math.round((new Date(r.date_expiration) - today) / 86400000)
+          : null;
+        if (type === 'j10')     return r.actif && diff !== null && diff >= 0  && diff <= 10;
+        if (type === 'j30')     return r.actif && diff !== null && diff >= 28 && diff <= 32;
+        if (type === 'j1')      return r.actif && diff !== null && diff >= 0  && diff <= 1;
         if (type === 'relance') return !r.actif && diff !== null && diff < -3;
         return false;
       });
@@ -1965,19 +1963,20 @@ function sendBulkNotif(type) {
 
       toast('📧 Envoi à ' + targets.length + ' client(s)...');
       var sent = 0;
+
       targets.forEach(function(r) {
-        var diff = Math.round((new Date(r.date_expiration) - today) / 86400000);
-        fetch('https://nwusjraxjfirsonbndfy.supabase.co/functions/v1/clever-handler', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json', 'x-internal-key': 'NOUVELLE_CLE_SECRETE_2025', 'Authorization': 'Bearer ' + SB_KEY },
-          body: JSON.stringify({
-            type:            type === 'j10' ? 'expiration_warning' : 'expiration_warning',
-            email:           r.email_admin,
-            nom:             r.nom,
-            abonnement:      r.abonnement || 'mensuel',
-            date_expiration: r.date_expiration,
-            jours_restants:  Math.max(diff, 0)
-          })
+        var diff = Math.round(
+          (new Date(r.date_expiration) - today) / 86400000
+        );
+        var notifType = type === 'relance' ? 'expiration_warning' : 'expiration_warning';
+
+        callEdge({
+          type:            notifType,
+          email:           r.email_admin,
+          nom:             r.nom,
+          abonnement:      r.abonnement || 'mensuel',
+          date_expiration: r.date_expiration,
+          jours_restants:  Math.max(diff, 0)
         }).then(function() {
           sent++;
           if (sent === targets.length) {
@@ -2005,25 +2004,31 @@ function runSuspensions() {
 
       toast('⏳ Suspension de ' + expired.length + ' compte(s)...');
       var done = 0;
+
       expired.forEach(function(r) {
-        db.from('residences').update({ actif: false }).eq('id', r.id).then(function() {
-          // Envoyer email suspension
-          if (r.email_admin) {
-            fetch('https://nwusjraxjfirsonbndfy.supabase.co/functions/v1/clever-handler', {
-              method: 'POST',
-              headers: { 'Content-Type': 'application/json', 'x-internal-key': 'NOUVELLE_CLE_SECRETE_2025', 'Authorization': 'Bearer ' + SB_KEY },
-              body: JSON.stringify({
-                type: 'suspension', email: r.email_admin, nom: r.nom,
-                abonnement: r.abonnement || 'mensuel', date_expiration: r.date_expiration
-              })
-            });
-          }
-          done++;
-          if (done === expired.length) {
-            toast('⛔ ' + done + ' compte(s) suspendu(s)');
-            loadStats(); loadNotifications();
-          }
-        });
+        // Étape 1 : suspendre en base
+        db.from('residences')
+          .update({ actif: false })
+          .eq('id', r.id)
+          .then(function() {
+
+            // Étape 2 : email via Edge Function centralisée
+            if (r.email_admin) {
+              callEdge({
+                type:            'suspension',
+                email:           r.email_admin,
+                nom:             r.nom,
+                abonnement:      r.abonnement || 'mensuel',
+                date_expiration: r.date_expiration
+              });
+            }
+
+            done++;
+            if (done === expired.length) {
+              toast('⛔ ' + done + ' compte(s) suspendu(s)');
+              loadStats(); loadNotifications();
+            }
+          });
       });
     });
 }
@@ -2265,65 +2270,60 @@ function saveSecteur() {
   saveBtn.disabled = true; saveBtn.textContent = '⏳...';
 
   // Étape 1 : mettre à jour la table residences
-  db.from('residences').update({ secteur: secteur }).eq('id', id)
+  db.from('residences')
+    .update({ secteur: secteur })
+    .eq('id', id)
     .then(function(res) {
       if (res.error) {
-        saveBtn.disabled = false; saveBtn.textContent = '✅ Enregistrer';
+        saveBtn.disabled = false;
+        saveBtn.textContent = '✅ Enregistrer';
         toast('❌ ' + res.error.message);
         return;
       }
 
-      // Étape 2 : récupérer admin_id de cette résidence
-      db.from('residences').select('admin_id').eq('id', id).single()
+      // Étape 2 : récupérer admin_id
+      db.from('residences')
+        .select('admin_id')
+        .eq('id', id)
+        .single()
         .then(function(r) {
           var adminId = r.data && r.data.admin_id;
 
-          // Étape 3 : mettre à jour user_metadata via Edge Function (service key sécurisée côté serveur)
           if (adminId) {
-            fetch('https://nwusjraxjfirsonbndfy.supabase.co/functions/v1/clever-handler', {
-              method: 'POST',
-              headers: {
-                'Content-Type':   'application/json',
-                'x-internal-key': 'NOUVELLE_CLE_SECRETE_2025',
-                'Authorization':  'Bearer ' + SB_KEY
-              },
-              body: JSON.stringify({
-                type:          'update_user_metadata',
-                admin_user_id: adminId,
-                metadata:      { secteur: secteur }
-              })
-            })
-            .then(function(resp) { return resp.json(); })
-            .then(function(data) {
-              saveBtn.disabled = false; saveBtn.textContent = '✅ Enregistrer';
+            // Étape 3 : mettre à jour user_metadata via Edge Function
+            callEdge({
+              type:          'update_user_metadata',
+              admin_user_id: adminId,
+              metadata:      { secteur: secteur }
+            }).then(function(data) {
+              saveBtn.disabled = false;
+              saveBtn.textContent = '✅ Enregistrer';
               if (data.success) {
                 toast('✅ Secteur "' + secteur + '" mis à jour — visible immédiatement au client');
               } else {
-                toast('⚠️ Table OK mais Auth : ' + JSON.stringify(data.error||data).substring(0,60));
+                toast('⚠️ Table OK mais Auth : ' +
+                  JSON.stringify(data.error || data).substring(0, 60));
               }
-              closeSecteurModal();
-              loadClients();
-            })
-            .catch(function(e) {
-              saveBtn.disabled = false; saveBtn.textContent = '✅ Enregistrer';
-              toast('⚠️ Table OK, Auth échoué : ' + e.message);
               closeSecteurModal();
               loadClients();
             });
           } else {
-            saveBtn.disabled = false; saveBtn.textContent = '✅ Enregistrer';
+            saveBtn.disabled = false;
+            saveBtn.textContent = '✅ Enregistrer';
             toast('✅ Secteur mis à jour → ' + secteur);
             closeSecteurModal();
             loadClients();
           }
         })
         .catch(function(e) {
-          saveBtn.disabled = false; saveBtn.textContent = '✅ Enregistrer';
+          saveBtn.disabled = false;
+          saveBtn.textContent = '✅ Enregistrer';
           toast('❌ ' + e.message);
         });
     })
     .catch(function(e) {
-      saveBtn.disabled = false; saveBtn.textContent = '✅ Enregistrer';
+      saveBtn.disabled = false;
+      saveBtn.textContent = '✅ Enregistrer';
       toast('❌ ' + e.message);
     });
 }
