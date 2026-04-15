@@ -1174,7 +1174,7 @@ function renderClients(data) {
   // row.residence_id → colonne UUID résidence
   // row.count OU row.nb_residents → colonne compteur
   inscriptionsMap[row.residence_id] = 
-    row.count || row.nb_residents || 0;
+    parseInt(row.count) || 0;
 });
       }
       buildClientsTable(data, tbody);
