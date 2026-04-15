@@ -1464,22 +1464,15 @@ function confirmSuspend(id, nom) {
     'Voulez-vous suspendre <strong>' + nom + '</strong> ?<br>Les utilisateurs ne pourront plus se connecter.',
     'Suspendre', 'mbtn-warn',
     function() {
-      // Passer par Edge Function (service_role_key pour bypass RLS)
-      fetch('https://nwusjraxjfirsonbndfy.supabase.co/functions/v1/clever-handler', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json', 'x-internal-key': 'NOUVELLE_CLE_SECRETE_2025', 'Authorization': 'Bearer ' + SB_KEY },
-        body: JSON.stringify({ type: 'suspend_client', residence_id: id, nom: nom })
-      })
-      .then(function(r) { return r.json(); })
-      .then(function(data) {
-        if (data.success) {
-          toast('⏸ ' + nom + ' suspendu — email envoyé');
-          loadClients(); loadStats();
-        } else {
-          toast('❌ ' + JSON.stringify(data.error || data).substring(0, 80));
-        }
-      })
-      .catch(function(e) { toast('❌ ' + e.message); });
+      callEdge({ type: 'suspend_client', residence_id: id, nom: nom })
+        .then(function(data) {
+          if (data.success) {
+            toast('⏸ ' + nom + ' suspendu — email envoyé');
+            loadClients(); loadStats();
+          } else {
+            toast('❌ ' + JSON.stringify(data.error || data).substring(0, 80));
+          }
+        });
     }
   );
 }
@@ -1489,25 +1482,18 @@ function confirmReactivate(id, nom) {
     'Voulez-vous réactiver <strong>' + nom + '</strong> ?<br>Les utilisateurs pourront à nouveau se connecter.',
     'Réactiver', 'mbtn-info',
     function() {
-      fetch('https://nwusjraxjfirsonbndfy.supabase.co/functions/v1/clever-handler', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json', 'x-internal-key': 'NOUVELLE_CLE_SECRETE_2025', 'Authorization': 'Bearer ' + SB_KEY },
-        body: JSON.stringify({ type: 'reactivate_client', residence_id: id, nom: nom })
-      })
-      .then(function(r) { return r.json(); })
-      .then(function(data) {
-        if (data.success) {
-          toast('✅ ' + nom + ' réactivé');
-          loadClients(); loadStats();
-        } else {
-          toast('❌ ' + JSON.stringify(data.error || data).substring(0, 80));
-        }
-      })
-      .catch(function(e) { toast('❌ ' + e.message); });
+      callEdge({ type: 'reactivate_client', residence_id: id, nom: nom })
+        .then(function(data) {
+          if (data.success) {
+            toast('✅ ' + nom + ' réactivé');
+            loadClients(); loadStats();
+          } else {
+            toast('❌ ' + JSON.stringify(data.error || data).substring(0, 80));
+          }
+        });
     }
   );
 }
-
 function confirmViderArchive(id, nom) {
   showModal('🗑', 'Vider l\'archive',
     'Supprimer <strong>toutes les données</strong> de <strong>' + nom + '</strong> ?<br><br>' +
@@ -1546,31 +1532,19 @@ function confirmDelete(id, nom, adminId) {
 function deleteClient(id, nom, adminId) {
   toast('⏳ Suppression en cours...');
 
-  // Tout passer par la Edge Function qui utilise service_role_key
-  fetch('https://nwusjraxjfirsonbndfy.supabase.co/functions/v1/clever-handler', {
-    method: 'POST',
-    headers: {
-      'Content-Type':   'application/json',
-      'x-internal-key': 'NOUVELLE_CLE_SECRETE_2025',
-      'Authorization':  'Bearer ' + SB_KEY
-    },
-    body: JSON.stringify({
-      type:         'delete_client',
-      residence_id: id,
-      admin_user_id: adminId || null,
-      nom:          nom
-    })
-  })
-  .then(function(r) { return r.json(); })
-  .then(function(data) {
+  callEdge({
+    type:          'delete_client',
+    residence_id:  id,
+    admin_user_id: adminId || null,
+    nom:           nom
+  }).then(function(data) {
     if (data.success) {
       toast('🗑 ' + nom + ' supprimé définitivement');
       loadClients(); loadStats(); loadDashboard();
     } else {
       toast('❌ ' + JSON.stringify(data.error || data).substring(0, 80));
     }
-  })
-  .catch(function(e) { toast('❌ ' + e.message); });
+  });
 }
 
 // ── DASHBOARD STOCKAGE ────────────────────────────────
