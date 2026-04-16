@@ -1047,6 +1047,22 @@ function doCreate() {
       showResult(d, pwd, adminNom);
       toast('✅ ' + d.code + ' créé !');
       loadStats(); loadClients();
+      // ── Email de bienvenue automatique ──────────────────
+      if (d.admin_email) {
+        callEdge({
+          type:            'bienvenue',
+          email:           d.admin_email,
+          nom:             d.espace || adminNom,
+          abonnement:      d.abonnement || currentAbo,
+          date_expiration: d.date_expiration || ''
+        }).then(function(emailRes) {
+          if (emailRes.success) {
+            toast('📧 Email de bienvenue envoyé à ' + d.admin_email);
+          } else {
+            console.warn('[bienvenue] Email échoué:', emailRes.error);
+          }
+        });
+      }
       ['fNom','fVille','fUnites','fAdresse','fAdminNom','fEmail','fPwd'].forEach(function(id) {
         var el = document.getElementById(id);
         if (el) el.value = '';

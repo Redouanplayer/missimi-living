@@ -3767,8 +3767,9 @@ async function deleteResident(id, email) {
     return;
   }
   const result = await callEdge({
-    type: 'delete_resident',
-    admin_user_id: id
+    type:          'delete_resident',
+    admin_user_id: id,
+    residence_id:  currentUserMeta.residence_id
   });
   if (!result.success) {
     alert('❌ Erreur : ' + (result.error || 'Inconnue'));
