@@ -703,6 +703,20 @@
         <button class="btn btn-primary" style="width:auto;font-size:12px" onclick="toggleAddResidentForm()">+ Ajouter</button>
       </div>
     </div>
+    <!-- BANDEAU SYNTHÈSE GLOBAL -->
+    <div id="resSynthese" style="display:none;margin-top:16px;padding:14px 16px;background:var(--bg);border-radius:var(--radius-sm);border:1px solid var(--border)">
+      <div style="display:flex;gap:20px;flex-wrap:wrap;align-items:center;margin-bottom:10px">
+        <div style="font-size:12px;font-weight:600;color:var(--muted);text-transform:uppercase;letter-spacing:.06em">Synthèse <span id="resSyntheseAnnee"></span></div>
+        <div style="display:flex;gap:12px;flex-wrap:wrap">
+          <span id="synTauxBadge" style="font-size:13px;font-weight:700;padding:3px 12px;border-radius:20px"></span>
+          <span style="font-size:12px;color:var(--muted)">Collecté : <strong id="synCollecte" style="color:var(--green-text)">0 DH</strong></span>
+          <span style="font-size:12px;color:var(--muted)">Reste : <strong id="synReste" style="color:var(--red-text)">0 DH</strong></span>
+        </div>
+      </div>
+      <div style="background:var(--border);border-radius:20px;height:10px;overflow:hidden">
+        <div id="resSyntheseBar" style="height:100%;border-radius:20px;background:linear-gradient(90deg,#2563eb,#10b981);width:0%;transition:width .6s ease"></div>
+      </div>
+    </div>
     <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-top:16px;padding-top:16px;border-top:1px solid var(--border)">
       <div>
         <label class="lbl" style="color:var(--blue-text)">💰 Montant mensuel global (DH)</label>
@@ -2921,6 +2935,10 @@ function renderResAnnuel() {
   const moisActuel = now.getMonth() + 1;
   const anneeNow   = now.getFullYear();
 
+  // Date début globale
+  const dateDebutGlobal = resConfigRes.date_debut_charges
+    ? new Date(resConfigRes.date_debut_charges) : null;
+
   // Filtre recherche
   const q = (document.getElementById('searchResidents')?.value || '').toLowerCase();
   const validated = allResidents.filter(r => {
@@ -2931,169 +2949,112 @@ function renderResAnnuel() {
            (r.appartement && r.appartement.toLowerCase().includes(q));
   });
 
-  if (!validated.length) {
+  // Pending filtrés aussi par la recherche
+  const pendingVisible = allResidents.filter(r => {
+    if (r.role !== 'resident_pending') return false;
+    if (!q) return true;
+    return (r.nom         && r.nom.toLowerCase().includes(q))   ||
+           (r.email       && r.email.toLowerCase().includes(q)) ||
+           (r.appartement && r.appartement.toLowerCase().includes(q));
+  });
+
+  if (!validated.length && !pendingVisible.length) {
     tbody.innerHTML =
       '<tr><td colspan="16" style="padding:32px;text-align:center;color:var(--muted)">👥 Aucun résident trouvé</td></tr>';
     updateTotauxAnnuel([], anneeNow, moisActuel);
     return;
   }
 
-  // Date début globale
-  const dateDebutGlobal = resConfigRes.date_debut_charges
-    ? new Date(resConfigRes.date_debut_charges) : null;
-
-  tbody.innerHTML = validated.map(r => {
+  // Lignes résidents validés
+  const rowsValidated = validated.map(r => {
     const paiementsRes = resAllPaiements[r.id] || {};
     const suspendu     = r.suspendu || false;
-
-    // Date début spécifique au résident (stockée dans metadata)
-    const dateDebutRes = r.date_debut_charges
-      ? new Date(r.date_debut_charges)
-      : dateDebutGlobal;
-
-    // Calcul payé annuel
-    let totalPaye  = 0;
-    let totalDu    = 0;
-    let nbPayes    = 0;
-
-        const cellules = [];
+    const dateDebutRes = r.date_debut_charges ? new Date(r.date_debut_charges) : dateDebutGlobal;
+    let totalPaye = 0, totalDu = 0, nbPayes = 0;
+    const cellules = [];
     for (let m = 1; m <= 12; m++) {
       const periodeStr = `${resAnneeActive}-${String(m).padStart(2,'0')}`;
       const montantM   = getMontantPourMois(resAnneeActive, m);
       const paiement   = paiementsRes[periodeStr];
-
-      // Déterminer si le mois est avant la date de début
       let avantDebut = false;
       if (dateDebutRes) {
         const debutAnnee = dateDebutRes.getFullYear();
         const debutMois  = dateDebutRes.getMonth() + 1;
-        if (resAnneeActive < debutAnnee ||
-           (resAnneeActive === debutAnnee && m < debutMois)) {
-          avantDebut = true;
-        }
+        if (resAnneeActive < debutAnnee || (resAnneeActive === debutAnnee && m < debutMois)) avantDebut = true;
       }
-
-      // Déterminer si futur
-      const estFutur = resAnneeActive > anneeNow ||
-        (resAnneeActive === anneeNow && m > moisActuel);
-
+      const estFutur = resAnneeActive > anneeNow || (resAnneeActive === anneeNow && m > moisActuel);
       let cellHtml = '';
-      let statut   = paiement?.statut || null;
-
       if (avantDebut && !paiement) {
-        // Avant date début = non dû = gris automatique
-        cellHtml = `<td style="padding:4px;text-align:center">
-          <span style="font-size:16px;opacity:0.3" title="Non dû avant date début">—</span>
-        </td>`;
-        // Ne compte pas dans les totaux
-
+        cellHtml = `<td style="padding:4px;text-align:center"><span style="font-size:16px;opacity:0.3" title="Non dû avant date début">—</span></td>`;
       } else if (paiement) {
-        // Paiement enregistré (y compris paiements anticipés futurs)
-        totalDu   += montantM;
-        totalPaye += parseFloat(paiement.montant_paye) || 0;
-        if (statut === 'paye') nbPayes++;
-
-        const icon = statut === 'paye' ? '✅' : statut === 'partiel' ? '⚠️' : '❌';
-
-        const montantAff = paiement.montant_paye
-          ? parseFloat(paiement.montant_paye).toLocaleString('fr-MA') + ' DH'
-          : '';
-        const dateAff = paiement.date_paiement
-          ? new Date(paiement.date_paiement).toLocaleDateString('fr-FR',{day:'numeric',month:'short'})
-          : '';
-
-        // Badge "anticipé" si mois futur payé
-        const anticipeBadge = estFutur && statut === 'paye'
-          ? `<span style="font-size:8px;background:var(--blue-bg);color:var(--blue-text);border-radius:4px;padding:1px 3px;display:block;margin-top:1px">anticipé</span>`
-          : '';
-
+        totalDu += montantM; totalPaye += parseFloat(paiement.montant_paye) || 0;
+        if (paiement.statut === 'paye') nbPayes++;
+        const icon = paiement.statut === 'paye' ? '✅' : paiement.statut === 'partiel' ? '⚠️' : '❌';
+        const montantAff = paiement.montant_paye ? parseFloat(paiement.montant_paye).toLocaleString('fr-MA') + ' DH' : '';
+        const dateAff = paiement.date_paiement ? new Date(paiement.date_paiement).toLocaleDateString('fr-FR',{day:'numeric',month:'short'}) : '';
+        const anticipeBadge = estFutur && paiement.statut === 'paye' ? `<span style="font-size:8px;background:var(--blue-bg);color:var(--blue-text);border-radius:4px;padding:1px 3px;display:block;margin-top:1px">anticipé</span>` : '';
         const title = `${icon} ${montantAff}${dateAff ? ' · ' + dateAff : ''}${estFutur ? ' · Paiement anticipé' : ''}`;
-
-        cellHtml = `<td style="padding:4px;text-align:center">
-          <span onclick="openResMoisModal('${r.id}','${periodeStr}','${(r.nom||'').replace(/'/g,"\\'")}','${(r.appartement||'').replace(/'/g,"\\'")}')"
-            style="font-size:16px;cursor:pointer;display:inline-block;transition:transform 0.1s"
-            onmouseover="this.style.transform='scale(1.3)'"
-            onmouseout="this.style.transform='scale(1)'"
-            title="${title}">${icon}</span>
-          ${anticipeBadge}
-        </td>`;
-
+        cellHtml = `<td style="padding:4px;text-align:center"><span onclick="openResMoisModal('${r.id}','${periodeStr}','${(r.nom||'').replace(/'/g,"\\'")}','${(r.appartement||'').replace(/'/g,"\\'")}')" style="font-size:16px;cursor:pointer;display:inline-block;transition:transform 0.1s" onmouseover="this.style.transform='scale(1.3)'" onmouseout="this.style.transform='scale(1)'" title="${title}">${icon}</span>${anticipeBadge}</td>`;
       } else if (estFutur) {
-        // Futur non payé — cliquable pour anticipé
         totalDu += montantM;
-        cellHtml = `<td style="padding:4px;text-align:center">
-          <span onclick="openResMoisModal('${r.id}','${periodeStr}','${(r.nom||'').replace(/'/g,"\\'")}','${(r.appartement||'').replace(/'/g,"\\'")}')"
-            style="font-size:13px;cursor:pointer;color:var(--hint);display:inline-block;transition:transform 0.1s"
-            onmouseover="this.style.transform='scale(1.2)';this.style.color='var(--blue)'"
-            onmouseout="this.style.transform='scale(1)';this.style.color='var(--hint)'"
-            title="Paiement anticipé possible">—</span>
-        </td>`;
-
+        cellHtml = `<td style="padding:4px;text-align:center"><span onclick="openResMoisModal('${r.id}','${periodeStr}','${(r.nom||'').replace(/'/g,"\\'")}','${(r.appartement||'').replace(/'/g,"\\'")}')" style="font-size:13px;cursor:pointer;color:var(--hint);display:inline-block;transition:transform 0.1s" onmouseover="this.style.transform='scale(1.2)';this.style.color='var(--blue)'" onmouseout="this.style.transform='scale(1)';this.style.color='var(--hint)'" title="Paiement anticipé possible">—</span></td>`;
       } else {
-        // Mois passé non payé
         totalDu += montantM;
-        cellHtml = `<td style="padding:4px;text-align:center">
-          <span onclick="openResMoisModal('${r.id}','${periodeStr}','${(r.nom||'').replace(/'/g,"\\'")}','${(r.appartement||'').replace(/'/g,"\\'")}')"
-            style="font-size:16px;cursor:pointer;display:inline-block;transition:transform 0.1s"
-            onmouseover="this.style.transform='scale(1.3)'"
-            onmouseout="this.style.transform='scale(1)'"
-            title="Non payé — cliquer pour enregistrer">❌</span>
-        </td>`;
+        cellHtml = `<td style="padding:4px;text-align:center"><span onclick="openResMoisModal('${r.id}','${periodeStr}','${(r.nom||'').replace(/'/g,"\\'")}','${(r.appartement||'').replace(/'/g,"\\'")}')" style="font-size:16px;cursor:pointer;display:inline-block;transition:transform 0.1s" onmouseover="this.style.transform='scale(1.3)'" onmouseout="this.style.transform='scale(1)'" title="Non payé — cliquer pour enregistrer">❌</span></td>`;
       }
       cellules.push(cellHtml);
     }
-
-    // Couleur ligne selon taux
     const taux = totalDu > 0 ? (totalPaye / totalDu) * 100 : 0;
     let bgLigne = '';
-    if (suspendu) {
-      bgLigne = 'background:rgba(185,28,28,0.04);opacity:0.75';
-    } else if (taux >= 80) {
-      bgLigne = 'background:var(--green-bg)';
-    } else if (taux >= 50) {
-      bgLigne = 'background:var(--yellow-bg)';
-    } else {
-      bgLigne = 'background:var(--red-bg)';
-    }
-
+    if (suspendu) bgLigne = 'background:rgba(185,28,28,0.04);opacity:0.75';
+    else if (taux >= 80) bgLigne = 'background:var(--green-bg)';
+    else if (taux >= 50) bgLigne = 'background:var(--yellow-bg)';
+    else bgLigne = 'background:var(--red-bg)';
     const reste = Math.max(0, totalDu - totalPaye);
     const initiale = (r.nom || r.email || '?')[0].toUpperCase();
-
-    return `<tr style="${bgLigne};border-bottom:1px solid var(--border);transition:all 0.15s"
-            onmouseover="this.style.boxShadow='inset 0 0 0 1px var(--border2)'"
-      onmouseout="this.style.boxShadow='none'">
+    return `<tr style="${bgLigne};border-bottom:1px solid var(--border);transition:all 0.15s" onmouseover="this.style.boxShadow='inset 0 0 0 1px var(--border2)'" onmouseout="this.style.boxShadow='none'">
       <td style="padding:8px 14px;white-space:nowrap">
         <div style="display:flex;align-items:center;gap:8px">
-          <div style="width:32px;height:32px;border-radius:50%;background:var(--blue-bg);color:var(--blue-text);display:flex;align-items:center;justify-content:center;font-weight:700;font-size:13px;flex-shrink:0;border:2px solid var(--blue-border)">
-            ${initiale}
-          </div>
+          <div style="width:32px;height:32px;border-radius:50%;background:var(--blue-bg);color:var(--blue-text);display:flex;align-items:center;justify-content:center;font-weight:700;font-size:13px;flex-shrink:0;border:2px solid var(--blue-border)">${initiale}</div>
           <div>
-            <div style="font-size:13px;font-weight:600;color:var(--text)">
-              ${suspendu ? '🔴 ' : ''}${r.nom || 'Sans nom'}
-            </div>
-            <div style="font-size:11px;color:var(--muted)">
-              ${r.appartement ? 'Apt ' + r.appartement : ''}
-              ${r.telephone ? ' · ' + r.telephone : ''}
-            </div>
+            <div style="font-size:13px;font-weight:600;color:var(--text)">${suspendu ? '🔴 ' : ''}${r.nom || 'Sans nom'}</div>
+            <div style="font-size:11px;color:var(--muted)">${r.appartement ? 'Apt ' + r.appartement : ''}${r.telephone ? ' · ' + r.telephone : ''}</div>
           </div>
         </div>
       </td>
       ${cellules.join('')}
-      <td style="padding:6px 10px;text-align:right;font-size:12px;font-weight:700;color:var(--green-text);white-space:nowrap">
-        ${totalPaye.toLocaleString('fr-MA')} DH
-      </td>
-      <td style="padding:6px 10px;text-align:right;font-size:12px;font-weight:700;color:${reste > 0 ? 'var(--red-text)' : 'var(--green-text)'};white-space:nowrap">
-        ${reste.toLocaleString('fr-MA')} DH
-      </td>
-            <td style="padding:6px 10px;text-align:center;position:relative">
-        <button
-          onclick="openResMenu(event,'${r.id}')"
-          style="background:var(--bg);border:1px solid var(--border2);border-radius:6px;padding:4px 10px;cursor:pointer;font-size:16px;color:var(--muted);font-family:'DM Sans',sans-serif">
-          ⋯
-        </button>
+      <td style="padding:6px 10px;text-align:right;font-size:12px;font-weight:700;color:var(--green-text);white-space:nowrap">${totalPaye.toLocaleString('fr-MA')} DH</td>
+      <td style="padding:6px 10px;text-align:right;font-size:12px;font-weight:700;color:${reste > 0 ? 'var(--red-text)' : 'var(--green-text)'};white-space:nowrap">${reste.toLocaleString('fr-MA')} DH</td>
+      <td style="padding:6px 10px;text-align:center;position:relative">
+        <button onclick="openResMenu(event,'${r.id}')" style="background:var(--bg);border:1px solid var(--border2);border-radius:6px;padding:4px 10px;cursor:pointer;font-size:16px;color:var(--muted);font-family:'DM Sans',sans-serif">⋯</button>
       </td>
     </tr>`;
   }).join('');
+
+  // Lignes résidents en attente (grisées)
+  const rowsPending = pendingVisible.map(r => {
+    const initiale = (r.nom || r.email || '?')[0].toUpperCase();
+    const cellsGris = Array(12).fill(`<td style="padding:4px;text-align:center"><span style="font-size:12px;opacity:0.3">—</span></td>`).join('');
+    return `<tr style="background:var(--orange-bg);border-bottom:1px solid var(--orange-border);opacity:0.85">
+      <td style="padding:8px 14px;white-space:nowrap">
+        <div style="display:flex;align-items:center;gap:8px">
+          <div style="width:32px;height:32px;border-radius:50%;background:var(--orange-bg);color:var(--orange-text);display:flex;align-items:center;justify-content:center;font-weight:700;font-size:13px;flex-shrink:0;border:2px solid var(--orange-border)">${initiale}</div>
+          <div>
+            <div style="font-size:13px;font-weight:600;color:var(--orange-text)">${r.nom || r.email || 'Sans nom'}</div>
+            <div style="font-size:11px;color:var(--orange-text);opacity:0.8">${r.appartement ? 'Apt ' + r.appartement : ''}${r.email ? ' · ' + r.email : ''}</div>
+            <div style="display:flex;gap:6px;margin-top:4px">
+              <button onclick="approveResident('${r.id}','${r.email}')" style="font-size:10px;padding:3px 8px;border-radius:4px;border:1px solid var(--green-border);background:var(--green-bg);color:var(--green-text);cursor:pointer;font-family:'DM Sans',sans-serif;font-weight:600">✅ Approuver</button>
+              <button onclick="rejectResident('${r.id}','${r.email}')" style="font-size:10px;padding:3px 8px;border-radius:4px;border:1px solid var(--red-border);background:var(--red-bg);color:var(--red-text);cursor:pointer;font-family:'DM Sans',sans-serif;font-weight:600">❌ Refuser</button>
+            </div>
+          </div>
+        </div>
+      </td>
+      ${cellsGris}
+      <td colspan="3" style="text-align:center;font-size:11px;color:var(--orange-text);font-weight:600;padding:8px">⏳ En attente de validation</td>
+    </tr>`;
+  }).join('');
+
+  tbody.innerHTML = rowsValidated + rowsPending;
 
   updateTotauxAnnuel(validated, anneeNow, moisActuel);
 }
@@ -3186,6 +3147,27 @@ function updateTotauxAnnuel(validated, anneeNow, moisActuel) {
   const elReste = document.getElementById('tot-reste');
   if (elPaye)  elPaye.textContent  = grandTotalPaye.toLocaleString('fr-MA') + ' DH';
   if (elReste) elReste.textContent = Math.max(0, grandTotalDu - grandTotalPaye).toLocaleString('fr-MA') + ' DH';
+
+  // ── BANDEAU SYNTHÈSE GLOBAL (CAS 13) ─────────────────────────
+  const synthDiv  = document.getElementById('resSynthese');
+  const synBar    = document.getElementById('resSyntheseBar');
+  const synTaux   = document.getElementById('synTauxBadge');
+  const synCol    = document.getElementById('synCollecte');
+  const synRest   = document.getElementById('synReste');
+  const synAnnee  = document.getElementById('resSyntheseAnnee');
+  if (synthDiv && grandTotalDu > 0) {
+    synthDiv.style.display = 'block';
+    const taux = Math.round((grandTotalPaye / grandTotalDu) * 100);
+    const reste = Math.max(0, grandTotalDu - grandTotalPaye);
+    if (synAnnee) synAnnee.textContent = resAnneeActive;
+    if (synBar)   synBar.style.width   = taux + '%';
+    if (synBar)   synBar.style.background = taux >= 80 ? 'linear-gradient(90deg,#16a34a,#4ade80)' : taux >= 50 ? 'linear-gradient(90deg,#d97706,#fbbf24)' : 'linear-gradient(90deg,#dc2626,#f87171)';
+    if (synTaux)  { synTaux.textContent = taux + '%'; synTaux.style.background = taux >= 80 ? 'var(--green-bg)' : taux >= 50 ? 'var(--yellow-bg)' : 'var(--red-bg)'; synTaux.style.color = taux >= 80 ? 'var(--green-text)' : taux >= 50 ? 'var(--yellow-text)' : 'var(--red-text)'; }
+    if (synCol)   synCol.textContent = grandTotalPaye.toLocaleString('fr-MA') + ' DH';
+    if (synRest)  synRest.textContent = reste.toLocaleString('fr-MA') + ' DH';
+  } else if (synthDiv) {
+    synthDiv.style.display = 'none';
+  }
 }
 
 // ── FILTRE RECHERCHE ─────────────────────────────────────────
@@ -4118,6 +4100,10 @@ function renderRecList() {
           style="font-size:11px;padding:5px 12px;border-radius:var(--radius-sm);border:1px solid var(--border2);background:var(--surface);cursor:pointer;color:var(--muted);font-family:'DM Sans',sans-serif;white-space:nowrap">
           ✏️ Modifier
         </button>
+        <button onclick="downloadRecPDF('${r.id}','${(r.nom||'').replace(/'/g,"\\'")}','${(r.appartement||'').replace(/'/g,"\\'")}')"
+          style="font-size:11px;padding:5px 12px;border-radius:var(--radius-sm);border:1px solid var(--blue-border);background:var(--blue-bg);cursor:pointer;color:var(--blue-text);font-family:'DM Sans',sans-serif;white-space:nowrap">
+          📄 Reçu
+        </button>
       </div>
     </div>`;
   }).join('');
@@ -4222,6 +4208,72 @@ async function saveRecPaiement() {
 
 function closeRecModal() {
   document.getElementById('recModal').classList.remove('open');
+}
+
+function downloadRecPDF(residentId, nom, apt) {
+  const p = recPaiements[residentId];
+  const resNomPDF  = currentUserMeta.residence_nom  || 'RedTech';
+  const resCodePDF = currentUserMeta.residence_code || '';
+  const moisLabel  = getMoisLabel();
+  const periode    = `${recAnneeActuelle}-${recMoisActuel}`;
+
+  const statutLabel = !p ? 'Non payé'
+    : p.statut === 'paye'    ? 'Payé'
+    : p.statut === 'partiel' ? 'Partiel'
+    : 'Non payé';
+  const statutColor = !p || p.statut === 'non_paye' ? '#b91c1c'
+    : p.statut === 'paye' ? '#15803d' : '#a16207';
+
+  const montantPaye = p?.montant_paye ? parseFloat(p.montant_paye).toFixed(2) : '0.00';
+  const montantDu   = recMontantMensuel.toFixed(2);
+  const datePaie    = p?.date_paiement ? new Date(p.date_paiement).toLocaleDateString('fr-FR',{day:'2-digit',month:'long',year:'numeric'}) : '—';
+  const modePaie    = { especes:'Espèces', virement:'Virement bancaire', cheque:'Chèque', mobile:'Paiement mobile' }[p?.mode_paiement] || '—';
+
+  const win = window.open('','_blank');
+  if (!win) { alert('⚠️ Autorisez les popups pour télécharger le reçu.'); return; }
+  win.document.write(`<!DOCTYPE html><html><head><meta charset="UTF-8">
+<title>Reçu ${nom} — ${moisLabel} ${recAnneeActuelle}</title>
+<style>
+  body{font-family:Arial,sans-serif;max-width:680px;margin:40px auto;padding:0 20px;color:#1c1c1a;}
+  .header{display:flex;justify-content:space-between;align-items:flex-end;border-bottom:2px solid #2563eb;padding-bottom:16px;margin-bottom:24px;}
+  .logo{font-size:22px;font-weight:700;color:#0d1b2a;letter-spacing:-.01em;}
+  .logo span{color:#e63946;}
+  .ref{font-size:11px;color:#78766e;text-align:right;}
+  .title{font-size:20px;font-weight:700;margin-bottom:4px;}
+  .sub{font-size:13px;color:#78766e;margin-bottom:24px;}
+  .badge{display:inline-block;padding:5px 14px;border-radius:20px;font-size:13px;font-weight:700;background:${p?.statut==='paye'?'#f0fdf4':p?.statut==='partiel'?'#fefce8':'#fef2f2'};color:${statutColor};border:1px solid ${p?.statut==='paye'?'#bbf7d0':p?.statut==='partiel'?'#fde68a':'#fecaca'};margin-bottom:20px;}
+  .grid{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:20px;}
+  .field{padding:12px 16px;background:#f5f4f1;border-radius:8px;}
+  .fl{font-size:10px;text-transform:uppercase;letter-spacing:.1em;color:#78766e;margin-bottom:5px;}
+  .fv{font-size:14px;font-weight:600;}
+  .total-box{background:#0d1b2a;color:#fff;border-radius:10px;padding:18px 20px;display:flex;justify-content:space-between;align-items:center;margin-bottom:24px;}
+  .total-label{font-size:13px;opacity:.7;}
+  .total-val{font-size:26px;font-weight:700;color:#4ade80;}
+  .footer{border-top:1px solid #e3e1db;padding-top:14px;font-size:11px;color:#aba9a1;text-align:center;}
+  @media print{body{margin:0;}}
+</style></head><body>
+<div class="header">
+  <div class="logo">Red<span>Tech</span> — ${resNomPDF}</div>
+  <div class="ref">Reçu de charges · ${moisLabel} ${recAnneeActuelle}<br>${resCodePDF ? 'Code : ' + resCodePDF : ''}<br>Édité le ${new Date().toLocaleDateString('fr-FR')}</div>
+</div>
+<div class="title">${nom}</div>
+<div class="sub">${apt ? 'Appartement ' + apt : ''}</div>
+<div class="badge">${statutLabel}</div>
+<div class="grid">
+  <div class="field"><div class="fl">Période</div><div class="fv">${moisLabel} ${recAnneeActuelle}</div></div>
+  <div class="field"><div class="fl">Charge mensuelle</div><div class="fv">${montantDu} DH</div></div>
+  <div class="field"><div class="fl">Date de paiement</div><div class="fv">${datePaie}</div></div>
+  <div class="field"><div class="fl">Mode de paiement</div><div class="fv">${modePaie}</div></div>
+  ${p?.note ? `<div class="field" style="grid-column:1/-1"><div class="fl">Note</div><div class="fv">${p.note}</div></div>` : ''}
+</div>
+<div class="total-box">
+  <div><div class="total-label">Montant payé</div></div>
+  <div class="total-val">${montantPaye} DH</div>
+</div>
+<div class="footer">${resNomPDF}${resCodePDF ? ' · ' + resCodePDF : ''} — Propulsé par RedTech · redtech.ma</div>
+<script>window.onload=()=>{window.print();}<\/script>
+</body></html>`);
+  win.document.close();
 }
 
 function getMoisLabel() {
