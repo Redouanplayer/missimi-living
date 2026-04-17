@@ -565,6 +565,8 @@
     <div class="tab" data-tab="residents" onclick="showTab('residents',this)" id="tabResidents" style="display:none">👥 Résidents</div>
 <div class="tab" data-tab="recouvrement" onclick="showTab('recouvrement',this)" id="tabRecouvrement" style="display:none">💰 Recouvrement</div>
 <div class="tab" data-tab="finances" onclick="showTab('finances',this)" id="tabFinances" style="display:none">📊 Finances</div>
+<div class="tab" data-tab="paiements" onclick="showTab('paiements',this)" id="tabPaiements" style="display:none">💳 Paiements</div>
+<div class="tab" data-tab="mescharges" onclick="showTab('mescharges',this)" id="tabMesCharges" style="display:none">💳 Mes charges</div>
     <div class="tab" data-tab="admin" onclick="showTab('admin',this)" id="tabAdmin" style="display:none">Administration</div>
   </div>
 
@@ -1468,6 +1470,21 @@
             <input type="number" id="appelMontantFixe" placeholder="Ex : 500" min="0" step="1">
           </div>
 
+          <details style="margin-bottom:14px;background:var(--surface);border:1px solid var(--border);border-radius:var(--radius-sm);padding:10px 14px">
+            <summary style="cursor:pointer;font-size:12px;font-weight:600;color:var(--muted)">⚙️ Pénalités de retard (optionnel)</summary>
+            <div class="fr2" style="margin-top:10px">
+              <div>
+                <label class="lbl">Pénalité % du solde</label>
+                <input type="number" id="appelPenalitePct" placeholder="Ex : 5" min="0" max="100" step="0.1">
+              </div>
+              <div>
+                <label class="lbl">Pénalité forfaitaire (DH)</label>
+                <input type="number" id="appelPenaliteForfait" placeholder="Ex : 100" min="0" step="1">
+              </div>
+            </div>
+            <div style="font-size:11px;color:var(--hint);margin-top:6px">Appliqué automatiquement après J+30 sur les mises en demeure</div>
+          </details>
+
           <div class="alert alert-error" id="appelErr"></div>
           <div class="alert alert-success" id="appelOk"></div>
 
@@ -1478,15 +1495,83 @@
         </div>
 
         <!-- Filtres + Liste des appels -->
-        <div class="filters" style="margin-bottom:12px">
-          <button class="filter-btn active" onclick="filterAppelStatut(this,'all')">Tous</button>
-          <button class="filter-btn" onclick="filterAppelStatut(this,'brouillon')">📝 Brouillons</button>
-          <button class="filter-btn" onclick="filterAppelStatut(this,'emis')">📤 Émis</button>
-          <button class="filter-btn" onclick="filterAppelStatut(this,'partiellement_paye')">⚠️ Partiels</button>
-          <button class="filter-btn" onclick="filterAppelStatut(this,'paye')">✅ Payés</button>
+        <div style="display:flex;justify-content:space-between;align-items:center;gap:10px;flex-wrap:wrap;margin-bottom:12px">
+          <div class="filters" style="margin:0">
+            <button class="filter-btn active" onclick="filterAppelStatut(this,'all')">Tous</button>
+            <button class="filter-btn" onclick="filterAppelStatut(this,'brouillon')">📝 Brouillons</button>
+            <button class="filter-btn" onclick="filterAppelStatut(this,'emis')">📤 Émis</button>
+            <button class="filter-btn" onclick="filterAppelStatut(this,'partiellement_paye')">⚠️ Partiels</button>
+            <button class="filter-btn" onclick="filterAppelStatut(this,'paye')">✅ Payés</button>
+          </div>
+          <button class="btn btn-ghost" style="font-size:12px" onclick="openRelancesModal()">🔔 Lancer relances</button>
         </div>
         <div id="appelsList"></div>
       </div>
+    </div>
+
+    <!-- PAIEMENTS (admin) -->
+    <div class="section" id="sec-paiements">
+      <div class="card" style="margin-bottom:16px;border-left:4px solid var(--green)">
+        <div style="display:flex;justify-content:space-between;align-items:flex-start;flex-wrap:wrap;gap:12px">
+          <div>
+            <div class="card-title">💳 Historique des paiements</div>
+            <div class="card-sub" style="margin-bottom:0">Toutes les encaissements de la résidence</div>
+          </div>
+          <button class="btn btn-ghost" style="font-size:12px" onclick="exportPaiementsCSV()">📥 Export CSV</button>
+        </div>
+      </div>
+
+      <div class="stats-grid" style="margin-bottom:16px">
+        <div class="stat-card" style="border-left:3px solid var(--green)">
+          <div class="stat-num" id="paiTotal" style="color:var(--green-text)">0</div>
+          <div class="stat-label">Paiements enregistrés</div>
+        </div>
+        <div class="stat-card" style="border-left:3px solid var(--blue)">
+          <div class="stat-num" id="paiMontantTotal" style="color:var(--blue-text)">0 DH</div>
+          <div class="stat-label">Montant total</div>
+        </div>
+        <div class="stat-card" style="border-left:3px solid var(--amber,#f59e0b)">
+          <div class="stat-num" id="paiMois" style="color:var(--orange-text)">0 DH</div>
+          <div class="stat-label">Ce mois-ci</div>
+        </div>
+      </div>
+
+      <div class="card" style="margin-bottom:12px">
+        <input type="text" id="paiSearch" oninput="renderPaiements()" placeholder="🔍 Rechercher par résident, n° reçu, référence..." style="margin-bottom:12px">
+        <div class="filters">
+          <button class="filter-btn active" onclick="filterPaiementMode(this,'all')">Tous modes</button>
+          <button class="filter-btn" onclick="filterPaiementMode(this,'especes')">💵 Espèces</button>
+          <button class="filter-btn" onclick="filterPaiementMode(this,'virement')">🏦 Virement</button>
+          <button class="filter-btn" onclick="filterPaiementMode(this,'cheque')">📄 Chèque</button>
+          <button class="filter-btn" onclick="filterPaiementMode(this,'mobile')">📱 Mobile</button>
+        </div>
+      </div>
+
+      <div id="paiementsList"></div>
+    </div>
+
+    <!-- MES CHARGES (résident) -->
+    <div class="section" id="sec-mescharges">
+      <div class="card" style="margin-bottom:16px;border-left:4px solid var(--blue)">
+        <div style="display:flex;justify-content:space-between;align-items:flex-start;flex-wrap:wrap;gap:12px">
+          <div>
+            <div class="card-title">💳 Mes charges et paiements</div>
+            <div class="card-sub" style="margin-bottom:0">Consultez vos appels de fonds et votre historique</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Dashboard solde -->
+      <div id="mesChargesSolde"></div>
+
+      <!-- Sous-onglets -->
+      <div class="filters" style="margin-bottom:16px;background:var(--surface);padding:8px;border-radius:var(--radius-sm);border:1px solid var(--border)">
+        <button class="filter-btn active" onclick="showMesChargesSubTab(this,'charges')">📋 Mes charges</button>
+        <button class="filter-btn" onclick="showMesChargesSubTab(this,'historique')">📜 Historique paiements</button>
+      </div>
+
+      <div id="mcSub-charges"></div>
+      <div id="mcSub-historique" style="display:none"></div>
     </div>
 
     <!-- ADMIN -->
@@ -1572,6 +1657,22 @@
     </div>
     <div class="modal-body">
       <div id="appelDetailBody"></div>
+    </div>
+  </div>
+</div>
+
+<!-- MODAL RELANCES AUTOMATIQUES -->
+<div class="modal-overlay" id="relancesModal" onclick="if(event.target===this)closeRelancesModal()">
+  <div class="modal-box" style="max-width:720px">
+    <div class="modal-header">
+      <div>
+        <div class="modal-title">🔔 Relances automatiques</div>
+        <div style="font-size:12px;color:var(--muted);margin-top:3px">Envoi groupé d'emails aux résidents en retard</div>
+      </div>
+      <button class="modal-close" onclick="closeRelancesModal()">×</button>
+    </div>
+    <div class="modal-body">
+      <div id="relancesBody"></div>
     </div>
   </div>
 </div>
@@ -2252,6 +2353,15 @@ async function createAppel() {
     if (error) throw error;
     if (!data || !data.success) throw new Error(data?.error || 'Erreur');
 
+    const penPct     = parseFloat(document.getElementById('appelPenalitePct').value) || 0;
+    const penForfait = parseFloat(document.getElementById('appelPenaliteForfait').value) || 0;
+    if (penPct > 0 || penForfait > 0) {
+      await db.from('appels_de_fonds').update({
+        penalite_pct: penPct,
+        penalite_forfait: penForfait
+      }).eq('id', data.appel_id);
+    }
+
     okEl.textContent = '✅ ' + data.message;
     okEl.style.display = 'block';
 
@@ -2448,15 +2558,32 @@ function closeAppelDetailModal() {
 }
 
 async function emitAppel(appelId) {
-  if (!confirm('Émettre définitivement cet appel ? Les résidents seront notifiés.')) return;
+  if (!confirm('Émettre définitivement cet appel ?\n\nUn email sera envoyé à tous les résidents concernés.')) return;
   try {
     const { data, error } = await db.rpc('emit_appel_de_fonds', { p_appel_id: appelId });
     if (error) throw error;
     if (!data || !data.success) throw new Error(data?.error || 'Erreur');
+
+    try {
+      const notifResult = await callEdge({
+        type: 'appel_emis',
+        appel_id: appelId,
+        residence_id: currentUserMeta.residence_id
+      });
+      if (notifResult && notifResult.nb_envoyes !== undefined) {
+        alert('✅ ' + data.message + '\n\n📧 ' + notifResult.nb_envoyes + ' email(s) envoyés'
+              + (notifResult.nb_echecs > 0 ? ' · ⚠️ ' + notifResult.nb_echecs + ' échecs' : ''));
+      } else {
+        alert('✅ ' + data.message + '\n\n⚠️ Notifications email non envoyées (voir logs)');
+      }
+    } catch(e) {
+      console.warn('Notifications email:', e);
+      alert('✅ ' + data.message + '\n\n⚠️ Notifications email non envoyées');
+    }
+
     closeAppelDetailModal();
     await loadAppels();
     loadFinStats();
-    alert('✅ ' + data.message);
   } catch(e) {
     alert('❌ ' + e.message);
   }
@@ -2488,33 +2615,39 @@ async function saveLignePaiement() {
   const montant = parseFloat(document.getElementById('lignePaiementMontant').value);
   if (isNaN(montant) || montant <= 0) { showErr(errEl, '⚠️ Montant invalide'); return; }
 
-  const { data: ligne, error: e1 } = await db.from('appels_lignes').select('*').eq('id', ligneId).single();
-  if (e1) { showErr(errEl, '❌ ' + e1.message); return; }
+  try {
+    const { data, error } = await db.rpc('enregistrer_paiement', {
+      p_ligne_id:  ligneId,
+      p_montant:   montant,
+      p_mode:      document.getElementById('lignePaiementMode').value,
+      p_date:      document.getElementById('lignePaiementDate').value || new Date().toISOString().slice(0,10),
+      p_reference: document.getElementById('lignePaiementNote').value || null,
+      p_note:      null
+    });
+    if (error) throw error;
+    if (!data || !data.success) throw new Error(data?.error || 'Erreur SQL');
 
-  const nouveauPaye = Number(ligne.montant_paye || 0) + montant;
-  const nouveauStatut = nouveauPaye >= Number(ligne.montant_du) ? 'paye'
-                      : nouveauPaye > 0 ? 'partiel' : 'du';
+    const appelIdCache = finAppels.find(a => a.id === (
+      (finAppels.find(a => a.id === document.getElementById('appelDetailTitre').dataset?.appelId)) ?
+      document.getElementById('appelDetailTitre').dataset.appelId : null
+    ))?.id;
 
-  const { error: e2 } = await db.from('appels_lignes').update({
-    montant_paye: nouveauPaye,
-    statut: nouveauStatut,
-    date_dernier_paiement: document.getElementById('lignePaiementDate').value || new Date().toISOString().slice(0,10)
-  }).eq('id', ligneId);
+    try {
+      await callEdge({ type: 'recu_paiement', paiement_id: data.paiement_id });
+    } catch(e) {
+      console.warn('Envoi reçu:', e);
+    }
 
-  if (e2) { showErr(errEl, '❌ ' + e2.message); return; }
+    closeLignePaiementModal();
+    alert('✅ ' + data.message + '\n\n📧 Reçu envoyé par email au résident');
 
-  const { data: allLignes } = await db.from('appels_lignes')
-    .select('montant_du, montant_paye').eq('appel_id', ligne.appel_id);
-  const totalDu = (allLignes||[]).reduce((s,l) => s + Number(l.montant_du||0), 0);
-  const totalPaye = (allLignes||[]).reduce((s,l) => s + Number(l.montant_paye||0), 0);
-  const nouveauStatutAppel = totalPaye >= totalDu ? 'paye'
-                            : totalPaye > 0 ? 'partiellement_paye' : 'emis';
-  await db.from('appels_de_fonds').update({ statut: nouveauStatutAppel }).eq('id', ligne.appel_id);
-
-  closeLignePaiementModal();
-  openAppelDetail(ligne.appel_id);
-  loadAppels();
-  loadFinStats();
+    const { data: ligne } = await db.from('appels_lignes').select('appel_id').eq('id', ligneId).single();
+    if (ligne) openAppelDetail(ligne.appel_id);
+    loadAppels();
+    loadFinStats();
+  } catch(e) {
+    showErr(errEl, '❌ ' + e.message);
+  }
 }
 
 function exportAppelPDF(appelId) {
@@ -2585,6 +2718,485 @@ ${(lignes||[]).map(l => `
     win.document.close();
   });
 }
+
+// ════════════════════════════════════════════════════════════
+// MODULE PAIEMENTS (Admin) — Étape B
+// ════════════════════════════════════════════════════════════
+let allPaiements = [];
+let paiModeFilter = 'all';
+const MODE_LABELS = {
+  especes: '💵 Espèces', virement: '🏦 Virement', cheque: '📄 Chèque',
+  mobile: '📱 Mobile', carte: '💳 Carte', autre: '📎 Autre'
+};
+
+async function loadAndRenderPaiements() {
+  const listEl = document.getElementById('paiementsList');
+  listEl.innerHTML = '<div class="empty-state"><div class="empty-icon">⏳</div>Chargement...</div>';
+
+  const { data, error } = await db.from('paiements')
+    .select('*')
+    .eq('residence_id', currentUserMeta.residence_id)
+    .order('date_paiement', { ascending: false })
+    .order('created_at', { ascending: false });
+
+  if (error) {
+    listEl.innerHTML = '<div class="empty-state">❌ ' + error.message + '</div>';
+    return;
+  }
+
+  allPaiements = data || [];
+  const total = allPaiements.length;
+  const montantTotal = allPaiements.reduce((s, p) => s + Number(p.montant || 0), 0);
+  const now = new Date();
+  const moisCourant = now.toISOString().slice(0, 7);
+  const moisTotal = allPaiements
+    .filter(p => (p.date_paiement || '').startsWith(moisCourant))
+    .reduce((s, p) => s + Number(p.montant || 0), 0);
+
+  document.getElementById('paiTotal').textContent        = total;
+  document.getElementById('paiMontantTotal').textContent = montantTotal.toLocaleString('fr-MA') + ' DH';
+  document.getElementById('paiMois').textContent         = moisTotal.toLocaleString('fr-MA') + ' DH';
+
+  renderPaiements();
+}
+
+function filterPaiementMode(btn, mode) {
+  paiModeFilter = mode;
+  document.querySelectorAll('#sec-paiements .filters .filter-btn').forEach(b => b.classList.remove('active'));
+  btn.classList.add('active');
+  renderPaiements();
+}
+
+function renderPaiements() {
+  const listEl = document.getElementById('paiementsList');
+  const search = (document.getElementById('paiSearch')?.value || '').toLowerCase().trim();
+
+  let filtered = allPaiements.filter(p => {
+    if (paiModeFilter !== 'all' && p.mode_paiement !== paiModeFilter) return false;
+    if (search) {
+      const text = ((p.resident_nom || '') + ' ' + (p.numero_recu || '') + ' ' + (p.reference || '') + ' ' + (p.note || '')).toLowerCase();
+      if (!text.includes(search)) return false;
+    }
+    return true;
+  });
+
+  if (!filtered.length) {
+    listEl.innerHTML = '<div class="empty-state"><div class="empty-icon">💳</div>' +
+      (allPaiements.length === 0 ? 'Aucun paiement enregistré<br><small style="color:var(--hint);font-size:12px;margin-top:8px;display:block">Les paiements apparaîtront ici après leur enregistrement</small>' : 'Aucun paiement ne correspond au filtre') +
+      '</div>';
+    return;
+  }
+
+  listEl.innerHTML = filtered.map(p => {
+    const date = new Date(p.date_paiement).toLocaleDateString('fr-FR', { day:'numeric', month:'short', year:'numeric' });
+    const initiale = (p.resident_nom || '?')[0].toUpperCase();
+    return `
+      <div class="card" style="margin-bottom:8px;padding:14px;display:flex;gap:12px;align-items:center">
+        <div style="width:40px;height:40px;border-radius:50%;background:var(--green-bg);color:var(--green-text);display:flex;align-items:center;justify-content:center;font-weight:700;font-size:14px;flex-shrink:0;border:2px solid var(--green-border)">${initiale}</div>
+        <div style="flex:1;min-width:0">
+          <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap;margin-bottom:3px">
+            <strong style="font-size:13px">${escapeHtml(p.resident_nom || '—')}</strong>
+            ${p.resident_apt ? `<span style="font-size:11px;color:var(--muted)">Apt ${escapeHtml(p.resident_apt)}</span>` : ''}
+            <span style="font-family:'DM Mono',monospace;font-size:10px;background:var(--bg);padding:2px 6px;border-radius:4px;border:1px solid var(--border);color:var(--muted)">${p.numero_recu || ''}</span>
+          </div>
+          <div style="font-size:11px;color:var(--hint);display:flex;gap:12px;flex-wrap:wrap">
+            <span>${MODE_LABELS[p.mode_paiement] || p.mode_paiement}</span>
+            <span>📅 ${date}</span>
+            ${p.reference ? `<span>📝 ${escapeHtml(p.reference)}</span>` : ''}
+          </div>
+        </div>
+        <div style="text-align:right;flex-shrink:0">
+          <div style="font-size:16px;font-weight:700;color:var(--green-text)">+${Number(p.montant).toLocaleString('fr-MA')} DH</div>
+          <button class="btn-xs" style="padding:4px 10px;margin-top:4px;background:var(--bg);border:1px solid var(--border);color:var(--muted);font-size:11px" onclick="downloadRecuPDF('${p.id}')">📄 Reçu</button>
+        </div>
+      </div>`;
+  }).join('');
+}
+
+function downloadRecuPDF(paiementId) {
+  const p = allPaiements.find(x => x.id === paiementId);
+  if (!p) return;
+  const win = window.open('', '_blank');
+  if (!win) { alert('⚠️ Autorisez les popups'); return; }
+  const resNom = currentUserMeta.residence_nom || 'RedTech';
+  const resCode = currentUserMeta.residence_code || '';
+
+  win.document.write(`<!DOCTYPE html><html><head><meta charset="UTF-8"><title>${p.numero_recu}</title>
+<style>
+  body{font-family:Arial,sans-serif;max-width:720px;margin:40px auto;padding:0 30px;color:#1c1c1a}
+  .hd{display:flex;justify-content:space-between;align-items:flex-end;border-bottom:3px solid #2563eb;padding-bottom:16px;margin-bottom:30px}
+  .lg{font-size:24px;font-weight:700;color:#0d1b2a}
+  .lg span{color:#e63946}
+  .num{font-family:monospace;background:#dcfce7;padding:6px 14px;border-radius:6px;color:#15803d;font-size:14px;font-weight:600}
+  h1{font-size:22px;margin:20px 0 5px;color:#15803d}
+  .sub{font-size:13px;color:#78766e;margin-bottom:30px}
+  .amount{background:#f0fdf4;border:2px solid #86efac;border-radius:10px;padding:20px;text-align:center;margin:25px 0}
+  .amount-v{font-size:36px;font-weight:800;color:#15803d}
+  .amount-l{font-size:11px;text-transform:uppercase;color:#78766e;letter-spacing:.1em;margin-top:4px}
+  table{width:100%;font-size:13px;margin-bottom:25px}
+  th{padding:10px 0;text-align:left;color:#78766e;font-weight:600;font-size:11px;text-transform:uppercase;letter-spacing:.05em;width:35%}
+  td{padding:10px 0;font-weight:500}
+  .ft{border-top:1px solid #e3e1db;padding-top:15px;font-size:10px;color:#aba9a1;text-align:center;margin-top:40px}
+  .stamp{margin-top:40px;padding:14px;background:#fff7ed;border-left:4px solid #f59e0b;border-radius:4px;font-size:12px;color:#7c2d12}
+  @media print{body{margin:0}}
+</style></head><body>
+<div class="hd">
+  <div class="lg">Red<span>Tech</span> — ${resNom}</div>
+  <div class="num">${p.numero_recu}</div>
+</div>
+<h1>✅ Reçu de paiement</h1>
+<div class="sub">Ce document atteste du règlement des charges indiquées ci-dessous.</div>
+<div class="amount">
+  <div class="amount-v">${Number(p.montant).toLocaleString('fr-MA')} DH</div>
+  <div class="amount-l">Montant encaissé</div>
+</div>
+<table>
+  <tr><th>Résident</th><td>${p.resident_nom || '—'}${p.resident_apt ? ' · Apt ' + p.resident_apt : ''}</td></tr>
+  <tr><th>Mode de paiement</th><td>${MODE_LABELS[p.mode_paiement] || p.mode_paiement}</td></tr>
+  <tr><th>Date de paiement</th><td>${new Date(p.date_paiement).toLocaleDateString('fr-FR', {day:'numeric',month:'long',year:'numeric'})}</td></tr>
+  ${p.reference ? `<tr><th>Référence</th><td>${p.reference}</td></tr>` : ''}
+  ${p.note ? `<tr><th>Note</th><td>${p.note}</td></tr>` : ''}
+  <tr><th>N° reçu</th><td style="font-family:monospace">${p.numero_recu}</td></tr>
+</table>
+<div class="stamp">💡 Ce reçu fait foi. Conservez-le précieusement dans vos archives.</div>
+<div class="ft">${resNom}${resCode ? ' · ' + resCode : ''} — Édité le ${new Date().toLocaleDateString('fr-FR')} via RedTech · redtech.ma</div>
+<script>window.onload=()=>window.print();<\/script>
+</body></html>`);
+  win.document.close();
+}
+
+function exportPaiementsCSV() {
+  if (!allPaiements.length) { alert('⚠️ Aucun paiement à exporter'); return; }
+  const headers = ['N° Reçu','Date','Résident','Appartement','Montant (DH)','Mode','Référence','Note'];
+  const rows = allPaiements.map(p => [
+    p.numero_recu || '',
+    p.date_paiement || '',
+    (p.resident_nom || '').replace(/"/g,'""'),
+    p.resident_apt || '',
+    Number(p.montant || 0).toFixed(2),
+    MODE_LABELS[p.mode_paiement] || p.mode_paiement,
+    (p.reference || '').replace(/"/g,'""'),
+    (p.note || '').replace(/"/g,'""')
+  ]);
+  const csv = [headers, ...rows].map(r => r.map(v => '"' + v + '"').join(',')).join('\n');
+  const blob = new Blob(['\ufeff' + csv], { type: 'text/csv;charset=utf-8' });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = 'paiements_' + new Date().toISOString().slice(0,10) + '.csv';
+  a.click();
+  URL.revokeObjectURL(url);
+}
+
+
+// ════════════════════════════════════════════════════════════
+// MODULE RELANCES AUTOMATIQUES
+// ════════════════════════════════════════════════════════════
+async function openRelancesModal() {
+  const modal = document.getElementById('relancesModal');
+  const body = document.getElementById('relancesBody');
+  body.innerHTML = '<div class="empty-state">⏳ Analyse des retards...</div>';
+  modal.classList.add('open');
+
+  try {
+    await db.rpc('marquer_lignes_en_retard');
+    const { data, error } = await db.rpc('lignes_a_relancer');
+    if (error) throw error;
+
+    const lignes = (data || []).filter(l =>
+      l.residence_id === currentUserMeta.residence_id &&
+      l.niveau_attendu > 0 &&
+      l.nb_relances_envoyees < l.niveau_attendu
+    );
+
+    if (!lignes.length) {
+      body.innerHTML = '<div class="empty-state"><div class="empty-icon">✨</div>Aucune relance à envoyer<br><small style="color:var(--hint);font-size:12px;margin-top:8px;display:block">Tous les résidents sont à jour ou déjà relancés</small></div>';
+      return;
+    }
+
+    const niv1 = lignes.filter(l => l.niveau_attendu === 1).length;
+    const niv2 = lignes.filter(l => l.niveau_attendu === 2).length;
+    const niv3 = lignes.filter(l => l.niveau_attendu === 3).length;
+
+    let html = `
+      <div style="background:var(--amber-bg,#fff7ed);border:1px solid var(--amber-border,#fdba74);border-radius:var(--radius-sm);padding:14px;margin-bottom:16px">
+        <div style="font-size:13px;font-weight:600;color:var(--orange-text,#9a3412);margin-bottom:8px">⚠️ ${lignes.length} relance(s) à envoyer</div>
+        <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:10px;font-size:12px">
+          <div style="padding:8px;background:var(--surface);border-radius:4px;text-align:center">
+            <div style="font-size:20px;font-weight:700;color:var(--blue-text)">${niv1}</div>
+            <div style="font-size:10px;color:var(--muted)">🔔 Niveau 1 (J+5)</div>
+          </div>
+          <div style="padding:8px;background:var(--surface);border-radius:4px;text-align:center">
+            <div style="font-size:20px;font-weight:700;color:var(--orange-text,#ea580c)">${niv2}</div>
+            <div style="font-size:10px;color:var(--muted)">⚠️ Niveau 2 (J+15)</div>
+          </div>
+          <div style="padding:8px;background:var(--surface);border-radius:4px;text-align:center">
+            <div style="font-size:20px;font-weight:700;color:var(--red-text)">${niv3}</div>
+            <div style="font-size:10px;color:var(--muted)">⛔ Mise en demeure</div>
+          </div>
+        </div>
+      </div>
+
+      <div class="section-heading" style="margin-bottom:10px">Résidents à relancer</div>
+      <div style="max-height:320px;overflow-y:auto;border:1px solid var(--border);border-radius:var(--radius-sm);margin-bottom:16px">
+    `;
+
+    lignes.forEach(l => {
+      const niveauLabel = l.niveau_attendu === 1 ? '🔔 Rappel'
+                       : l.niveau_attendu === 2 ? '⚠️ Relance'
+                       : '⛔ Mise en demeure';
+      const niveauColor = l.niveau_attendu === 1 ? 'b-ouvert'
+                       : l.niveau_attendu === 2 ? 'b-moyenne'
+                       : 'b-haute';
+      html += `
+        <div style="display:flex;align-items:center;gap:10px;padding:11px 14px;border-bottom:1px solid var(--border)">
+          <div style="flex:1;min-width:0">
+            <div style="font-size:13px;font-weight:600">${escapeHtml(l.resident_nom || '—')}${l.resident_apt ? ' · Apt ' + escapeHtml(l.resident_apt) : ''}</div>
+            <div style="font-size:11px;color:var(--muted)">${escapeHtml(l.appel_numero)} · ${l.jours_retard}j de retard · ${Number(l.solde).toLocaleString('fr-MA')} DH</div>
+          </div>
+          <span class="badge ${niveauColor}">${niveauLabel}</span>
+        </div>
+      `;
+    });
+
+    html += `
+      </div>
+      <div style="background:var(--blue-bg);border:1px solid var(--blue-border);border-radius:var(--radius-sm);padding:12px;margin-bottom:16px;font-size:12px;color:var(--blue-text)">
+        💡 En production, les relances s'envoient automatiquement tous les jours à 7h via pg_cron. Ce bouton permet de les déclencher manuellement.
+      </div>
+      <div class="btn-row">
+        <button class="btn btn-ghost" onclick="closeRelancesModal()">Annuler</button>
+        <button class="btn btn-primary" style="width:auto" onclick="lancerRelancesAuto(${lignes.length})">📧 Envoyer ${lignes.length} relance(s)</button>
+      </div>
+    `;
+
+    body.innerHTML = html;
+  } catch(e) {
+    body.innerHTML = '<div class="empty-state">❌ ' + e.message + '</div>';
+  }
+}
+
+function closeRelancesModal() {
+  document.getElementById('relancesModal').classList.remove('open');
+}
+
+async function lancerRelancesAuto(nbAttendu) {
+  const btn = event.target;
+  btn.disabled = true;
+  btn.textContent = '⏳ Envoi en cours...';
+
+  try {
+    const result = await callEdge({ type: 'run_relances_auto' });
+    closeRelancesModal();
+    if (result && result.nb_envoyees !== undefined) {
+      alert('✅ ' + result.nb_envoyees + ' relance(s) envoyée(s)'
+          + (result.nb_skipped > 0 ? '\n⚠️ ' + result.nb_skipped + ' ignorée(s)' : ''));
+    } else {
+      alert('⚠️ Retour inattendu de l\'Edge Function');
+    }
+    loadFinStats();
+  } catch(e) {
+    alert('❌ ' + e.message);
+  } finally {
+    btn.disabled = false;
+    btn.textContent = '📧 Envoyer ' + nbAttendu + ' relance(s)';
+  }
+}
+
+
+// ════════════════════════════════════════════════════════════
+// MODULE MES CHARGES (Résident)
+// ════════════════════════════════════════════════════════════
+let mesChargesData = [];
+let mesPaiementsData = [];
+
+async function loadAndRenderMesCharges() {
+  const soldeEl = document.getElementById('mesChargesSolde');
+  soldeEl.innerHTML = '<div class="card"><div class="empty-state">⏳ Chargement de votre situation...</div></div>';
+
+  try {
+    const [soldeRes, chargesRes, paiementsRes] = await Promise.all([
+      db.rpc('mon_solde'),
+      db.rpc('mes_charges'),
+      db.rpc('mes_paiements')
+    ]);
+
+    if (soldeRes.error) throw soldeRes.error;
+    if (chargesRes.error) throw chargesRes.error;
+    if (paiementsRes.error) throw paiementsRes.error;
+
+    const solde = (soldeRes.data && soldeRes.data[0]) || {};
+    mesChargesData = chargesRes.data || [];
+    mesPaiementsData = paiementsRes.data || [];
+
+    renderMesChargesSolde(solde);
+    renderMesCharges();
+    renderMesPaiements();
+  } catch(e) {
+    soldeEl.innerHTML = '<div class="card"><div class="empty-state">❌ ' + e.message + '</div></div>';
+  }
+}
+
+function renderMesChargesSolde(s) {
+  const el = document.getElementById('mesChargesSolde');
+  const solde = Number(s.solde || 0);
+  const paye  = Number(s.total_paye || 0);
+  const du    = Number(s.total_du || 0);
+  const taux  = du > 0 ? Math.round((paye / du) * 100) : 100;
+  const nbRetards = Number(s.nb_retards || 0);
+
+  const statusColor = solde <= 0 ? 'var(--green)' : nbRetards > 0 ? 'var(--red)' : 'var(--amber,#f59e0b)';
+  const statusMsg   = solde <= 0 ? '✅ Vous êtes à jour'
+                   : nbRetards > 0 ? '🔴 Vous avez ' + nbRetards + ' charge(s) en retard'
+                   : '⏳ Vous avez un solde en cours';
+
+  el.innerHTML = `
+    <div class="card" style="margin-bottom:16px;border-left:4px solid ${statusColor}">
+      <div style="display:flex;justify-content:space-between;align-items:flex-start;gap:16px;flex-wrap:wrap">
+        <div>
+          <div style="font-size:11px;color:var(--muted);font-weight:600;text-transform:uppercase;letter-spacing:.05em;margin-bottom:4px">Mon solde</div>
+          <div style="font-size:32px;font-weight:800;color:${statusColor};line-height:1">${solde.toLocaleString('fr-MA')} DH</div>
+          <div style="font-size:12px;color:var(--muted);margin-top:6px">${statusMsg}</div>
+        </div>
+        <div style="text-align:right;font-size:12px;color:var(--muted)">
+          <div>Total dû : <strong>${du.toLocaleString('fr-MA')} DH</strong></div>
+          <div style="color:var(--green-text)">Payé : <strong>${paye.toLocaleString('fr-MA')} DH</strong></div>
+          ${s.prochaine_echeance ? `<div style="margin-top:6px">Prochaine échéance : <strong>${new Date(s.prochaine_echeance).toLocaleDateString('fr-FR')}</strong></div>` : ''}
+        </div>
+      </div>
+      <div style="margin-top:14px">
+        <div style="background:var(--border);border-radius:20px;height:10px;overflow:hidden">
+          <div style="height:100%;background:linear-gradient(90deg,#2563eb,#10b981);width:${taux}%;border-radius:20px;transition:width .6s ease"></div>
+        </div>
+        <div style="text-align:center;font-size:11px;color:var(--muted);margin-top:6px">Taux de paiement : <strong>${taux}%</strong></div>
+      </div>
+    </div>
+  `;
+}
+
+function showMesChargesSubTab(btn, sub) {
+  document.querySelectorAll('#sec-mescharges .filters:first-of-type .filter-btn').forEach(b => b.classList.remove('active'));
+  btn.classList.add('active');
+  document.getElementById('mcSub-charges').style.display    = sub === 'charges' ? 'block' : 'none';
+  document.getElementById('mcSub-historique').style.display = sub === 'historique' ? 'block' : 'none';
+}
+
+function renderMesCharges() {
+  const el = document.getElementById('mcSub-charges');
+  if (!mesChargesData.length) {
+    el.innerHTML = '<div class="empty-state"><div class="empty-icon">✨</div>Aucune charge active<br><small style="color:var(--hint);font-size:12px;margin-top:8px;display:block">Vous n\'avez aucun appel de fonds en cours</small></div>';
+    return;
+  }
+
+  el.innerHTML = mesChargesData.map(c => {
+    const typeInfo = APPEL_TYPES[c.appel_type] || APPEL_TYPES.autre;
+    const statutInfo = c.statut === 'paye' ? { label: '✅ Payé', cls: 'b-resolu' }
+                    : c.statut === 'partiel' ? { label: '⚠️ Partiel', cls: 'b-moyenne' }
+                    : c.statut === 'en_retard' ? { label: '🔴 En retard', cls: 'b-haute' }
+                    : { label: '📤 À payer', cls: 'b-ouvert' };
+    const jRestants = c.jours_restants;
+    const dateLbl = jRestants < 0 ? `<span style="color:var(--red-text);font-weight:600">Échue depuis ${Math.abs(jRestants)} jour(s)</span>`
+                  : jRestants === 0 ? `<span style="color:var(--orange-text);font-weight:600">Échue aujourd'hui</span>`
+                  : jRestants <= 7 ? `<span style="color:var(--orange-text);font-weight:600">Échéance dans ${jRestants} jour(s)</span>`
+                  : `Échéance le ${new Date(c.date_echeance).toLocaleDateString('fr-FR')}`;
+
+    return `
+      <div class="card" style="margin-bottom:10px;padding:16px">
+        <div style="display:flex;justify-content:space-between;align-items:flex-start;gap:12px;flex-wrap:wrap;margin-bottom:10px">
+          <div style="flex:1;min-width:0">
+            <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap;margin-bottom:4px">
+              <span class="badge ${statutInfo.cls}">${statutInfo.label}</span>
+              <span style="font-family:'DM Mono',monospace;font-size:11px;color:var(--muted);background:var(--bg);padding:2px 8px;border-radius:4px;border:1px solid var(--border)">${c.appel_numero || '—'}</span>
+            </div>
+            <div style="font-size:14px;font-weight:600;color:var(--text);margin-bottom:3px">${typeInfo.icon} ${escapeHtml(c.appel_titre)}</div>
+            <div style="font-size:11px;color:var(--hint)">${dateLbl}${c.periode ? ' · ' + c.periode : ''}</div>
+          </div>
+          <div style="text-align:right">
+            <div style="font-size:18px;font-weight:700;color:${Number(c.solde) > 0 ? 'var(--red-text)' : 'var(--green-text)'}">${Number(c.solde).toLocaleString('fr-MA')} DH</div>
+            <div style="font-size:10px;color:var(--muted);text-transform:uppercase;letter-spacing:.05em">${Number(c.solde) > 0 ? 'Restant dû' : 'Soldé'}</div>
+          </div>
+        </div>
+        <div style="display:flex;justify-content:space-between;font-size:11px;color:var(--muted);padding-top:10px;border-top:1px solid var(--border)">
+          <span>Montant : <strong>${Number(c.montant_du).toLocaleString('fr-MA')} DH</strong></span>
+          <span style="color:var(--green-text)">Payé : <strong>${Number(c.montant_paye).toLocaleString('fr-MA')} DH</strong></span>
+          ${c.nb_relances > 0 ? `<span style="color:var(--orange-text)">🔔 ${c.nb_relances} relance(s)</span>` : ''}
+        </div>
+      </div>
+    `;
+  }).join('');
+}
+
+function renderMesPaiements() {
+  const el = document.getElementById('mcSub-historique');
+  if (!mesPaiementsData.length) {
+    el.innerHTML = '<div class="empty-state"><div class="empty-icon">📜</div>Aucun paiement enregistré</div>';
+    return;
+  }
+
+  el.innerHTML = mesPaiementsData.map(p => {
+    const date = new Date(p.date_paiement).toLocaleDateString('fr-FR', { day:'numeric', month:'long', year:'numeric' });
+    return `
+      <div class="card" style="margin-bottom:8px;padding:14px;display:flex;gap:12px;align-items:center">
+        <div style="width:40px;height:40px;border-radius:50%;background:var(--green-bg);color:var(--green-text);display:flex;align-items:center;justify-content:center;font-size:18px;flex-shrink:0;border:2px solid var(--green-border)">✓</div>
+        <div style="flex:1;min-width:0">
+          <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap;margin-bottom:2px">
+            <strong style="font-size:13px">${escapeHtml(p.appel_titre || 'Paiement')}</strong>
+            <span style="font-family:'DM Mono',monospace;font-size:10px;background:var(--bg);padding:2px 6px;border-radius:4px;border:1px solid var(--border);color:var(--muted)">${p.numero_recu}</span>
+          </div>
+          <div style="font-size:11px;color:var(--hint)">${MODE_LABELS[p.mode_paiement] || p.mode_paiement} · 📅 ${date}${p.reference ? ' · ' + escapeHtml(p.reference) : ''}</div>
+        </div>
+        <div style="text-align:right;flex-shrink:0">
+          <div style="font-size:15px;font-weight:700;color:var(--green-text)">+${Number(p.montant).toLocaleString('fr-MA')} DH</div>
+          <button class="btn-xs" style="padding:3px 8px;margin-top:3px;background:var(--bg);border:1px solid var(--border);color:var(--muted);font-size:10px" onclick='downloadRecuPDFResident(${JSON.stringify(p).replace(/'/g,"&#39;")})'>📄 Reçu</button>
+        </div>
+      </div>
+    `;
+  }).join('');
+}
+
+function downloadRecuPDFResident(p) {
+  const win = window.open('', '_blank');
+  if (!win) { alert('⚠️ Autorisez les popups'); return; }
+  const resNom = currentUserMeta.residence_nom || 'RedTech';
+  const resCode = currentUserMeta.residence_code || '';
+
+  win.document.write(`<!DOCTYPE html><html><head><meta charset="UTF-8"><title>${p.numero_recu}</title>
+<style>
+  body{font-family:Arial,sans-serif;max-width:720px;margin:40px auto;padding:0 30px;color:#1c1c1a}
+  .hd{display:flex;justify-content:space-between;align-items:flex-end;border-bottom:3px solid #2563eb;padding-bottom:16px;margin-bottom:30px}
+  .lg{font-size:24px;font-weight:700;color:#0d1b2a}.lg span{color:#e63946}
+  .num{font-family:monospace;background:#dcfce7;padding:6px 14px;border-radius:6px;color:#15803d;font-size:14px;font-weight:600}
+  h1{font-size:22px;margin:20px 0 5px;color:#15803d}
+  .sub{font-size:13px;color:#78766e;margin-bottom:30px}
+  .amount{background:#f0fdf4;border:2px solid #86efac;border-radius:10px;padding:20px;text-align:center;margin:25px 0}
+  .amount-v{font-size:36px;font-weight:800;color:#15803d}
+  .amount-l{font-size:11px;text-transform:uppercase;color:#78766e;letter-spacing:.1em;margin-top:4px}
+  table{width:100%;font-size:13px;margin-bottom:25px}
+  th{padding:10px 0;text-align:left;color:#78766e;font-weight:600;font-size:11px;text-transform:uppercase;letter-spacing:.05em;width:35%}
+  td{padding:10px 0;font-weight:500}
+  .ft{border-top:1px solid #e3e1db;padding-top:15px;font-size:10px;color:#aba9a1;text-align:center;margin-top:40px}
+  @media print{body{margin:0}}
+</style></head><body>
+<div class="hd"><div class="lg">Red<span>Tech</span> — ${resNom}</div><div class="num">${p.numero_recu}</div></div>
+<h1>✅ Reçu de paiement</h1>
+<div class="sub">Ce document atteste du règlement des charges ci-dessous.</div>
+<div class="amount">
+  <div class="amount-v">${Number(p.montant).toLocaleString('fr-MA')} DH</div>
+  <div class="amount-l">Montant réglé</div>
+</div>
+<table>
+  <tr><th>Concerne</th><td>${p.appel_titre || '—'}</td></tr>
+  <tr><th>Mode</th><td>${MODE_LABELS[p.mode_paiement] || p.mode_paiement}</td></tr>
+  <tr><th>Date</th><td>${new Date(p.date_paiement).toLocaleDateString('fr-FR', {day:'numeric',month:'long',year:'numeric'})}</td></tr>
+  ${p.reference ? `<tr><th>Référence</th><td>${p.reference}</td></tr>` : ''}
+  <tr><th>N° reçu</th><td style="font-family:monospace">${p.numero_recu}</td></tr>
+</table>
+<div class="ft">${resNom}${resCode ? ' · ' + resCode : ''} — Édité le ${new Date().toLocaleDateString('fr-FR')} via RedTech · redtech.ma</div>
+<script>window.onload=()=>window.print();<\/script>
+</body></html>`);
+  win.document.close();
+}
+
 
 async function init() {
   const { data: { session } } = await db.auth.getSession();
@@ -2941,6 +3553,8 @@ document.getElementById('tabRecouvrement').style.display =
   secteurActuel === 'residence' ? 'block' : 'none';
 document.getElementById('tabFinances').style.display =
   secteurActuel === 'residence' ? 'block' : 'none';
+document.getElementById('tabPaiements').style.display =
+  secteurActuel === 'residence' ? 'block' : 'none';
 
 if (secteurActuel === 'residence') {
   initRecPeriode();
@@ -2978,10 +3592,14 @@ if (secteurActuel === 'residence') {
     document.getElementById('tabResidents').style.display    = 'none';
     document.getElementById('tabRecouvrement').style.display = 'none';
     document.getElementById('tabCompta').style.display       = 'none';
+    document.getElementById('tabFinances').style.display     = 'none';
+    document.getElementById('tabPaiements').style.display    = 'none';
     document.getElementById('tabServices').style.display     = 'block';
     document.getElementById('tabDocuments').style.display    = 'block';
     document.getElementById('tabNouveau').style.display      = 'block';
     document.getElementById('tabSuivi').style.display        = 'block';
+    document.getElementById('tabMesCharges').style.display   =
+      secteurActuel === 'residence' ? 'block' : 'none';
 
     // Pré-remplir appartement
     const fAptEl = document.getElementById('fApt');
@@ -3009,6 +3627,8 @@ if(tab==='recouvrement') {
   loadAndRenderRecouvrement();
 }
 if(tab==='finances') loadAndRenderFinances();
+if(tab==='paiements') loadAndRenderPaiements();
+if(tab==='mescharges') loadAndRenderMesCharges();
 }
 
 async function loadTickets() {
