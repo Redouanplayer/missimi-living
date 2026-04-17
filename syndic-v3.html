@@ -564,6 +564,7 @@
     <div class="tab" data-tab="compta" onclick="showTab('compta',this)" id="tabCompta" style="display:none">Comptabilité</div>
     <div class="tab" data-tab="residents" onclick="showTab('residents',this)" id="tabResidents" style="display:none">👥 Résidents</div>
 <div class="tab" data-tab="recouvrement" onclick="showTab('recouvrement',this)" id="tabRecouvrement" style="display:none">💰 Recouvrement</div>
+<div class="tab" data-tab="finances" onclick="showTab('finances',this)" id="tabFinances" style="display:none">📊 Finances</div>
     <div class="tab" data-tab="admin" onclick="showTab('admin',this)" id="tabAdmin" style="display:none">Administration</div>
   </div>
 
@@ -1335,6 +1336,159 @@
       <div id="docsList"></div>
     </div>
 
+    <!-- FINANCES (nouveau module : quotes-parts + appels de fonds) -->
+    <div class="section" id="sec-finances">
+      <div class="card" style="margin-bottom:16px;border-left:4px solid var(--blue)">
+        <div style="display:flex;justify-content:space-between;align-items:flex-start;flex-wrap:wrap;gap:12px">
+          <div>
+            <div class="card-title">📊 Gestion financière</div>
+            <div class="card-sub" style="margin-bottom:0">Quotes-parts et appels de fonds — remplace l'ancien recouvrement</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Stats finances -->
+      <div class="stats-grid" id="finStats" style="margin-bottom:20px">
+        <div class="stat-card" style="border-left:3px solid var(--blue)">
+          <div class="stat-num" id="finNbQP" style="color:var(--blue-text)">0</div>
+          <div class="stat-label">Résidents avec quote-part</div>
+        </div>
+        <div class="stat-card" style="border-left:3px solid var(--green)">
+          <div class="stat-num" id="finTotalQP" style="color:var(--green-text)">0</div>
+          <div class="stat-label">Total mensuel (DH)</div>
+        </div>
+        <div class="stat-card" style="border-left:3px solid var(--amber,#f59e0b)">
+          <div class="stat-num" id="finNbAppels" style="color:var(--orange-text)">0</div>
+          <div class="stat-label">Appels actifs</div>
+        </div>
+      </div>
+
+      <div class="stats-grid" style="margin-bottom:20px">
+        <div class="stat-card" style="border-left:3px solid var(--blue);grid-column:span 2">
+          <div class="stat-num" id="finTaux" style="color:var(--blue-text);font-size:28px">0%</div>
+          <div class="stat-label">Taux de recouvrement global</div>
+          <div style="background:var(--border);border-radius:20px;height:8px;overflow:hidden;margin-top:10px">
+            <div id="finTauxBar" style="height:100%;background:linear-gradient(90deg,#2563eb,#10b981);width:0%;transition:width .6s ease"></div>
+          </div>
+          <div style="display:flex;justify-content:space-between;margin-top:6px;font-size:11px;color:var(--muted)">
+            <span>Collecté : <strong id="finPaye" style="color:var(--green-text)">0 DH</strong></span>
+            <span>Solde : <strong id="finSolde" style="color:var(--red-text)">0 DH</strong></span>
+          </div>
+        </div>
+        <div class="stat-card" style="border-left:3px solid var(--red)">
+          <div class="stat-num" id="finNbRetards" style="color:var(--red-text)">0</div>
+          <div class="stat-label">🔴 Résidents en retard</div>
+        </div>
+      </div>
+
+      <!-- Sous-onglets -->
+      <div class="filters" style="margin-bottom:20px;background:var(--surface);padding:8px;border-radius:var(--radius-sm);border:1px solid var(--border)">
+        <button class="filter-btn active" onclick="showFinSubTab(this,'qp')">💼 Quotes-parts</button>
+        <button class="filter-btn" onclick="showFinSubTab(this,'appels')">🧾 Appels de fonds</button>
+      </div>
+
+      <!-- SOUS-ONGLET QUOTES-PARTS -->
+      <div id="finSub-qp">
+        <div class="card" style="margin-bottom:16px">
+          <div style="display:flex;justify-content:space-between;align-items:flex-start;gap:12px;flex-wrap:wrap;margin-bottom:14px">
+            <div>
+              <div class="card-title">💼 Quotes-parts mensuelles</div>
+              <div class="card-sub" style="margin-bottom:0">Définir le montant mensuel dû par chaque résident</div>
+            </div>
+            <div style="display:flex;gap:8px">
+              <button class="btn btn-ghost" style="font-size:12px" onclick="applySameQPToAll()">📋 Appliquer le même à tous</button>
+              <button class="btn btn-primary" style="width:auto;font-size:12px" onclick="saveAllQuotesParts()">💾 Enregistrer les modifications</button>
+            </div>
+          </div>
+          <div id="qpList"></div>
+        </div>
+      </div>
+
+      <!-- SOUS-ONGLET APPELS DE FONDS -->
+      <div id="finSub-appels" style="display:none">
+        <div class="card" style="margin-bottom:16px">
+          <div style="display:flex;justify-content:space-between;align-items:flex-start;gap:12px;flex-wrap:wrap;margin-bottom:14px">
+            <div>
+              <div class="card-title">🧾 Appels de fonds</div>
+              <div class="card-sub" style="margin-bottom:0">Campagnes de charges courantes, travaux, provisions...</div>
+            </div>
+            <button class="btn btn-primary" style="width:auto;font-size:12px" onclick="toggleAppelForm()">+ Nouvel appel</button>
+          </div>
+        </div>
+
+        <!-- Formulaire création appel -->
+        <div class="card" id="appelForm" style="display:none;margin-bottom:16px;border-left:3px solid var(--blue)">
+          <div class="card-title" style="margin-bottom:4px">Nouvel appel de fonds</div>
+          <div class="card-sub">L'appel est créé en brouillon. Vous pourrez l'éditer puis l'émettre.</div>
+
+          <div class="fr2">
+            <div>
+              <label class="lbl">Type <span class="req">*</span></label>
+              <select id="appelType">
+                <option value="charges_courantes">📅 Charges courantes</option>
+                <option value="travaux">🔨 Travaux</option>
+                <option value="provisions_ag">⚖️ Provisions AG</option>
+                <option value="regularisation">📊 Régularisation annuelle</option>
+                <option value="fonds_reserve">💰 Fonds de réserve</option>
+                <option value="autre">📎 Autre</option>
+              </select>
+            </div>
+            <div>
+              <label class="lbl">Période <span class="req">*</span></label>
+              <input type="month" id="appelPeriode">
+            </div>
+          </div>
+
+          <div class="fg">
+            <label class="lbl">Titre <span class="req">*</span></label>
+            <input type="text" id="appelTitre" placeholder="Ex : Charges mensuelles novembre 2026">
+          </div>
+
+          <div class="fg">
+            <label class="lbl">Description</label>
+            <textarea id="appelDesc" placeholder="Détails, motif, répartition..." style="min-height:60px"></textarea>
+          </div>
+
+          <div class="fr2">
+            <div>
+              <label class="lbl">Date d'échéance <span class="req">*</span></label>
+              <input type="date" id="appelEcheance">
+            </div>
+            <div>
+              <label class="lbl">Mode de calcul <span class="req">*</span></label>
+              <select id="appelCalcul">
+                <option value="qp">📐 Selon quote-part de chaque résident</option>
+                <option value="fixe">💵 Montant fixe pour tous</option>
+              </select>
+            </div>
+          </div>
+
+          <div class="fg" id="appelMontantFixeWrap" style="display:none">
+            <label class="lbl">Montant fixe (DH) <span class="req">*</span></label>
+            <input type="number" id="appelMontantFixe" placeholder="Ex : 500" min="0" step="1">
+          </div>
+
+          <div class="alert alert-error" id="appelErr"></div>
+          <div class="alert alert-success" id="appelOk"></div>
+
+          <div class="btn-row">
+            <button class="btn btn-ghost" onclick="resetAppelForm()">Annuler</button>
+            <button class="btn btn-primary" style="width:auto" id="appelSubmitBtn" onclick="createAppel()">📤 Créer l'appel →</button>
+          </div>
+        </div>
+
+        <!-- Filtres + Liste des appels -->
+        <div class="filters" style="margin-bottom:12px">
+          <button class="filter-btn active" onclick="filterAppelStatut(this,'all')">Tous</button>
+          <button class="filter-btn" onclick="filterAppelStatut(this,'brouillon')">📝 Brouillons</button>
+          <button class="filter-btn" onclick="filterAppelStatut(this,'emis')">📤 Émis</button>
+          <button class="filter-btn" onclick="filterAppelStatut(this,'partiellement_paye')">⚠️ Partiels</button>
+          <button class="filter-btn" onclick="filterAppelStatut(this,'paye')">✅ Payés</button>
+        </div>
+        <div id="appelsList"></div>
+      </div>
+    </div>
+
     <!-- ADMIN -->
     <div class="section" id="sec-admin">
       <!-- DEMANDES EN ATTENTE -->
@@ -1401,6 +1555,71 @@
           <textarea id="commentInput" placeholder="Écrire un message..."></textarea>
           <button class="btn-send" onclick="addComment()">Envoyer</button>
         </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- MODAL DÉTAIL APPEL DE FONDS -->
+<div class="modal-overlay" id="appelDetailModal" onclick="if(event.target===this)closeAppelDetailModal()">
+  <div class="modal-box" style="max-width:760px">
+    <div class="modal-header">
+      <div>
+        <div class="modal-title" id="appelDetailTitre">🧾 Appel de fonds</div>
+        <div style="font-size:12px;color:var(--muted);margin-top:3px" id="appelDetailSub"></div>
+      </div>
+      <button class="modal-close" onclick="closeAppelDetailModal()">×</button>
+    </div>
+    <div class="modal-body">
+      <div id="appelDetailBody"></div>
+    </div>
+  </div>
+</div>
+
+<!-- MODAL PAIEMENT RAPIDE SUR UNE LIGNE -->
+<div class="modal-overlay" id="lignePaiementModal" onclick="if(event.target===this)closeLignePaiementModal()">
+  <div class="modal-box" style="max-width:440px">
+    <div class="modal-header">
+      <div>
+        <div class="modal-title">💳 Enregistrer un paiement</div>
+        <div style="font-size:12px;color:var(--muted);margin-top:3px" id="lignePaiementSub"></div>
+      </div>
+      <button class="modal-close" onclick="closeLignePaiementModal()">×</button>
+    </div>
+    <div class="modal-body">
+      <input type="hidden" id="lignePaiementLigneId">
+      <div style="background:var(--blue-bg);border:1px solid var(--blue-border);border-radius:var(--radius-sm);padding:12px 14px;margin-bottom:16px;font-size:13px;color:var(--blue-text)">
+        Dû : <strong id="lignePaiementDu">0 DH</strong> · 
+        Déjà payé : <strong id="lignePaiementDejaPaye">0 DH</strong> · 
+        Solde : <strong id="lignePaiementSolde">0 DH</strong>
+      </div>
+      <div class="fr2">
+        <div>
+          <label class="lbl">Montant à encaisser (DH) <span class="req">*</span></label>
+          <input type="number" id="lignePaiementMontant" placeholder="0" min="0" step="0.01">
+        </div>
+        <div>
+          <label class="lbl">Date paiement</label>
+          <input type="date" id="lignePaiementDate">
+        </div>
+      </div>
+      <div class="fg">
+        <label class="lbl">Mode de paiement</label>
+        <select id="lignePaiementMode">
+          <option value="especes">💵 Espèces</option>
+          <option value="virement">🏦 Virement bancaire</option>
+          <option value="cheque">📄 Chèque</option>
+          <option value="mobile">📱 Paiement mobile</option>
+        </select>
+      </div>
+      <div class="fg">
+        <label class="lbl">Référence / Note</label>
+        <input type="text" id="lignePaiementNote" placeholder="Ex: Reçu n°123">
+      </div>
+      <div class="alert alert-error" id="lignePaiementErr"></div>
+      <div class="btn-row">
+        <button class="btn btn-ghost" onclick="closeLignePaiementModal()">Annuler</button>
+        <button class="btn btn-primary" style="width:auto" onclick="saveLignePaiement()">💾 Enregistrer</button>
       </div>
     </div>
   </div>
@@ -1767,6 +1986,606 @@ async function deleteDocument(docId, url, titre) {
   }
 }
 
+// ════════════════════════════════════════════════════════════
+// MODULE FINANCES (Étape A : quotes-parts + appels de fonds)
+// ════════════════════════════════════════════════════════════
+let finResidents = [];
+let finQuotesParts = {};
+let finAppels = [];
+let finAppelStatutFilter = 'all';
+let finCurrentSubTab = 'qp';
+
+const APPEL_TYPES = {
+  charges_courantes: { icon: '📅', label: 'Charges courantes' },
+  travaux:           { icon: '🔨', label: 'Travaux' },
+  provisions_ag:     { icon: '⚖️', label: 'Provisions AG' },
+  regularisation:    { icon: '📊', label: 'Régularisation' },
+  fonds_reserve:     { icon: '💰', label: 'Fonds de réserve' },
+  autre:             { icon: '📎', label: 'Autre' }
+};
+
+const APPEL_STATUTS = {
+  brouillon:            { label: '📝 Brouillon',   cls: 'b-moyenne' },
+  emis:                 { label: '📤 Émis',         cls: 'b-ouvert' },
+  partiellement_paye:   { label: '⚠️ Partiel',     cls: 'b-moyenne' },
+  paye:                 { label: '✅ Payé',         cls: 'b-resolu' },
+  cloture:              { label: '🔒 Clôturé',     cls: 'b-basse' },
+  annule:               { label: '❌ Annulé',      cls: 'b-haute' }
+};
+
+function showFinSubTab(btn, sub) {
+  finCurrentSubTab = sub;
+  document.querySelectorAll('#sec-finances .filters:first-of-type .filter-btn').forEach(b => b.classList.remove('active'));
+  btn.classList.add('active');
+  document.getElementById('finSub-qp').style.display     = sub === 'qp' ? 'block' : 'none';
+  document.getElementById('finSub-appels').style.display = sub === 'appels' ? 'block' : 'none';
+  if (sub === 'appels' && finAppels.length === 0) {
+    loadAppels();
+  }
+}
+
+async function loadAndRenderFinances() {
+  if (!currentUserMeta.residence_id) {
+    document.getElementById('qpList').innerHTML = '<div class="empty-state">Résidence non identifiée</div>';
+    return;
+  }
+  await loadFinResidents();
+  await loadQuotesParts();
+  renderQuotesParts();
+  loadFinStats();
+  loadAppels();
+}
+
+async function loadFinResidents() {
+  try {
+    const result = await callEdge({
+      type: 'list_residents',
+      residence_id: currentUserMeta.residence_id
+    });
+    if (result && result.success && result.residents) {
+      finResidents = result.residents.filter(r => r.role === 'resident');
+    } else {
+      finResidents = [];
+    }
+  } catch(e) {
+    console.error('loadFinResidents:', e);
+    finResidents = [];
+  }
+}
+
+async function loadQuotesParts() {
+  const { data, error } = await db.from('quotes_parts')
+    .select('*')
+    .eq('residence_id', currentUserMeta.residence_id)
+    .eq('actif', true);
+  if (error) { console.error('QP:', error); finQuotesParts = {}; return; }
+  finQuotesParts = {};
+  (data || []).forEach(qp => { finQuotesParts[qp.resident_id] = qp; });
+}
+
+async function loadFinStats() {
+  try {
+    const { data } = await db.rpc('get_finances_stats', {
+      p_residence_id: currentUserMeta.residence_id
+    });
+    if (data && data[0]) {
+      const s = data[0];
+      document.getElementById('finNbQP').textContent      = s.nb_residents_qp || 0;
+      document.getElementById('finTotalQP').textContent   = Number(s.total_quotes_parts || 0).toLocaleString('fr-MA');
+      document.getElementById('finNbAppels').textContent  = s.nb_appels_actifs || 0;
+      document.getElementById('finNbRetards').textContent = s.nb_retards || 0;
+
+      const taux = Number(s.taux_recouvrement || 0);
+      document.getElementById('finTaux').textContent   = taux + '%';
+      document.getElementById('finTauxBar').style.width = taux + '%';
+      document.getElementById('finPaye').textContent   = Number(s.montant_total_paye  || 0).toLocaleString('fr-MA') + ' DH';
+      document.getElementById('finSolde').textContent  = Number(s.montant_total_solde || 0).toLocaleString('fr-MA') + ' DH';
+    }
+  } catch(e) { console.warn('stats fin:', e); }
+}
+
+function renderQuotesParts() {
+  const el = document.getElementById('qpList');
+  if (!finResidents.length) {
+    el.innerHTML = '<div class="empty-state"><div class="empty-icon">👥</div>Aucun résident actif<br><small style="color:var(--hint);font-size:12px;margin-top:8px;display:block">Ajoutez des résidents depuis l\'onglet 👥 Résidents</small></div>';
+    return;
+  }
+
+  const rows = finResidents.map(r => {
+    const qp = finQuotesParts[r.id];
+    const montant = qp ? qp.montant_mensuel : 0;
+    const initiale = (r.nom || r.email || '?')[0].toUpperCase();
+    return `
+      <div style="display:flex;align-items:center;gap:12px;padding:12px;border:1px solid var(--border);border-radius:var(--radius-sm);margin-bottom:8px;background:var(--surface);transition:all .15s" onmouseover="this.style.borderColor='var(--border2)'" onmouseout="this.style.borderColor='var(--border)'">
+        <div style="width:36px;height:36px;border-radius:50%;background:var(--blue-bg);color:var(--blue-text);display:flex;align-items:center;justify-content:center;font-weight:700;font-size:14px;flex-shrink:0;border:2px solid var(--blue-border)">${initiale}</div>
+        <div style="flex:1;min-width:0">
+          <div style="font-size:13px;font-weight:600;color:var(--text)">${escapeHtml(r.nom || 'Sans nom')}</div>
+          <div style="font-size:11px;color:var(--muted)">${r.appartement ? 'Apt ' + r.appartement : ''}${r.email ? ' · ' + r.email : ''}</div>
+        </div>
+        <div style="display:flex;align-items:center;gap:6px;flex-shrink:0">
+          <input type="number" id="qp-${r.id}" value="${montant}" min="0" step="1" placeholder="0"
+            style="width:110px;text-align:right;padding:7px 10px;font-weight:600;font-size:13px" data-resident="${r.id}" data-nom="${escapeAttr(r.nom||'')}" data-apt="${escapeAttr(r.appartement||'')}">
+          <span style="font-size:12px;color:var(--muted);font-weight:600">DH/mois</span>
+        </div>
+      </div>`;
+  }).join('');
+
+  el.innerHTML = rows;
+}
+
+function applySameQPToAll() {
+  const first = finResidents[0];
+  if (!first) return;
+  const val = prompt('Montant mensuel à appliquer à TOUS les résidents (en DH) ?');
+  const n = parseFloat(val);
+  if (isNaN(n) || n < 0) return;
+  finResidents.forEach(r => {
+    const inp = document.getElementById('qp-' + r.id);
+    if (inp) inp.value = n;
+  });
+}
+
+async function saveAllQuotesParts() {
+  const montants = finResidents.map(r => {
+    const inp = document.getElementById('qp-' + r.id);
+    const val = inp ? parseFloat(inp.value) : 0;
+    return {
+      resident_id:     r.id,
+      resident_nom:    r.nom || '',
+      resident_apt:    r.appartement || '',
+      montant_mensuel: isNaN(val) ? 0 : val
+    };
+  }).filter(m => m.montant_mensuel >= 0);
+
+  if (!montants.length) return;
+
+  const btn = event.target;
+  btn.disabled = true;
+  btn.textContent = '⏳ Enregistrement...';
+
+  try {
+    const { data, error } = await db.rpc('set_quotes_parts_bulk', {
+      p_residence_id: currentUserMeta.residence_id,
+      p_montants:     montants
+    });
+    if (error) throw error;
+    if (!data || !data.success) throw new Error(data?.error || 'Erreur SQL');
+
+    alert('✅ ' + data.message);
+    await loadQuotesParts();
+    loadFinStats();
+  } catch(e) {
+    alert('❌ ' + e.message);
+  } finally {
+    btn.disabled = false;
+    btn.textContent = '💾 Enregistrer les modifications';
+  }
+}
+
+// ── APPELS DE FONDS ─────────────────────────────────────────
+function toggleAppelForm() {
+  const form = document.getElementById('appelForm');
+  if (form.style.display === 'none') {
+    form.style.display = 'block';
+    const now = new Date();
+    document.getElementById('appelPeriode').value = now.toISOString().slice(0,7);
+    const ech = new Date(now.getTime() + 15*86400000);
+    document.getElementById('appelEcheance').value = ech.toISOString().slice(0,10);
+    updateAppelTitreDefault();
+    form.scrollIntoView({ behavior: 'smooth' });
+  } else {
+    form.style.display = 'none';
+  }
+}
+
+function updateAppelTitreDefault() {
+  const type = document.getElementById('appelType').value;
+  const periode = document.getElementById('appelPeriode').value;
+  const titreInp = document.getElementById('appelTitre');
+  if (!titreInp.value && periode) {
+    const [y, m] = periode.split('-');
+    const moisNom = ['','Janvier','Février','Mars','Avril','Mai','Juin','Juillet','Août','Septembre','Octobre','Novembre','Décembre'][parseInt(m)];
+    titreInp.value = APPEL_TYPES[type].label + ' — ' + moisNom + ' ' + y;
+  }
+}
+
+document.addEventListener('DOMContentLoaded', function() {
+  const typeEl    = document.getElementById('appelType');
+  const periodeEl = document.getElementById('appelPeriode');
+  const calculEl  = document.getElementById('appelCalcul');
+  if (typeEl)    typeEl.addEventListener('change',    updateAppelTitreDefault);
+  if (periodeEl) periodeEl.addEventListener('change', updateAppelTitreDefault);
+  if (calculEl)  calculEl.addEventListener('change', function() {
+    document.getElementById('appelMontantFixeWrap').style.display =
+      this.value === 'fixe' ? 'block' : 'none';
+  });
+});
+
+function resetAppelForm() {
+  document.getElementById('appelTitre').value = '';
+  document.getElementById('appelDesc').value = '';
+  document.getElementById('appelType').value = 'charges_courantes';
+  document.getElementById('appelCalcul').value = 'qp';
+  document.getElementById('appelMontantFixe').value = '';
+  document.getElementById('appelMontantFixeWrap').style.display = 'none';
+  document.getElementById('appelErr').style.display = 'none';
+  document.getElementById('appelOk').style.display = 'none';
+  document.getElementById('appelForm').style.display = 'none';
+}
+
+async function createAppel() {
+  const errEl = document.getElementById('appelErr');
+  const okEl  = document.getElementById('appelOk');
+  errEl.style.display = 'none';
+  okEl.style.display = 'none';
+
+  const titre     = document.getElementById('appelTitre').value.trim();
+  const desc      = document.getElementById('appelDesc').value.trim();
+  const type      = document.getElementById('appelType').value;
+  const periode   = document.getElementById('appelPeriode').value;
+  const echeance  = document.getElementById('appelEcheance').value;
+  const mode      = document.getElementById('appelCalcul').value;
+  const montantF  = parseFloat(document.getElementById('appelMontantFixe').value) || null;
+
+  if (!titre)    { showErr(errEl, '⚠️ Le titre est obligatoire'); return; }
+  if (!periode)  { showErr(errEl, '⚠️ La période est obligatoire'); return; }
+  if (!echeance) { showErr(errEl, '⚠️ La date d\'échéance est obligatoire'); return; }
+  if (mode === 'fixe' && (!montantF || montantF <= 0)) {
+    showErr(errEl, '⚠️ Saisissez un montant fixe valide'); return;
+  }
+
+  const btn = document.getElementById('appelSubmitBtn');
+  btn.disabled = true;
+  btn.textContent = '⏳ Création...';
+
+  try {
+    const { data, error } = await db.rpc('create_appel_de_fonds', {
+      p_residence_id:  currentUserMeta.residence_id,
+      p_titre:         titre,
+      p_description:   desc || null,
+      p_type:          type,
+      p_periode:       periode,
+      p_date_echeance: echeance,
+      p_montant_fixe:  montantF,
+      p_use_qp:        mode === 'qp'
+    });
+    if (error) throw error;
+    if (!data || !data.success) throw new Error(data?.error || 'Erreur');
+
+    okEl.textContent = '✅ ' + data.message;
+    okEl.style.display = 'block';
+
+    setTimeout(() => {
+      resetAppelForm();
+      loadAppels();
+      loadFinStats();
+    }, 1200);
+  } catch(e) {
+    showErr(errEl, '❌ ' + e.message);
+  } finally {
+    btn.disabled = false;
+    btn.textContent = '📤 Créer l\'appel →';
+  }
+}
+
+async function loadAppels() {
+  const listEl = document.getElementById('appelsList');
+  if (!listEl) return;
+  listEl.innerHTML = '<div class="empty-state">⏳ Chargement...</div>';
+
+  const { data, error } = await db.from('appels_de_fonds')
+    .select('*')
+    .eq('residence_id', currentUserMeta.residence_id)
+    .order('created_at', { ascending: false });
+
+  if (error) {
+    listEl.innerHTML = '<div class="empty-state">❌ ' + error.message + '</div>';
+    return;
+  }
+  finAppels = data || [];
+  renderAppels();
+}
+
+function filterAppelStatut(btn, statut) {
+  finAppelStatutFilter = statut;
+  document.querySelectorAll('#finSub-appels .filter-btn').forEach(b => b.classList.remove('active'));
+  btn.classList.add('active');
+  renderAppels();
+}
+
+function renderAppels() {
+  const listEl = document.getElementById('appelsList');
+  const filtered = finAppelStatutFilter === 'all'
+    ? finAppels
+    : finAppels.filter(a => a.statut === finAppelStatutFilter);
+
+  if (!filtered.length) {
+    listEl.innerHTML = '<div class="empty-state"><div class="empty-icon">🧾</div>' +
+      (finAppels.length === 0 ? 'Aucun appel de fonds<br><small style="color:var(--hint);font-size:12px;margin-top:8px;display:block">Cliquez sur "+ Nouvel appel" pour commencer</small>' : 'Aucun appel ne correspond au filtre') +
+      '</div>';
+    return;
+  }
+
+  listEl.innerHTML = filtered.map(a => {
+    const typeInfo = APPEL_TYPES[a.type] || APPEL_TYPES.autre;
+    const statutInfo = APPEL_STATUTS[a.statut] || APPEL_STATUTS.brouillon;
+    const echDate = new Date(a.date_echeance);
+    const today = new Date(); today.setHours(0,0,0,0);
+    const jRest = Math.round((echDate - today) / 86400000);
+    const echLbl = jRest < 0 ? `<span style="color:var(--red-text);font-weight:600">Échue depuis ${Math.abs(jRest)}j</span>`
+                : jRest === 0 ? `<span style="color:var(--orange-text);font-weight:600">Échue aujourd'hui</span>`
+                : `Échéance dans ${jRest}j`;
+
+    return `
+      <div class="card" style="margin-bottom:10px;padding:16px;cursor:pointer;transition:all .15s" onclick="openAppelDetail('${a.id}')" onmouseover="this.style.borderColor='var(--border2)';this.style.transform='translateY(-1px)'" onmouseout="this.style.borderColor='var(--border)';this.style.transform='translateY(0)'">
+        <div style="display:flex;justify-content:space-between;align-items:flex-start;gap:12px;flex-wrap:wrap">
+          <div style="flex:1;min-width:0">
+            <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap;margin-bottom:6px">
+              <span class="badge ${statutInfo.cls}">${statutInfo.label}</span>
+              <span style="font-family:'DM Mono',monospace;font-size:11px;color:var(--muted);background:var(--bg);padding:2px 8px;border-radius:4px;border:1px solid var(--border)">${a.numero || '—'}</span>
+            </div>
+            <div style="font-size:14px;font-weight:600;color:var(--text);margin-bottom:3px">
+              ${typeInfo.icon} ${escapeHtml(a.titre)}
+            </div>
+            ${a.description ? `<div style="font-size:12px;color:var(--muted);margin-bottom:6px;line-height:1.5">${escapeHtml(a.description)}</div>` : ''}
+            <div style="font-size:11px;color:var(--hint);display:flex;gap:12px;flex-wrap:wrap">
+              <span>📅 ${a.periode || '—'}</span>
+              <span>📆 ${echLbl}</span>
+              <span>👥 ${a.nb_residents || 0} résidents</span>
+              <span>💰 ${Number(a.montant_total||0).toLocaleString('fr-MA')} DH</span>
+            </div>
+          </div>
+        </div>
+      </div>`;
+  }).join('');
+}
+
+async function openAppelDetail(appelId) {
+  const modal = document.getElementById('appelDetailModal');
+  const body = document.getElementById('appelDetailBody');
+  body.innerHTML = '<div class="empty-state">⏳ Chargement...</div>';
+  modal.classList.add('open');
+
+  const appel = finAppels.find(a => a.id === appelId);
+  if (!appel) { body.innerHTML = '<div class="empty-state">❌ Appel introuvable</div>'; return; }
+
+  const typeInfo = APPEL_TYPES[appel.type] || APPEL_TYPES.autre;
+  const statutInfo = APPEL_STATUTS[appel.statut] || APPEL_STATUTS.brouillon;
+
+  document.getElementById('appelDetailTitre').textContent = typeInfo.icon + ' ' + appel.titre;
+  document.getElementById('appelDetailSub').innerHTML = appel.numero + ' · ' + statutInfo.label;
+
+  const { data: lignes, error } = await db.from('appels_lignes')
+    .select('*')
+    .eq('appel_id', appelId)
+    .order('resident_nom');
+
+  if (error) { body.innerHTML = '<div class="empty-state">❌ ' + error.message + '</div>'; return; }
+
+  const totalDu   = (lignes||[]).reduce((s,l) => s + Number(l.montant_du||0), 0);
+  const totalPaye = (lignes||[]).reduce((s,l) => s + Number(l.montant_paye||0), 0);
+  const tauxRec   = totalDu > 0 ? Math.round((totalPaye/totalDu)*100) : 0;
+
+  let html = `
+    <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:10px;margin-bottom:20px">
+      <div style="padding:12px;background:var(--blue-bg);border-radius:var(--radius-sm);text-align:center">
+        <div style="font-size:20px;font-weight:700;color:var(--blue-text)">${Number(totalDu).toLocaleString('fr-MA')} DH</div>
+        <div style="font-size:10px;color:var(--muted);font-weight:600;text-transform:uppercase;letter-spacing:.05em">Total dû</div>
+      </div>
+      <div style="padding:12px;background:var(--green-bg);border-radius:var(--radius-sm);text-align:center">
+        <div style="font-size:20px;font-weight:700;color:var(--green-text)">${Number(totalPaye).toLocaleString('fr-MA')} DH</div>
+        <div style="font-size:10px;color:var(--muted);font-weight:600;text-transform:uppercase;letter-spacing:.05em">Encaissé</div>
+      </div>
+      <div style="padding:12px;background:var(--red-bg);border-radius:var(--radius-sm);text-align:center">
+        <div style="font-size:20px;font-weight:700;color:var(--red-text)">${Number(totalDu-totalPaye).toLocaleString('fr-MA')} DH</div>
+        <div style="font-size:10px;color:var(--muted);font-weight:600;text-transform:uppercase;letter-spacing:.05em">Solde</div>
+      </div>
+    </div>
+
+    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:6px">
+      <span style="font-size:13px;font-weight:600">Taux de recouvrement</span>
+      <span style="font-size:18px;font-weight:700;color:var(--blue)">${tauxRec}%</span>
+    </div>
+    <div style="background:var(--border);border-radius:20px;height:10px;overflow:hidden;margin-bottom:20px">
+      <div style="height:100%;background:linear-gradient(90deg,#2563eb,#10b981);width:${tauxRec}%;border-radius:20px;transition:width .6s ease"></div>
+    </div>
+
+    ${appel.statut === 'brouillon' ? `
+      <div style="padding:12px;background:var(--yellow-bg);border:1px solid var(--yellow-border);border-radius:var(--radius-sm);margin-bottom:16px;display:flex;justify-content:space-between;align-items:center;gap:10px">
+        <div style="font-size:12px;color:var(--yellow-text)">📝 Cet appel est en brouillon. Cliquez "Émettre" pour le valider.</div>
+        <button class="btn btn-primary" style="width:auto;font-size:12px" onclick="emitAppel('${appel.id}')">📤 Émettre</button>
+      </div>
+    ` : ''}
+
+    <div class="section-heading" style="margin-bottom:10px">Détail par résident</div>
+    <div style="max-height:300px;overflow-y:auto;border:1px solid var(--border);border-radius:var(--radius-sm)">
+  `;
+
+  if (!lignes.length) {
+    html += '<div class="empty-state" style="padding:30px">Aucune ligne</div>';
+  } else {
+    html += lignes.map(l => {
+      const statutCls = l.statut === 'paye' ? 'b-resolu'
+                     : l.statut === 'partiel' ? 'b-moyenne'
+                     : l.statut === 'en_retard' ? 'b-haute' : 'b-ouvert';
+      const statutLbl = l.statut === 'paye' ? '✅ Payé'
+                     : l.statut === 'partiel' ? '⚠️ Partiel'
+                     : l.statut === 'en_retard' ? '🔴 Retard' : '📤 Dû';
+      return `
+        <div style="display:flex;align-items:center;gap:10px;padding:11px 14px;border-bottom:1px solid var(--border)">
+          <div style="flex:1;min-width:0">
+            <div style="font-size:13px;font-weight:600">${escapeHtml(l.resident_nom || 'Sans nom')}</div>
+            <div style="font-size:11px;color:var(--muted)">${l.resident_apt ? 'Apt ' + l.resident_apt : ''}</div>
+          </div>
+          <div style="text-align:right;min-width:90px">
+            <div style="font-size:13px;font-weight:700">${Number(l.montant_du||0).toLocaleString('fr-MA')} DH</div>
+            <div style="font-size:11px;color:var(--green-text)">Payé: ${Number(l.montant_paye||0).toLocaleString('fr-MA')}</div>
+          </div>
+          <span class="badge ${statutCls}" style="min-width:70px;text-align:center">${statutLbl}</span>
+          ${appel.statut !== 'brouillon' && l.solde > 0 ? `
+            <button class="btn-xs btn-green" style="padding:5px 10px" onclick="openLignePaiement('${l.id}','${escapeAttr(l.resident_nom||'')}',${l.montant_du},${l.montant_paye})">💳 Paiement</button>
+          ` : ''}
+        </div>
+      `;
+    }).join('');
+  }
+
+  html += '</div>';
+
+  if (appel.statut !== 'brouillon' && appel.statut !== 'annule') {
+    html += `
+      <div style="margin-top:16px;display:flex;gap:8px;justify-content:flex-end;flex-wrap:wrap">
+        <button class="btn btn-ghost" style="font-size:12px" onclick="exportAppelPDF('${appel.id}')">📄 Export PDF</button>
+      </div>
+    `;
+  }
+
+  body.innerHTML = html;
+}
+
+function closeAppelDetailModal() {
+  document.getElementById('appelDetailModal').classList.remove('open');
+}
+
+async function emitAppel(appelId) {
+  if (!confirm('Émettre définitivement cet appel ? Les résidents seront notifiés.')) return;
+  try {
+    const { data, error } = await db.rpc('emit_appel_de_fonds', { p_appel_id: appelId });
+    if (error) throw error;
+    if (!data || !data.success) throw new Error(data?.error || 'Erreur');
+    closeAppelDetailModal();
+    await loadAppels();
+    loadFinStats();
+    alert('✅ ' + data.message);
+  } catch(e) {
+    alert('❌ ' + e.message);
+  }
+}
+
+function openLignePaiement(ligneId, nom, montantDu, montantPaye) {
+  document.getElementById('lignePaiementLigneId').value = ligneId;
+  document.getElementById('lignePaiementSub').textContent = nom;
+  const solde = Number(montantDu) - Number(montantPaye);
+  document.getElementById('lignePaiementDu').textContent       = Number(montantDu).toLocaleString('fr-MA') + ' DH';
+  document.getElementById('lignePaiementDejaPaye').textContent = Number(montantPaye).toLocaleString('fr-MA') + ' DH';
+  document.getElementById('lignePaiementSolde').textContent    = solde.toLocaleString('fr-MA') + ' DH';
+  document.getElementById('lignePaiementMontant').value = solde;
+  document.getElementById('lignePaiementDate').value    = new Date().toISOString().slice(0,10);
+  document.getElementById('lignePaiementMode').value    = 'especes';
+  document.getElementById('lignePaiementNote').value    = '';
+  document.getElementById('lignePaiementErr').style.display = 'none';
+  document.getElementById('lignePaiementModal').classList.add('open');
+}
+
+function closeLignePaiementModal() {
+  document.getElementById('lignePaiementModal').classList.remove('open');
+}
+
+async function saveLignePaiement() {
+  const errEl = document.getElementById('lignePaiementErr');
+  errEl.style.display = 'none';
+  const ligneId = document.getElementById('lignePaiementLigneId').value;
+  const montant = parseFloat(document.getElementById('lignePaiementMontant').value);
+  if (isNaN(montant) || montant <= 0) { showErr(errEl, '⚠️ Montant invalide'); return; }
+
+  const { data: ligne, error: e1 } = await db.from('appels_lignes').select('*').eq('id', ligneId).single();
+  if (e1) { showErr(errEl, '❌ ' + e1.message); return; }
+
+  const nouveauPaye = Number(ligne.montant_paye || 0) + montant;
+  const nouveauStatut = nouveauPaye >= Number(ligne.montant_du) ? 'paye'
+                      : nouveauPaye > 0 ? 'partiel' : 'du';
+
+  const { error: e2 } = await db.from('appels_lignes').update({
+    montant_paye: nouveauPaye,
+    statut: nouveauStatut,
+    date_dernier_paiement: document.getElementById('lignePaiementDate').value || new Date().toISOString().slice(0,10)
+  }).eq('id', ligneId);
+
+  if (e2) { showErr(errEl, '❌ ' + e2.message); return; }
+
+  const { data: allLignes } = await db.from('appels_lignes')
+    .select('montant_du, montant_paye').eq('appel_id', ligne.appel_id);
+  const totalDu = (allLignes||[]).reduce((s,l) => s + Number(l.montant_du||0), 0);
+  const totalPaye = (allLignes||[]).reduce((s,l) => s + Number(l.montant_paye||0), 0);
+  const nouveauStatutAppel = totalPaye >= totalDu ? 'paye'
+                            : totalPaye > 0 ? 'partiellement_paye' : 'emis';
+  await db.from('appels_de_fonds').update({ statut: nouveauStatutAppel }).eq('id', ligne.appel_id);
+
+  closeLignePaiementModal();
+  openAppelDetail(ligne.appel_id);
+  loadAppels();
+  loadFinStats();
+}
+
+function exportAppelPDF(appelId) {
+  const appel = finAppels.find(a => a.id === appelId);
+  if (!appel) return;
+
+  db.from('appels_lignes').select('*').eq('appel_id', appelId).order('resident_nom').then(({data: lignes}) => {
+    const typeInfo = APPEL_TYPES[appel.type] || APPEL_TYPES.autre;
+    const totalDu   = (lignes||[]).reduce((s,l) => s + Number(l.montant_du||0), 0);
+    const totalPaye = (lignes||[]).reduce((s,l) => s + Number(l.montant_paye||0), 0);
+    const resNomPDF  = currentUserMeta.residence_nom  || 'RedTech';
+    const resCodePDF = currentUserMeta.residence_code || '';
+
+    const win = window.open('','_blank');
+    if (!win) { alert('⚠️ Autorisez les popups'); return; }
+    win.document.write(`<!DOCTYPE html><html><head><meta charset="UTF-8"><title>${appel.numero}</title>
+<style>
+  body{font-family:Arial,sans-serif;max-width:780px;margin:30px auto;padding:0 20px;color:#1c1c1a}
+  .hd{display:flex;justify-content:space-between;align-items:flex-end;border-bottom:2px solid #2563eb;padding-bottom:14px;margin-bottom:20px}
+  .lg{font-size:22px;font-weight:700;color:#0d1b2a}
+  .lg span{color:#e63946}
+  .num{font-family:monospace;background:#eff6ff;padding:4px 10px;border-radius:5px;color:#1d4ed8;font-size:13px}
+  h1{font-size:20px;margin-bottom:5px}
+  .meta{font-size:12px;color:#78766e;margin-bottom:20px}
+  .stats{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin-bottom:20px}
+  .stat{padding:12px;background:#f5f4f1;border-radius:6px;text-align:center}
+  .stat-v{font-size:18px;font-weight:700}
+  .stat-l{font-size:10px;text-transform:uppercase;color:#78766e;margin-top:3px}
+  table{width:100%;border-collapse:collapse;font-size:12px}
+  th,td{padding:8px 12px;text-align:left;border-bottom:1px solid #e3e1db}
+  th{background:#f5f4f1;font-weight:700;text-transform:uppercase;font-size:10px;color:#78766e;letter-spacing:.05em}
+  .ft{border-top:1px solid #e3e1db;padding-top:10px;margin-top:20px;font-size:10px;color:#aba9a1;text-align:center}
+  @media print{body{margin:0}}
+</style></head><body>
+<div class="hd">
+  <div class="lg">Red<span>Tech</span> — ${resNomPDF}</div>
+  <div class="num">${appel.numero || 'ADF'}</div>
+</div>
+<h1>${typeInfo.icon} ${appel.titre}</h1>
+<div class="meta">
+  Période : <strong>${appel.periode || '—'}</strong> · 
+  Échéance : <strong>${new Date(appel.date_echeance).toLocaleDateString('fr-FR')}</strong> · 
+  ${resCodePDF ? 'Code : ' + resCodePDF : ''}
+</div>
+${appel.description ? `<p style="font-size:13px;color:#78766e;margin-bottom:20px">${appel.description}</p>` : ''}
+<div class="stats">
+  <div class="stat"><div class="stat-v">${totalDu.toLocaleString('fr-MA')} DH</div><div class="stat-l">Total dû</div></div>
+  <div class="stat"><div class="stat-v" style="color:#15803d">${totalPaye.toLocaleString('fr-MA')} DH</div><div class="stat-l">Encaissé</div></div>
+  <div class="stat"><div class="stat-v" style="color:#b91c1c">${(totalDu-totalPaye).toLocaleString('fr-MA')} DH</div><div class="stat-l">Solde</div></div>
+</div>
+<table>
+<thead><tr><th>Résident</th><th>Apt</th><th style="text-align:right">Dû (DH)</th><th style="text-align:right">Payé (DH)</th><th style="text-align:right">Solde (DH)</th><th>Statut</th></tr></thead>
+<tbody>
+${(lignes||[]).map(l => `
+  <tr>
+    <td>${l.resident_nom || '—'}</td>
+    <td>${l.resident_apt || '—'}</td>
+    <td style="text-align:right;font-weight:600">${Number(l.montant_du||0).toLocaleString('fr-MA')}</td>
+    <td style="text-align:right;color:#15803d">${Number(l.montant_paye||0).toLocaleString('fr-MA')}</td>
+    <td style="text-align:right;font-weight:600;color:${(l.solde||0)>0?'#b91c1c':'#15803d'}">${Number(l.solde||0).toLocaleString('fr-MA')}</td>
+    <td>${l.statut === 'paye' ? '✅' : l.statut === 'partiel' ? '⚠️' : l.statut === 'en_retard' ? '🔴' : '—'} ${l.statut}</td>
+  </tr>
+`).join('')}
+</tbody></table>
+<div class="ft">${resNomPDF}${resCodePDF ? ' · ' + resCodePDF : ''} — Édité le ${new Date().toLocaleDateString('fr-FR')} via RedTech · redtech.ma</div>
+<script>window.onload=()=>{window.print();}<\/script>
+</body></html>`);
+    win.document.close();
+  });
+}
+
 async function init() {
   const { data: { session } } = await db.auth.getSession();
   if (session) {
@@ -2120,6 +2939,8 @@ function showApp() {
     const secteurActuel = currentUserMeta.secteur || 'residence';
 document.getElementById('tabRecouvrement').style.display =
   secteurActuel === 'residence' ? 'block' : 'none';
+document.getElementById('tabFinances').style.display =
+  secteurActuel === 'residence' ? 'block' : 'none';
 
 if (secteurActuel === 'residence') {
   initRecPeriode();
@@ -2187,6 +3008,7 @@ if(tab==='recouvrement') {
   if (!recMoisActuel) initRecPeriode();
   loadAndRenderRecouvrement();
 }
+if(tab==='finances') loadAndRenderFinances();
 }
 
 async function loadTickets() {
