@@ -560,6 +560,7 @@
       <span class="tab-badge" id="unreadBadge" style="display:none">0</span>
     </div>
     <div class="tab" data-tab="services" onclick="showTab('services',this)" id="tabServices" style="display:none">Annuaire</div>
+    <div class="tab" data-tab="documents" onclick="showTab('documents',this)" id="tabDocuments" style="display:none">📁 Documents</div>
     <div class="tab" data-tab="compta" onclick="showTab('compta',this)" id="tabCompta" style="display:none">Comptabilité</div>
     <div class="tab" data-tab="residents" onclick="showTab('residents',this)" id="tabResidents" style="display:none">👥 Résidents</div>
 <div class="tab" data-tab="recouvrement" onclick="showTab('recouvrement',this)" id="tabRecouvrement" style="display:none">💰 Recouvrement</div>
@@ -1203,6 +1204,137 @@
     </div>
   </div>
 </div>
+        <!-- DOCUMENTS -->
+    <div class="section" id="sec-documents">
+      <!-- En-tête avec stats -->
+      <div class="card" style="margin-bottom:16px;border-left:4px solid var(--blue)">
+        <div style="display:flex;justify-content:space-between;align-items:flex-start;flex-wrap:wrap;gap:12px;margin-bottom:16px">
+          <div>
+            <div class="card-title">📁 Gestion documentaire</div>
+            <div class="card-sub" style="margin-bottom:0">Contrats, factures, diagnostics, PV d'AG et documents officiels</div>
+          </div>
+          <button id="btnUploadDoc" class="btn btn-primary" style="width:auto;display:none" onclick="toggleDocUploadForm()">+ Ajouter un document</button>
+        </div>
+        <!-- Stats -->
+        <div class="stats-grid" id="docStats" style="display:none">
+          <div class="stat-card" style="border-left:3px solid var(--blue)">
+            <div class="stat-num" id="docTotal" style="color:var(--blue-text)">0</div>
+            <div class="stat-label">📄 Documents</div>
+          </div>
+          <div class="stat-card" style="border-left:3px solid var(--green)">
+            <div class="stat-num" id="docTaille" style="color:var(--green-text)">0</div>
+            <div class="stat-label">💾 Stockage (MB)</div>
+          </div>
+          <div class="stat-card" style="border-left:3px solid var(--amber,#f59e0b)">
+            <div class="stat-num" id="docDownloads" style="color:var(--orange-text)">0</div>
+            <div class="stat-label">📥 Téléchargements</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Formulaire upload (admin uniquement) -->
+      <div class="card" id="docUploadForm" style="display:none;margin-bottom:16px;border-left:3px solid var(--blue)">
+        <div class="card-title" style="margin-bottom:4px">Nouveau document</div>
+        <div class="card-sub">Uploadez un fichier et renseignez ses informations</div>
+
+        <div class="fr2">
+          <div>
+            <label class="lbl">Catégorie <span class="req">*</span></label>
+            <select id="docCat">
+              <option value="contrat">📜 Contrat</option>
+              <option value="facture">🧾 Facture</option>
+              <option value="diagnostic">🔬 Diagnostic</option>
+              <option value="pv_ag">⚖️ PV d'assemblée</option>
+              <option value="reglement">📖 Règlement</option>
+              <option value="comptes_annuels">📊 Comptes annuels</option>
+              <option value="assurance">🛡️ Assurance</option>
+              <option value="plans">🗺️ Plans</option>
+              <option value="certificat">🎖️ Certificat</option>
+              <option value="autre">📎 Autre</option>
+            </select>
+          </div>
+          <div>
+            <label class="lbl">Visibilité <span class="req">*</span></label>
+            <select id="docVis">
+              <option value="residents">🏠 Résidents (défaut)</option>
+              <option value="admin_only">🔒 Admin uniquement</option>
+              <option value="public">🌍 Public (site web)</option>
+            </select>
+          </div>
+        </div>
+
+        <div class="fg">
+          <label class="lbl">Titre du document <span class="req">*</span></label>
+          <input type="text" id="docTitre" placeholder="Ex : Contrat d'entretien ascenseur 2026">
+        </div>
+
+        <div class="fg">
+          <label class="lbl">Description</label>
+          <textarea id="docDesc" placeholder="Décrivez brièvement le contenu et son utilité..." style="min-height:60px"></textarea>
+        </div>
+
+        <div class="fr2">
+          <div>
+            <label class="lbl">Tags (séparés par virgule)</label>
+            <input type="text" id="docTags" placeholder="Ex: 2026, urgent, ascenseur">
+          </div>
+          <div>
+            <label class="lbl">Date d'expiration</label>
+            <input type="date" id="docExpiration">
+          </div>
+        </div>
+
+        <div class="fg">
+          <label class="lbl">Fichier <span class="req">*</span></label>
+          <div class="upload-zone" id="docUploadZone" onclick="document.getElementById('docFile').click()">
+            <div style="font-size:28px;margin-bottom:8px">📄</div>
+            <div id="docUploadText">Cliquez pour sélectionner un fichier</div>
+            <div style="font-size:11px;color:var(--hint);margin-top:4px">PDF, images, Word, Excel — max 20 Mo</div>
+          </div>
+          <input type="file" id="docFile" accept=".pdf,image/*,.doc,.docx,.xls,.xlsx,.ppt,.pptx,.txt,.csv" style="display:none" onchange="handleDocFile(this)">
+          <div id="docFileChip"></div>
+        </div>
+
+        <div class="alert alert-error" id="docErr"></div>
+        <div class="alert alert-success" id="docOk"></div>
+
+        <!-- Progress bar upload -->
+        <div id="docProgress" style="display:none;margin-bottom:12px">
+          <div style="display:flex;justify-content:space-between;font-size:12px;margin-bottom:4px">
+            <span style="color:var(--muted)" id="docProgressLabel">Upload en cours...</span>
+            <span style="font-weight:600;color:var(--blue)" id="docProgressPct">0%</span>
+          </div>
+          <div style="background:var(--border);border-radius:20px;height:8px;overflow:hidden">
+            <div id="docProgressBar" style="height:100%;background:linear-gradient(90deg,#2563eb,#10b981);width:0%;transition:width .3s ease"></div>
+          </div>
+        </div>
+
+        <div class="btn-row">
+          <button class="btn btn-ghost" onclick="resetDocForm()">Annuler</button>
+          <button class="btn btn-primary" style="width:auto" id="docSubmitBtn" onclick="uploadDocument()">📤 Uploader →</button>
+        </div>
+      </div>
+
+      <!-- Recherche + filtres -->
+      <div class="card" style="margin-bottom:16px">
+        <input type="text" id="docSearch" oninput="filterDocs()" placeholder="🔍 Rechercher un document..." style="margin-bottom:12px">
+        <div class="filters" id="docCatFilters">
+          <button class="filter-btn active" onclick="filterDocCat(this,'all')">Tous</button>
+          <button class="filter-btn" onclick="filterDocCat(this,'contrat')">📜 Contrats</button>
+          <button class="filter-btn" onclick="filterDocCat(this,'facture')">🧾 Factures</button>
+          <button class="filter-btn" onclick="filterDocCat(this,'diagnostic')">🔬 Diagnostics</button>
+          <button class="filter-btn" onclick="filterDocCat(this,'pv_ag')">⚖️ PV AG</button>
+          <button class="filter-btn" onclick="filterDocCat(this,'reglement')">📖 Règlements</button>
+          <button class="filter-btn" onclick="filterDocCat(this,'comptes_annuels')">📊 Comptes</button>
+          <button class="filter-btn" onclick="filterDocCat(this,'assurance')">🛡️ Assurance</button>
+          <button class="filter-btn" onclick="filterDocCat(this,'autre')">📎 Autre</button>
+        </div>
+      </div>
+
+      <!-- Liste des documents -->
+      <div id="docsList"></div>
+    </div>
+
     <!-- ADMIN -->
     <div class="section" id="sec-admin">
       <!-- DEMANDES EN ATTENTE -->
@@ -1303,6 +1435,336 @@ function hasUnreadAdminComment(t) {
   if (!t.commentaires || !t.commentaires.length) return false;
   const last = t.commentaires[t.commentaires.length - 1];
   return last.role === 'admin' && !isRead(t.id + '_' + last.id);
+}
+
+// ════════════════════════════════════════════════════════════
+// MODULE DOCUMENTS
+// ════════════════════════════════════════════════════════════
+const DOC_BUCKET = 'redtech-documents';
+let allDocs = [];
+let docSelectedFile = null;
+let docCurrentFilter = 'all';
+const CAT_LABELS = {
+  contrat: '📜 Contrat', facture: '🧾 Facture', diagnostic: '🔬 Diagnostic',
+  pv_ag: '⚖️ PV AG', reglement: '📖 Règlement', comptes_annuels: '📊 Comptes',
+  assurance: '🛡️ Assurance', plans: '🗺️ Plans', certificat: '🎖️ Certificat', autre: '📎 Autre'
+};
+const VIS_LABELS = {
+  public:'🌍 Public', residents:'🏠 Résidents', admin_only:'🔒 Admin'
+};
+
+function toggleDocUploadForm() {
+  const form = document.getElementById('docUploadForm');
+  if (form.style.display === 'none') {
+    form.style.display = 'block';
+    form.scrollIntoView({ behavior: 'smooth', block: 'start' });
+  } else {
+    form.style.display = 'none';
+  }
+}
+
+function handleDocFile(input) {
+  const file = input.files[0];
+  if (!file) return;
+  if (file.size > 20 * 1024 * 1024) {
+    alert('⚠️ Fichier trop volumineux (max 20 Mo)');
+    input.value = '';
+    return;
+  }
+  docSelectedFile = file;
+  const sizeKB = (file.size / 1024).toFixed(1);
+  const sizeStr = file.size > 1048576 ? (file.size / 1048576).toFixed(2) + ' Mo' : sizeKB + ' Ko';
+  document.getElementById('docUploadText').innerHTML =
+    '<strong style="color:var(--blue-text)">✓ ' + file.name + '</strong><br>' +
+    '<span style="font-size:11px;color:var(--hint)">' + sizeStr + '</span>';
+  document.getElementById('docFileChip').innerHTML = '';
+  if (!document.getElementById('docTitre').value) {
+    document.getElementById('docTitre').value = file.name.replace(/\.[^/.]+$/, '');
+  }
+}
+
+function resetDocForm() {
+  document.getElementById('docTitre').value = '';
+  document.getElementById('docDesc').value = '';
+  document.getElementById('docTags').value = '';
+  document.getElementById('docExpiration').value = '';
+  document.getElementById('docFile').value = '';
+  document.getElementById('docCat').value = 'contrat';
+  document.getElementById('docVis').value = 'residents';
+  document.getElementById('docUploadText').innerHTML = 'Cliquez pour sélectionner un fichier';
+  document.getElementById('docErr').style.display = 'none';
+  document.getElementById('docOk').style.display = 'none';
+  document.getElementById('docProgress').style.display = 'none';
+  docSelectedFile = null;
+  document.getElementById('docUploadForm').style.display = 'none';
+}
+
+async function uploadDocument() {
+  const errEl = document.getElementById('docErr');
+  const okEl  = document.getElementById('docOk');
+  errEl.style.display = 'none';
+  okEl.style.display = 'none';
+
+  const titre = document.getElementById('docTitre').value.trim();
+  const desc  = document.getElementById('docDesc').value.trim();
+  const cat   = document.getElementById('docCat').value;
+  const vis   = document.getElementById('docVis').value;
+  const tags  = document.getElementById('docTags').value
+                  .split(',').map(t => t.trim()).filter(Boolean);
+  const exp   = document.getElementById('docExpiration').value || null;
+
+  if (!titre) { showErr(errEl, '⚠️ Le titre est obligatoire'); return; }
+  if (!docSelectedFile) { showErr(errEl, '⚠️ Veuillez sélectionner un fichier'); return; }
+  if (!currentUserMeta.residence_id) { showErr(errEl, '❌ Résidence non identifiée'); return; }
+
+  const btn = document.getElementById('docSubmitBtn');
+  btn.disabled = true;
+  btn.textContent = '⏳ Upload...';
+
+  const progressEl  = document.getElementById('docProgress');
+  const progressBar = document.getElementById('docProgressBar');
+  const progressPct = document.getElementById('docProgressPct');
+  const progressLbl = document.getElementById('docProgressLabel');
+  progressEl.style.display = 'block';
+  progressBar.style.width = '10%';
+  progressPct.textContent = '10%';
+  progressLbl.textContent = 'Envoi du fichier...';
+
+  try {
+    const ext     = docSelectedFile.name.split('.').pop();
+    const safeName = docSelectedFile.name.replace(/[^a-zA-Z0-9._-]/g, '_');
+    const path    = currentUserMeta.residence_id + '/' + Date.now() + '_' + safeName;
+
+    progressBar.style.width = '30%';
+    progressPct.textContent = '30%';
+
+    const { data: upData, error: upErr } = await db.storage
+      .from(DOC_BUCKET)
+      .upload(path, docSelectedFile, {
+        cacheControl: '3600',
+        upsert: false,
+        contentType: docSelectedFile.type
+      });
+
+    if (upErr) throw new Error('Storage: ' + upErr.message);
+
+    progressBar.style.width = '70%';
+    progressPct.textContent = '70%';
+    progressLbl.textContent = 'Enregistrement...';
+
+    const { data: urlData } = db.storage.from(DOC_BUCKET).getPublicUrl(path);
+    const publicUrl = urlData.publicUrl;
+
+    const { error: insErr } = await db.from('documents').insert({
+      residence_id:    currentUserMeta.residence_id,
+      titre, description: desc, categorie: cat, tags,
+      fichier_nom:     docSelectedFile.name,
+      fichier_url:     publicUrl,
+      fichier_type:    docSelectedFile.type,
+      fichier_taille:  docSelectedFile.size,
+      visibilite:      vis,
+      uploaded_by:     currentUser.id,
+      uploaded_by_nom: currentUserMeta.nom || currentUser.email,
+      date_expiration: exp
+    });
+
+    if (insErr) {
+      await db.storage.from(DOC_BUCKET).remove([path]);
+      throw new Error('DB: ' + insErr.message);
+    }
+
+    progressBar.style.width = '100%';
+    progressPct.textContent = '100%';
+    progressLbl.textContent = '✅ Terminé';
+
+    okEl.textContent = '✅ Document "' + titre + '" uploadé avec succès';
+    okEl.style.display = 'block';
+
+    setTimeout(() => { resetDocForm(); loadAndRenderDocuments(); }, 1500);
+
+  } catch(e) {
+    console.error('[uploadDocument]', e);
+    showErr(errEl, '❌ ' + e.message);
+    progressEl.style.display = 'none';
+  } finally {
+    btn.disabled = false;
+    btn.textContent = '📤 Uploader →';
+  }
+}
+
+async function loadAndRenderDocuments() {
+  const listEl = document.getElementById('docsList');
+  listEl.innerHTML = '<div class="empty-state"><div class="empty-icon">⏳</div>Chargement des documents...</div>';
+
+  const btnUpload   = document.getElementById('btnUploadDoc');
+  const statsGrid   = document.getElementById('docStats');
+  const isAdmin     = currentRole === 'admin';
+  if (btnUpload) btnUpload.style.display = isAdmin ? 'inline-flex' : 'none';
+  if (statsGrid) statsGrid.style.display = isAdmin ? 'grid' : 'none';
+
+  let query = db.from('documents').select('*').order('created_at', { ascending: false });
+  if (currentUserMeta.residence_id) query = query.eq('residence_id', currentUserMeta.residence_id);
+
+  const { data, error } = await query;
+  if (error) {
+    listEl.innerHTML = '<div class="empty-state"><div class="empty-icon">❌</div>Erreur : ' + error.message + '</div>';
+    return;
+  }
+
+  allDocs = data || [];
+  renderDocs();
+
+  if (isAdmin && currentUserMeta.residence_id) {
+    loadDocStats();
+  }
+}
+
+async function loadDocStats() {
+  try {
+    const { data } = await db.rpc('get_documents_stats', { p_residence_id: currentUserMeta.residence_id });
+    if (data && data[0]) {
+      const s = data[0];
+      document.getElementById('docTotal').textContent      = s.total_docs || 0;
+      document.getElementById('docTaille').textContent     = (s.total_taille_mb || 0) + ' Mo';
+      document.getElementById('docDownloads').textContent  = s.total_downloads || 0;
+    }
+  } catch(e) { console.warn('stats docs:', e); }
+}
+
+function filterDocCat(btn, cat) {
+  docCurrentFilter = cat;
+  document.querySelectorAll('#docCatFilters .filter-btn').forEach(b => b.classList.remove('active'));
+  btn.classList.add('active');
+  renderDocs();
+}
+
+function filterDocs() {
+  renderDocs();
+}
+
+function renderDocs() {
+  const listEl = document.getElementById('docsList');
+  const search = (document.getElementById('docSearch').value || '').toLowerCase().trim();
+  const isAdmin = currentRole === 'admin';
+
+  let filtered = allDocs.filter(d => {
+    if (docCurrentFilter !== 'all' && d.categorie !== docCurrentFilter) return false;
+    if (search) {
+      const text = (d.titre + ' ' + (d.description || '') + ' ' + (d.tags || []).join(' ')).toLowerCase();
+      if (!text.includes(search)) return false;
+    }
+    return true;
+  });
+
+  if (!filtered.length) {
+    listEl.innerHTML = '<div class="empty-state"><div class="empty-icon">📭</div>' +
+      (allDocs.length === 0 ? 'Aucun document disponible' : 'Aucun document ne correspond à votre recherche') +
+      (isAdmin && allDocs.length === 0 ? '<br><small style="color:var(--hint);font-size:12px;margin-top:8px;display:block">Cliquez sur "+ Ajouter un document" pour commencer</small>' : '') +
+      '</div>';
+    return;
+  }
+
+  listEl.innerHTML = filtered.map(d => renderDocCard(d, isAdmin)).join('');
+}
+
+function renderDocCard(d, isAdmin) {
+  const sizeMo = d.fichier_taille ? (d.fichier_taille / 1048576).toFixed(2) + ' Mo' : '?';
+  const date = new Date(d.created_at).toLocaleDateString('fr-FR', { day:'numeric', month:'short', year:'numeric' });
+  const expSoon = d.date_expiration && new Date(d.date_expiration) < new Date(Date.now() + 30*86400000);
+  const expired = d.date_expiration && new Date(d.date_expiration) < new Date();
+  const tagsHtml = (d.tags || []).map(t => '<span style="font-size:10px;background:var(--bg);color:var(--muted);padding:2px 8px;border-radius:10px;border:1px solid var(--border)">#' + t + '</span>').join(' ');
+  const ext = (d.fichier_nom || '').split('.').pop().toLowerCase();
+  const iconColor = ['pdf'].includes(ext) ? '#b91c1c'
+                  : ['doc','docx'].includes(ext) ? '#1d4ed8'
+                  : ['xls','xlsx','csv'].includes(ext) ? '#15803d'
+                  : ['jpg','jpeg','png','gif','webp'].includes(ext) ? '#c2410c' : '#78766e';
+
+  return `
+    <div class="card" style="margin-bottom:10px;padding:18px;display:flex;gap:14px;align-items:flex-start">
+      <div style="width:48px;height:48px;background:${iconColor}15;color:${iconColor};border-radius:10px;display:flex;align-items:center;justify-content:center;font-weight:700;font-size:11px;flex-shrink:0;border:1px solid ${iconColor}30">
+        ${ext.toUpperCase().slice(0,4)}
+      </div>
+      <div style="flex:1;min-width:0">
+        <div style="display:flex;justify-content:space-between;align-items:flex-start;gap:10px;flex-wrap:wrap">
+          <div style="flex:1;min-width:0">
+            <div style="font-size:14px;font-weight:600;color:var(--text);margin-bottom:3px">
+              ${escapeHtml(d.titre)}
+              ${expired ? '<span class="badge b-haute" style="margin-left:6px">⚠️ Expiré</span>' :
+                 expSoon ? '<span class="badge b-moyenne" style="margin-left:6px">⏰ Expire bientôt</span>' : ''}
+            </div>
+            ${d.description ? `<div style="font-size:12px;color:var(--muted);margin-bottom:6px;line-height:1.5">${escapeHtml(d.description)}</div>` : ''}
+            <div style="display:flex;gap:6px;flex-wrap:wrap;align-items:center;margin-bottom:4px">
+              <span class="badge b-ouvert">${CAT_LABELS[d.categorie] || d.categorie}</span>
+              <span class="badge b-basse" style="font-size:10px">${VIS_LABELS[d.visibilite] || d.visibilite}</span>
+              ${tagsHtml}
+            </div>
+            <div style="font-size:11px;color:var(--hint);display:flex;gap:10px;flex-wrap:wrap">
+              <span>📄 ${sizeMo}</span>
+              <span>📅 ${date}</span>
+              ${d.uploaded_by_nom ? `<span>👤 ${escapeHtml(d.uploaded_by_nom)}</span>` : ''}
+              ${d.nb_telecharge ? `<span>📥 ${d.nb_telecharge} tél.</span>` : ''}
+            </div>
+          </div>
+          <div style="display:flex;gap:6px;flex-shrink:0">
+            <button onclick="downloadDocument('${d.id}','${escapeAttr(d.fichier_url)}','${escapeAttr(d.fichier_nom)}')" class="btn-xs btn-green" style="padding:6px 12px">📥 Télécharger</button>
+            ${isAdmin ? `
+              <button onclick="deleteDocument('${d.id}','${escapeAttr(d.fichier_url)}','${escapeAttr(d.titre)}')" class="btn-xs" style="padding:6px 10px;background:var(--red-bg);color:var(--red-text);border:1px solid var(--red-border)">🗑️</button>
+            ` : ''}
+          </div>
+        </div>
+      </div>
+    </div>`;
+}
+
+function escapeHtml(s) {
+  if (!s) return '';
+  return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+}
+function escapeAttr(s) {
+  if (!s) return '';
+  return String(s).replace(/'/g,"\\'").replace(/"/g,'&quot;');
+}
+
+async function downloadDocument(docId, url, filename) {
+  try {
+    await db.rpc('increment_document_downloads', { p_doc_id: docId });
+  } catch(e) { console.warn('increment:', e); }
+
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = filename;
+  a.target = '_blank';
+  a.rel = 'noopener';
+  document.body.appendChild(a);
+  a.click();
+  document.body.removeChild(a);
+
+  setTimeout(() => {
+    const doc = allDocs.find(d => d.id === docId);
+    if (doc) doc.nb_telecharge = (doc.nb_telecharge || 0) + 1;
+    renderDocs();
+  }, 500);
+}
+
+async function deleteDocument(docId, url, titre) {
+  if (!confirm('Supprimer définitivement le document "' + titre + '" ?\\n\\nCette action est irréversible.')) return;
+
+  try {
+    try {
+      const urlParts = url.split('/' + DOC_BUCKET + '/');
+      if (urlParts[1]) {
+        const storagePath = decodeURIComponent(urlParts[1]);
+        await db.storage.from(DOC_BUCKET).remove([storagePath]);
+      }
+    } catch(e) { console.warn('storage delete:', e); }
+
+    const { error } = await db.from('documents').delete().eq('id', docId);
+    if (error) throw error;
+
+    loadAndRenderDocuments();
+  } catch(e) {
+    alert('❌ Erreur : ' + e.message);
+  }
 }
 
 async function init() {
@@ -1652,6 +2114,7 @@ function showApp() {
     tabAdmin.style.display = 'block';
     document.getElementById('tabResidents').style.display = 'block';
     document.getElementById('tabServices').style.display  = 'block';
+    document.getElementById('tabDocuments').style.display = 'block';
     document.getElementById('tabCompta').style.display    = 'block';
 
     const secteurActuel = currentUserMeta.secteur || 'residence';
@@ -1695,6 +2158,7 @@ if (secteurActuel === 'residence') {
     document.getElementById('tabRecouvrement').style.display = 'none';
     document.getElementById('tabCompta').style.display       = 'none';
     document.getElementById('tabServices').style.display     = 'block';
+    document.getElementById('tabDocuments').style.display    = 'block';
     document.getElementById('tabNouveau').style.display      = 'block';
     document.getElementById('tabSuivi').style.display        = 'block';
 
@@ -1716,6 +2180,7 @@ function showTab(tab, el) {
   if(tab==='suivi') loadAndRenderSuivi();
   if(tab==='admin') loadAndRenderAdmin();
   if(tab==='services') loadAndRenderPros();
+  if(tab==='documents') loadAndRenderDocuments();
   if(tab==='compta') loadAndRenderCompta();
   if(tab==='residents') loadAndRenderResidents();
 if(tab==='recouvrement') {
