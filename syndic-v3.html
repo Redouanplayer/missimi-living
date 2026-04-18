@@ -143,7 +143,8 @@
   }
 
   /* ── LAYOUT ──────────────────────────────────── */
-  .page{max-width:860px;margin:0 auto;padding:28px 20px;}
+  .page{max-width:860px;margin:0 auto;padding:28px 20px;transition:max-width .2s ease;}
+  .page.wide{max-width:1360px;}
   .section{display:none;}
   .section.active{display:block;}
 
@@ -872,6 +873,53 @@
 </div>
 
 <!-- MODAL EDIT RESIDENT -->
+<div class="modal-overlay" id="exportOptionsModal" onclick="if(event.target===this)closeExportOptionsModal()">
+  <div class="modal-box" style="max-width:500px">
+    <div class="modal-header">
+      <div>
+        <div class="modal-title">📥 Exporter les données</div>
+        <div style="font-size:12px;color:var(--muted);margin-top:3px">Choisissez le type d'export selon vos besoins</div>
+      </div>
+      <button class="modal-close" onclick="closeExportOptionsModal()">×</button>
+    </div>
+    <div class="modal-body">
+      <button onclick="exportSyntheseAnnuelle()" style="width:100%;text-align:left;padding:14px 16px;margin-bottom:10px;background:var(--surface);border:2px solid var(--border);border-radius:var(--radius-sm);cursor:pointer;font-family:'DM Sans',sans-serif;transition:all .15s" onmouseover="this.style.borderColor='var(--blue)';this.style.background='var(--blue-bg)'" onmouseout="this.style.borderColor='var(--border)';this.style.background='var(--surface)'">
+        <div style="display:flex;align-items:flex-start;gap:12px">
+          <div style="font-size:24px;line-height:1">📊</div>
+          <div style="flex:1">
+            <div style="font-size:14px;font-weight:600;color:var(--text);margin-bottom:3px">Synthèse annuelle</div>
+            <div style="font-size:12px;color:var(--muted);line-height:1.5">Vue tableau 12 mois de l'année sélectionnée avec totaux et taux. Idéal pour un aperçu rapide.</div>
+          </div>
+        </div>
+      </button>
+
+      <button onclick="exportHistoriqueDetaille()" style="width:100%;text-align:left;padding:14px 16px;margin-bottom:10px;background:var(--surface);border:2px solid var(--border);border-radius:var(--radius-sm);cursor:pointer;font-family:'DM Sans',sans-serif;transition:all .15s" onmouseover="this.style.borderColor='var(--green-border)';this.style.background='var(--green-bg)'" onmouseout="this.style.borderColor='var(--border)';this.style.background='var(--surface)'">
+        <div style="display:flex;align-items:flex-start;gap:12px">
+          <div style="font-size:24px;line-height:1">📜</div>
+          <div style="flex:1">
+            <div style="font-size:14px;font-weight:600;color:var(--text);margin-bottom:3px">Historique détaillé (toutes années)</div>
+            <div style="font-size:12px;color:var(--muted);line-height:1.5">1 ligne par paiement avec date, montant, mode, référence. Analysable dans Excel, idéal pour la compta.</div>
+          </div>
+        </div>
+      </button>
+
+      <button onclick="exportEtatResidents()" style="width:100%;text-align:left;padding:14px 16px;background:var(--surface);border:2px solid var(--border);border-radius:var(--radius-sm);cursor:pointer;font-family:'DM Sans',sans-serif;transition:all .15s" onmouseover="this.style.borderColor='var(--amber-border,#fed7aa)';this.style.background='var(--amber-bg,#fff7ed)'" onmouseout="this.style.borderColor='var(--border)';this.style.background='var(--surface)'">
+        <div style="display:flex;align-items:flex-start;gap:12px">
+          <div style="font-size:24px;line-height:1">👥</div>
+          <div style="flex:1">
+            <div style="font-size:14px;font-weight:600;color:var(--text);margin-bottom:3px">Bilan par résident</div>
+            <div style="font-size:12px;color:var(--muted);line-height:1.5">Un résumé par résident : nb mois payés, total réglé, dernier paiement, mode préféré.</div>
+          </div>
+        </div>
+      </button>
+
+      <div style="margin-top:16px;padding:10px 12px;background:var(--blue-bg);border-radius:var(--radius-sm);font-size:11px;color:var(--blue-text)">
+        💡 Les fichiers CSV s'ouvrent dans Excel, Google Sheets ou LibreOffice Calc.
+      </div>
+    </div>
+  </div>
+</div>
+
 <div class="modal-overlay" id="editResidentModal" onclick="if(event.target===this)closeEditResident()">
   <div class="modal-box" style="max-width:480px">
     <div class="modal-header">
@@ -2849,6 +2897,14 @@ function showTab(tab, el) {
   document.querySelectorAll('.section').forEach(s=>s.classList.remove('active'));
   if(el) el.classList.add('active');
   document.getElementById('sec-'+tab).classList.add('active');
+
+  // Largeur page : les onglets avec gros tableaux utilisent la version large
+  const wideTabs = ['residents', 'finances', 'compta', 'admin', 'documents'];
+  const pageEl = document.querySelector('.page');
+  if (pageEl) {
+    pageEl.classList.toggle('wide', wideTabs.includes(tab));
+  }
+
   if(tab==='suivi') loadAndRenderSuivi();
   if(tab==='admin') loadAndRenderAdmin();
   if(tab==='services') loadAndRenderPros();
@@ -3982,8 +4038,10 @@ function initResAnneeFilter() {
   if (!sel) return;
   const now = new Date().getFullYear();
   sel.innerHTML = '';
-  for (let y = now; y >= now - 4; y--) {
-    sel.innerHTML += `<option value="${y}">${y}</option>`;
+  // 3 années futures (pour planification)
+  for (let y = now + 3; y >= now - 5; y--) {
+    const label = y > now ? `${y} (à venir)` : y === now ? `${y} (en cours)` : `${y}`;
+    sel.innerHTML += `<option value="${y}">${label}</option>`;
   }
   sel.value = resAnneeActive;
 }
@@ -5139,22 +5197,35 @@ async function deleteResident(id, email) {
 }
 // ── EXPORT CSV ANNUEL ────────────────────────────────────────
 function exportResCSV() {
-  const validated = allResidents.filter(r => r.role === 'resident');
-  if (!validated.length) {
+  if (!allResidents || !allResidents.length) {
     alert('Aucun résident à exporter.');
     return;
   }
-  if (!resAnneeActive) {
-    resAnneeActive = new Date().getFullYear();
-  }
+  showExportOptions();
+}
 
-  const moisNoms = ['Jan','Fév','Mar','Avr','Mai','Jun',
-                    'Jul','Aoû','Sep','Oct','Nov','Déc'];
+function showExportOptions() {
+  const modal = document.getElementById('exportOptionsModal');
+  if (modal) modal.classList.add('open');
+}
+
+function closeExportOptionsModal() {
+  document.getElementById('exportOptionsModal').classList.remove('open');
+}
+
+// ── EXPORT 1 : Synthèse annuelle (tableau) ─────────────────
+async function exportSyntheseAnnuelle() {
+  closeExportOptionsModal();
+  const validated = allResidents.filter(r => r.role === 'resident');
+  if (!validated.length) { alert('Aucun résident.'); return; }
+
+  const annee = resAnneeActive || new Date().getFullYear();
+  const moisNoms = ['Jan','Fév','Mar','Avr','Mai','Jun','Jul','Aoû','Sep','Oct','Nov','Déc'];
 
   const headers = [
     'Nom','Email','Appartement','Téléphone','Statut',
     ...moisNoms,
-    'Total Payé (DH)','Reste (DH)','Taux (%)'
+    'Total Dû (DH)','Total Payé (DH)','Reste (DH)','Taux (%)'
   ];
 
   const dateDebutGlobal = resConfigRes.date_debut_charges
@@ -5164,37 +5235,25 @@ function exportResCSV() {
     const paiementsRes = resAllPaiements[r.id] || {};
     const dateDebutRes = r.date_debut_charges
       ? new Date(r.date_debut_charges) : dateDebutGlobal;
-
-    let totalPaye = 0;
-    let totalDu   = 0;
+    let totalPaye = 0, totalDu = 0;
     const moisCells = [];
 
     for (let m = 1; m <= 12; m++) {
-      const periodeStr = `${resAnneeActive}-${String(m).padStart(2,'0')}`;
-      const montantM   = getMontantPourMois(resAnneeActive, m);
+      const periodeStr = `${annee}-${String(m).padStart(2,'0')}`;
+      const montantM   = getMontantPourMois(annee, m);
       const paiement   = paiementsRes[periodeStr];
 
       let avantDebut = false;
       if (dateDebutRes) {
         const dA = dateDebutRes.getFullYear();
         const dM = dateDebutRes.getMonth() + 1;
-        if (resAnneeActive < dA || (resAnneeActive === dA && m < dM)) {
-          avantDebut = true;
-        }
+        if (annee < dA || (annee === dA && m < dM)) avantDebut = true;
       }
-
-      if (avantDebut && !paiement) {
-        moisCells.push('N/A');
-        continue;
-      }
-
+      if (avantDebut && !paiement) { moisCells.push('N/A'); continue; }
       totalDu += montantM;
       if (paiement) {
         totalPaye += parseFloat(paiement.montant_paye) || 0;
-        moisCells.push(
-          paiement.statut === 'paye'    ? 'Payé' :
-          paiement.statut === 'partiel' ? 'Partiel' : 'Non payé'
-        );
+        moisCells.push(paiement.statut === 'paye' ? 'Payé' : paiement.statut === 'partiel' ? 'Partiel' : 'Non payé');
       } else {
         moisCells.push('Non payé');
       }
@@ -5202,30 +5261,176 @@ function exportResCSV() {
 
     const taux  = totalDu > 0 ? Math.round((totalPaye / totalDu) * 100) : 0;
     const reste = Math.max(0, totalDu - totalPaye);
-
     return [
-      r.nom          || '',
-      r.email        || '',
-      r.appartement  || '',
-      r.telephone    || '',
-      r.suspendu     ? 'Suspendu' : 'Actif',
+      r.nom || '', r.email || '', r.appartement || '', r.telephone || '',
+      r.suspendu ? 'Suspendu' : 'Actif',
       ...moisCells,
-      totalPaye,
-      reste,
-      taux + '%'
+      totalDu, totalPaye, reste, taux + '%'
     ];
   });
 
   const csv = [headers, ...rows]
     .map(r => r.map(c => `"${String(c).replace(/"/g,'""')}"`).join(','))
     .join('\n');
-
   const blob = new Blob(['\uFEFF' + csv], { type: 'text/csv;charset=utf-8;' });
-  const a    = document.createElement('a');
-  a.href     = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(blob);
   const resNomExp = (currentUserMeta.residence_nom || 'Residence').replace(/\s+/g,'_');
-  a.download = `Residents_${resNomExp}_${resAnneeActive}.csv`;
+  a.download = `Synthese_${resNomExp}_${annee}.csv`;
   a.click();
+}
+
+// ── EXPORT 2 : Historique détaillé multi-années ─────────────
+async function exportHistoriqueDetaille() {
+  closeExportOptionsModal();
+  if (!currentUserMeta.residence_id) {
+    alert('❌ Résidence introuvable');
+    return;
+  }
+
+  const btn = event?.target;
+  if (btn) { btn.disabled = true; btn.textContent = '⏳ Chargement historique...'; }
+
+  try {
+    const { data: paiements, error } = await db.from('recouvrement')
+      .select('*')
+      .eq('residence_id', currentUserMeta.residence_id)
+      .order('date_paiement', { ascending: false })
+      .order('periode', { ascending: false });
+
+    if (error) throw error;
+    if (!paiements || !paiements.length) {
+      alert('Aucun paiement historisé.');
+      return;
+    }
+
+    const residentsMap = {};
+    allResidents.forEach(r => {
+      residentsMap[r.id] = r;
+    });
+
+    const headers = [
+      'Date paiement', 'Période concernée',
+      'Résident', 'Email', 'Appartement', 'Téléphone',
+      'Statut', 'Montant payé (DH)', 'Mode', 'Note/Référence',
+      'Date saisie'
+    ];
+
+    const modeLabels = {
+      especes: 'Espèces', virement: 'Virement', cheque: 'Chèque',
+      mobile: 'Mobile', carte: 'Carte', autre: 'Autre'
+    };
+    const statutLabels = {
+      paye: 'Payé', partiel: 'Partiel', non_paye: 'Non payé'
+    };
+
+    const rows = paiements.map(p => {
+      const r = residentsMap[p.resident_id] || {};
+      return [
+        p.date_paiement || '',
+        p.periode || '',
+        r.nom || '(résident supprimé)',
+        r.email || '',
+        r.appartement || '',
+        r.telephone || '',
+        statutLabels[p.statut] || p.statut || '',
+        parseFloat(p.montant_paye || 0).toFixed(2),
+        modeLabels[p.mode_paiement] || p.mode_paiement || '',
+        (p.note || '').replace(/\n/g, ' '),
+        p.created_at ? new Date(p.created_at).toLocaleDateString('fr-FR') : ''
+      ];
+    });
+
+    const csv = [headers, ...rows]
+      .map(r => r.map(c => `"${String(c).replace(/"/g,'""')}"`).join(','))
+      .join('\n');
+    const blob = new Blob(['\uFEFF' + csv], { type: 'text/csv;charset=utf-8;' });
+    const a = document.createElement('a');
+    a.href = URL.createObjectURL(blob);
+    const resNomExp = (currentUserMeta.residence_nom || 'Residence').replace(/\s+/g,'_');
+    const dateStr = new Date().toISOString().slice(0,10);
+    a.download = `Historique_paiements_${resNomExp}_${dateStr}.csv`;
+    a.click();
+
+    alert(`✅ ${paiements.length} paiement(s) exporté(s)`);
+  } catch(e) {
+    alert('❌ Erreur : ' + e.message);
+  } finally {
+    if (btn) { btn.disabled = false; btn.textContent = '📊 Historique détaillé (toutes années)'; }
+  }
+}
+
+// ── EXPORT 3 : État par résident (bilan complet) ─────────────
+async function exportEtatResidents() {
+  closeExportOptionsModal();
+  if (!currentUserMeta.residence_id) {
+    alert('❌ Résidence introuvable');
+    return;
+  }
+
+  const btn = event?.target;
+  if (btn) { btn.disabled = true; btn.textContent = '⏳ Calcul...'; }
+
+  try {
+    const { data: allPaiements, error } = await db.from('recouvrement')
+      .select('*')
+      .eq('residence_id', currentUserMeta.residence_id);
+
+    if (error) throw error;
+
+    const residents = allResidents.filter(r => r.role === 'resident');
+    const headers = [
+      'Nom', 'Email', 'Appartement', 'Téléphone', 'Statut compte',
+      'Date début charges', 'Nb mois payés', 'Nb mois partiels', 'Nb mois non payés',
+      'Total payé (DH)', 'Dernier paiement', 'Mode dernier paiement'
+    ];
+
+    const statutLabels = { paye: 'Payé', partiel: 'Partiel', non_paye: 'Non payé' };
+    const modeLabels = {
+      especes: 'Espèces', virement: 'Virement', cheque: 'Chèque',
+      mobile: 'Mobile', carte: 'Carte', autre: 'Autre'
+    };
+
+    const rows = residents.map(r => {
+      const paiementsR = (allPaiements || []).filter(p => p.resident_id === r.id);
+      const nbPayes   = paiementsR.filter(p => p.statut === 'paye').length;
+      const nbPartiels= paiementsR.filter(p => p.statut === 'partiel').length;
+      const nbNon     = paiementsR.filter(p => p.statut === 'non_paye').length;
+      const totalPaye = paiementsR.reduce((s, p) => s + (parseFloat(p.montant_paye) || 0), 0);
+
+      const paiementsTries = [...paiementsR]
+        .filter(p => p.date_paiement)
+        .sort((a,b) => (b.date_paiement || '').localeCompare(a.date_paiement || ''));
+      const dernier = paiementsTries[0];
+
+      return [
+        r.nom || '', r.email || '', r.appartement || '', r.telephone || '',
+        r.suspendu ? 'Suspendu' : 'Actif',
+        r.date_debut_charges || '',
+        nbPayes, nbPartiels, nbNon,
+        totalPaye.toFixed(2),
+        dernier?.date_paiement || '',
+        dernier ? (modeLabels[dernier.mode_paiement] || dernier.mode_paiement || '') : ''
+      ];
+    });
+
+    const csv = [headers, ...rows]
+      .map(r => r.map(c => `"${String(c).replace(/"/g,'""')}"`).join(','))
+      .join('\n');
+    const blob = new Blob(['\uFEFF' + csv], { type: 'text/csv;charset=utf-8;' });
+    const a = document.createElement('a');
+    a.href = URL.createObjectURL(blob);
+    const resNomExp = (currentUserMeta.residence_nom || 'Residence').replace(/\s+/g,'_');
+    const dateStr = new Date().toISOString().slice(0,10);
+    a.download = `Bilan_residents_${resNomExp}_${dateStr}.csv`;
+    a.click();
+
+    alert(`✅ Bilan de ${residents.length} résident(s) exporté`);
+  } catch(e) {
+    alert('❌ Erreur : ' + e.message);
+  } finally {
+    if (btn) { btn.disabled = false; btn.textContent = '👥 Bilan par résident'; }
+  }
 }
 
 // ========================
