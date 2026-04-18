@@ -777,7 +777,11 @@
         </div>
       </div>
       <div>
-        <label class="lbl" style="color:var(--blue-text)">📅 Date de début des charges</label>
+        <label class="lbl" style="color:var(--blue-text);display:flex;align-items:center;gap:6px">
+          📅 Date de début par défaut
+          <span title="S'applique à TOUS les résidents sauf ceux qui ont leur propre date d'arrivée configurée dans le menu ⋯" style="cursor:help;font-size:12px;opacity:.6">ⓘ</span>
+        </label>
+        <div style="font-size:10px;color:var(--blue-text);opacity:.7;margin-top:2px;margin-bottom:4px">Pour tous les résidents · peut être surchargée individuellement</div>
         <div style="display:flex;gap:8px;margin-top:4px">
           <input type="date" id="resDateDebut" style="border-color:var(--blue-border)">
           <button onclick="saveConfigResidence()" class="btn btn-primary" style="width:auto;white-space:nowrap">✅ Appliquer</button>
@@ -1073,25 +1077,34 @@
 
 <!-- MODAL DATE DEBUT -->
 <div class="modal-overlay" id="dateDebutModal" onclick="if(event.target===this)closeDateDebutModal()">
-  <div class="modal-box" style="max-width:400px">
+  <div class="modal-box" style="max-width:440px">
     <div class="modal-header">
-      <div class="modal-title">📅 Date de début des charges</div>
+      <div>
+        <div class="modal-title">📅 Date d'arrivée du résident</div>
+        <div style="font-size:12px;color:var(--muted);margin-top:3px">Surcharge la date par défaut pour ce résident</div>
+      </div>
       <button class="modal-close" onclick="closeDateDebutModal()">×</button>
     </div>
     <div class="modal-body">
       <input type="hidden" id="dateDebutResId">
-      <div style="font-size:14px;font-weight:600;margin-bottom:16px" id="dateDebutNom"></div>
-      <div style="background:var(--blue-bg);border:1px solid var(--blue-border);border-radius:var(--radius-sm);padding:12px 14px;margin-bottom:16px;font-size:12px;color:var(--blue-text)">
-        💡 Les mois avant cette date seront considérés comme non dus.
+      <div style="font-size:14px;font-weight:600;margin-bottom:12px" id="dateDebutNom"></div>
+
+      <div style="background:var(--blue-bg);border:1px solid var(--blue-border);border-radius:var(--radius-sm);padding:12px 14px;margin-bottom:14px;font-size:12px;color:var(--blue-text);line-height:1.6">
+        💡 <strong>À utiliser uniquement si ce résident a une date différente</strong> de la date par défaut de la résidence (ex : acquisition récente, arrivée en cours d'année).<br>
+        Les mois avant cette date seront marqués <strong>"—"</strong> (non dus) dans le tableau.
       </div>
+
+      <div style="background:var(--bg);border:1px solid var(--border);border-radius:var(--radius-sm);padding:10px 12px;margin-bottom:14px;font-size:11px;color:var(--muted)" id="dateDebutCurrentInfo"></div>
+
       <div class="fg">
-        <label class="lbl">Date de première exigibilité <span class="req">*</span></label>
+        <label class="lbl">Date d'arrivée dans la résidence <span class="req">*</span></label>
         <input type="date" id="dateDebutValue">
       </div>
       <div class="alert alert-error" id="dateDebutErr"></div>
-      <div class="btn-row">
-        <button class="btn btn-ghost" onclick="closeDateDebutModal()">Annuler</button>
-        <button class="btn btn-primary" style="width:auto" onclick="confirmerDateDebut()">📅 Enregistrer</button>
+      <div class="btn-row" style="gap:6px">
+        <button class="btn btn-ghost" onclick="closeDateDebutModal()" style="flex:1">Annuler</button>
+        <button class="btn" style="width:auto;background:var(--red-bg);color:var(--red-text);border:1px solid var(--red-border);display:none" id="dateDebutResetBtn" onclick="resetDateDebut()">🔄 Utiliser la date par défaut</button>
+        <button class="btn btn-primary" style="width:auto;flex:1" onclick="confirmerDateDebut()">📅 Enregistrer</button>
       </div>
     </div>
   </div>
@@ -1101,7 +1114,7 @@
 <div id="resActionsMenu" style="display:none;position:fixed;background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);box-shadow:var(--shadow);z-index:500;min-width:180px;overflow:hidden">
   <div id="resMenuNom" style="padding:10px 14px;font-size:12px;font-weight:600;color:var(--muted);border-bottom:1px solid var(--border);background:var(--bg)"></div>
   <button onclick="event.stopPropagation();resMenuAction('edit')" style="display:flex;align-items:center;gap:8px;width:100%;padding:10px 14px;border:none;background:none;cursor:pointer;font-size:13px;font-family:'DM Sans',sans-serif;color:var(--text)">✏️ Modifier infos</button>
-  <button onclick="event.stopPropagation();resMenuAction('date')" style="display:flex;align-items:center;gap:8px;width:100%;padding:10px 14px;border:none;background:none;cursor:pointer;font-size:13px;font-family:'DM Sans',sans-serif;color:var(--text)">📅 Date début charges</button>
+  <button onclick="event.stopPropagation();resMenuAction('date')" style="display:flex;align-items:center;gap:8px;width:100%;padding:10px 14px;border:none;background:none;cursor:pointer;font-size:13px;font-family:'DM Sans',sans-serif;color:var(--text)">📅 Date d'arrivée du résident</button>
   <div id="resMenuSuspendreBtn">
     <button onclick="event.stopPropagation();resMenuAction('suspendre')" style="display:flex;align-items:center;gap:8px;width:100%;padding:10px 14px;border:none;background:none;cursor:pointer;font-size:13px;font-family:'DM Sans',sans-serif;color:var(--orange-text)">⏸ Suspendre</button>
   </div>
@@ -4570,8 +4583,32 @@ function resMenuAction(action) {
 
   if (action === 'date') {
     document.getElementById('dateDebutResId').value  = r.id;
-    document.getElementById('dateDebutNom').textContent = r.nom || r.email || '';
-    document.getElementById('dateDebutValue').value  = r.date_debut_charges || resConfigRes.date_debut_charges || '';
+    document.getElementById('dateDebutNom').textContent = (r.nom || r.email || '') + (r.appartement ? ' · Apt ' + r.appartement : '');
+
+    const resSpecificDate = r.date_debut_charges || null;
+    const globalDate = resConfigRes.date_debut_charges || null;
+
+    const fmtDate = (d) => {
+      if (!d) return 'non définie';
+      try { return new Date(d).toLocaleDateString('fr-FR', {day:'numeric',month:'long',year:'numeric'}); }
+      catch { return d; }
+    };
+
+    const infoEl = document.getElementById('dateDebutCurrentInfo');
+    const resetBtn = document.getElementById('dateDebutResetBtn');
+
+    if (resSpecificDate) {
+      infoEl.innerHTML = '📌 Date spécifique actuelle : <strong>' + fmtDate(resSpecificDate) + '</strong><br>'
+                       + '📅 Date par défaut de la résidence : ' + fmtDate(globalDate);
+      if (resetBtn) resetBtn.style.display = 'inline-block';
+    } else {
+      infoEl.innerHTML = '📅 Actuellement : date par défaut de la résidence ('
+                       + '<strong>' + fmtDate(globalDate) + '</strong>)<br>'
+                       + '<span style="color:var(--muted)">Aucune date spécifique définie pour ce résident.</span>';
+      if (resetBtn) resetBtn.style.display = 'none';
+    }
+
+    document.getElementById('dateDebutValue').value  = resSpecificDate || globalDate || '';
     document.getElementById('dateDebutErr').style.display = 'none';
     document.getElementById('dateDebutModal').classList.add('open');
   }
@@ -5000,6 +5037,46 @@ async function confirmerReactiver() {
 // ── DATE DÉBUT RÉSIDENT ──────────────────────────────────────
 function closeDateDebutModal() {
   document.getElementById('dateDebutModal').classList.remove('open');
+}
+
+async function resetDateDebut() {
+  const resId = document.getElementById('dateDebutResId').value;
+  const errEl = document.getElementById('dateDebutErr');
+  errEl.style.display = 'none';
+
+  if (!resId) {
+    errEl.textContent   = '❌ ID résident manquant';
+    errEl.style.display = 'block';
+    return;
+  }
+
+  if (!confirm('Ce résident utilisera la date par défaut de la résidence.\n\nContinuer ?')) return;
+
+  const btn = document.getElementById('dateDebutResetBtn');
+  if (btn) { btn.disabled = true; btn.textContent = '⏳...'; }
+
+  try {
+    const result = await callEdge({
+      type:          'update_user_metadata',
+      admin_user_id: resId,
+      metadata:      { date_debut_charges: null }
+    });
+
+    if (!result || !result.success) {
+      errEl.textContent   = '❌ ' + (result?.error || 'Erreur');
+      errEl.style.display = 'block';
+      return;
+    }
+
+    closeDateDebutModal();
+    showToast('🔄 Date spécifique supprimée — date par défaut appliquée', 'success');
+    await loadAndRenderResidents();
+  } catch(e) {
+    errEl.textContent   = '❌ ' + e.message;
+    errEl.style.display = 'block';
+  } finally {
+    if (btn) { btn.disabled = false; btn.textContent = '🔄 Utiliser la date par défaut'; }
+  }
 }
 
 async function confirmerDateDebut() {
