@@ -3031,42 +3031,19 @@ async function loadAndRenderAdmin() {
 }
 
 async function loadPendingResidents() {
-  console.log('[loadPendingResidents] Démarrage (via list_residents)...');
-
-  if (!currentUser || !currentUserMeta.residence_id) {
-    console.warn('[loadPendingResidents] ⚠️ Pas de residence_id en session');
+  const { data, error } = await db.rpc('get_pending_residents');
+  if (error || !data) {
     renderPending([]);
     return;
   }
-
-  // Utiliser list_residents (Edge Function) qui retourne TOUS les comptes de la résidence
-  // y compris les resident_pending
-  const result = await callEdge({
-    type:         'list_residents',
-    residence_id: currentUserMeta.residence_id
-  });
-
-  console.log('[loadPendingResidents] Résultat:', result);
-
-  if (!result || !result.success) {
-    console.error('[loadPendingResidents] ❌ Erreur Edge:', result?.error);
-    const panel = document.getElementById('pendingPanel');
-    const list  = document.getElementById('pendingList');
-    if (panel) panel.style.display = 'block';
-    if (list) list.innerHTML = `
-      <div style="padding:14px;background:#fef2f2;border:1px solid #fecaca;border-radius:8px;color:#991b1b;font-size:12px">
-        ❌ <strong>Erreur chargement :</strong> ${result?.error || 'Inconnue'}
-      </div>`;
-    return;
-  }
-
-  // Filtrer uniquement les resident_pending
-  const allUsers = result.residents || [];
-  const pending  = allUsers.filter(u => u.role === 'resident_pending');
-
-  console.log('[loadPendingResidents] ✅ Total résidents:', allUsers.length, '| Pending:', pending.length);
-
-  renderPending(pending);
+  // Filtrer uniquement les demandes pour la résidence de cet admin
+  const { data: myRes } = await db.from('residences')
+    .select('id, nom, code_residence')
+    .eq('admin_id', currentUser.id)
+    .single();
+  if (!myRes) { renderPending([]); return; }
+  const filtered = data.filter(u => u.residence_id === myRes.id);
+  renderPending(filtered);
 }
 
 function renderPending(list) {
@@ -4208,13 +4185,10 @@ async function loadAndRenderResidents() {
     }
 
     // Résidents
-    console.log('[loadAndRenderResidents] Appel list_residents pour residence_id=', myRes.id);
     const result = await callEdge({
   type:         'list_residents',
   residence_id: myRes.id
 });
-    console.log('[loadAndRenderResidents] Réponse:', result);
-
     if (!result.success) {
       if (tbody) tbody.innerHTML =
         `<tr><td colspan="16" style="padding:32px;text-align:center;color:var(--red-text)">❌ ${result.error}</td></tr>`;
@@ -4223,8 +4197,6 @@ async function loadAndRenderResidents() {
 
     allResidents      = result.residents || [];
     residentsFiltered = [...allResidents];
-    console.log('[loadAndRenderResidents] ✅', allResidents.length, 'résident(s) chargé(s)');
-    console.log('  Rôles:', allResidents.map(r => ({ email: r.email, role: r.role })));
 
     // Paiements de toute l'année
     const { data: paiements } = await db.from('recouvrement')
@@ -4254,10 +4226,6 @@ async function loadAndRenderResidents() {
     if (elPending)  elPending.textContent  = pending.length;
     if (elApparts)  elApparts.textContent  = apparts.length;
     if (elSuspendu) elSuspendu.textContent = suspendus.length;
-
-    // ⭐ Afficher le bandeau des demandes en attente dans Résidents
-    console.log('[loadAndRenderResidents] Pendings à afficher:', pending.length);
-    renderPending(pending);
 
     renderResAnnuel();
 
@@ -5196,24 +5164,35 @@ async function addResidentManually() {
   const btn = document.querySelector('#addResidentForm .btn-primary');
   if (btn) { btn.disabled = true; btn.textContent = 'Création...'; }
 
+  // ⭐ Assainir les metadata : transformer les chaînes vides en null
+  // (sinon le serveur Auth plante avec 500 au login sur les dates invalides)
+  const cleanDateDebut = (() => {
+    const d = resConfigRes.date_debut_charges;
+    if (!d || d === '' || d === 'null' || d === 'undefined') return null;
+    // Vérifier que c'est bien une date parsable
+    try {
+      const parsed = new Date(d);
+      if (isNaN(parsed.getTime())) return null;
+      return d;
+    } catch { return null; }
+  })();
+
   const result = await callEdge({
     type:     'create_resident',
     email,
     password: pwd,
     metadata: {
-      nom,
-      appartement:    apt,
-      telephone:      tel,
+      nom:            nom            || '',
+      appartement:    apt            || '',
+      telephone:      tel            || '',
       role:           'resident',
       residence_id:   myRes.id,
-      residence_nom:  myRes.nom,
-      residence_code: myRes.code_residence,
+      residence_nom:  myRes.nom      || '',
+      residence_code: myRes.code_residence || '',
       secteur:        currentUserMeta.secteur || 'residence',
-      date_debut_charges: resConfigRes.date_debut_charges || null
+      date_debut_charges: cleanDateDebut
     }
   });
-
-  console.log('[addResidentManually] Résultat create_resident:', result);
 
   if (btn) { btn.disabled = false; btn.textContent = 'Créer le compte →'; }
 
@@ -5232,25 +5211,6 @@ async function addResidentManually() {
     return;
   }
 
-  // ⭐ Auto-approbation : l'admin crée manuellement = compte validé d'office
-  // Cela corrige le cas où l'Edge Function crée le compte en 'resident_pending' par défaut
-  const createdUserId = result.user_id || result.user?.id || result.id;
-  if (createdUserId) {
-    console.log('[addResidentManually] Tentative auto-approbation pour user_id=', createdUserId);
-    try {
-      const { error: approveErr } = await db.rpc('approve_resident', { user_id: createdUserId });
-      if (approveErr) {
-        console.warn('[addResidentManually] Auto-approbation échouée (non bloquant):', approveErr);
-      } else {
-        console.log('[addResidentManually] ✅ Auto-approbation réussie');
-      }
-    } catch(e) {
-      console.warn('[addResidentManually] Exception auto-approbation:', e.message);
-    }
-  } else {
-    console.warn('[addResidentManually] ⚠️ Pas de user_id retourné par create_resident');
-  }
-
   okEl.textContent   = `✅ Compte créé pour ${nom} (${email}) !`;
   okEl.style.display = 'block';
 
@@ -5260,30 +5220,10 @@ async function addResidentManually() {
   });
   document.getElementById('newResPwd').value = 'RedTech2026!';
 
-  // Attendre 2s pour que la propagation Auth + approve_resident soit effective
-  console.log('[addResidentManually] Attente propagation (2s)...');
-  setTimeout(async () => {
+  setTimeout(() => {
     toggleAddResidentForm();
-    await loadAndRenderResidents();
-
-    const found = allResidents.find(r => r.email === email);
-    console.log('[addResidentManually] Après refresh, résident trouvé?', !!found, found?.role);
-
-    if (!found) {
-      console.warn('[addResidentManually] Retry dans 2s...');
-      setTimeout(async () => {
-        await loadAndRenderResidents();
-        const foundRetry = allResidents.find(r => r.email === email);
-        if (!foundRetry) {
-          showToast('⚠️ Résident créé mais pas visible. Rechargez (F5).', 'error');
-        } else {
-          showToast('✅ ' + nom + ' ajouté avec succès', 'success');
-        }
-      }, 2000);
-    } else {
-      showToast('✅ ' + nom + ' ajouté avec succès', 'success');
-    }
-  }, 2000);
+    loadAndRenderResidents();
+  }, 1500);
 }
 
 // ── SUPPRIMER RÉSIDENT ───────────────────────────────────────
