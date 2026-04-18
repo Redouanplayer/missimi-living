@@ -4038,16 +4038,60 @@ function initResAnneeFilter() {
   if (!sel) return;
   const now = new Date().getFullYear();
   sel.innerHTML = '';
-  // 3 années futures (pour planification)
-  for (let y = now + 3; y >= now - 5; y--) {
-    const label = y > now ? `${y} (à venir)` : y === now ? `${y} (en cours)` : `${y}`;
+
+  // Années rapides : 6 passées + courante + 3 futures
+  const yearsToShow = new Set();
+  for (let y = now + 3; y >= now - 6; y--) yearsToShow.add(y);
+
+  // Toujours inclure l'année active (même si hors plage standard)
+  if (resAnneeActive) yearsToShow.add(resAnneeActive);
+
+  // Trier du plus récent au plus ancien
+  const sorted = [...yearsToShow].sort((a, b) => b - a);
+
+  sorted.forEach(y => {
+    const label = y > now + 3 ? `${y} (future)`
+               : y > now      ? `${y} (à venir)`
+               : y === now    ? `${y} (en cours)`
+               : `${y}`;
     sel.innerHTML += `<option value="${y}">${label}</option>`;
-  }
+  });
+
+  // Option "Autre année..." en bas
+  sel.innerHTML += `<option value="__custom__" style="font-weight:600;color:#2563eb">➕ Autre année…</option>`;
+
   sel.value = resAnneeActive;
 }
 
 function onResAnneeChange() {
-  resAnneeActive = parseInt(document.getElementById('resAnneeFilter').value);
+  const sel = document.getElementById('resAnneeFilter');
+  const val = sel.value;
+
+  if (val === '__custom__') {
+    const now = new Date().getFullYear();
+    const saisie = prompt(
+      `Saisissez l'année souhaitée\n(entre ${now - 50} et ${now + 50}) :`,
+      String(resAnneeActive || now)
+    );
+
+    if (!saisie || isNaN(parseInt(saisie))) {
+      sel.value = resAnneeActive;
+      return;
+    }
+
+    const annee = parseInt(saisie);
+    if (annee < now - 50 || annee > now + 50) {
+      alert(`⚠️ Année hors limites (${now - 50} à ${now + 50})`);
+      sel.value = resAnneeActive;
+      return;
+    }
+
+    resAnneeActive = annee;
+    initResAnneeFilter();
+  } else {
+    resAnneeActive = parseInt(val);
+  }
+
   loadAndRenderResidents();
 }
 
