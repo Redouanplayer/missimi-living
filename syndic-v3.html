@@ -777,11 +777,7 @@
         </div>
       </div>
       <div>
-        <label class="lbl" style="color:var(--blue-text);display:flex;align-items:center;gap:6px">
-          📅 Date de début par défaut
-          <span title="S'applique à TOUS les résidents sauf ceux qui ont leur propre date d'arrivée configurée dans le menu ⋯" style="cursor:help;font-size:12px;opacity:.6">ⓘ</span>
-        </label>
-        <div style="font-size:10px;color:var(--blue-text);opacity:.7;margin-top:2px;margin-bottom:4px">Pour tous les résidents · peut être surchargée individuellement</div>
+        <label class="lbl" style="color:var(--blue-text)">📅 Date de début des charges</label>
         <div style="display:flex;gap:8px;margin-top:4px">
           <input type="date" id="resDateDebut" style="border-color:var(--blue-border)">
           <button onclick="saveConfigResidence()" class="btn btn-primary" style="width:auto;white-space:nowrap">✅ Appliquer</button>
@@ -949,75 +945,128 @@
 
 <!-- MODAL PAIEMENT MENSUEL RESIDENTS -->
 <div class="modal-overlay" id="resMoisModal" onclick="if(event.target===this)closeResMoisModal()">
-  <div class="modal-box" style="max-width:460px">
-    <div class="modal-header">
+  <div class="modal-box" style="max-width:520px">
+
+    <!-- HEADER DYNAMIQUE : change selon mode saisie/correction -->
+    <div class="modal-header" id="resMoisHeader" style="transition:background .2s">
       <div>
         <div class="modal-title" id="resMoisModalTitle">💳 Paiement</div>
         <div style="font-size:12px;color:var(--muted);margin-top:3px" id="resMoisModalSub"></div>
       </div>
       <button class="modal-close" onclick="closeResMoisModal()">×</button>
     </div>
+
     <div class="modal-body">
       <input type="hidden" id="resMoisResId">
       <input type="hidden" id="resMoisPeriode">
-      <div style="margin-bottom:16px">
-        <label class="lbl">Statut du paiement</label>
-        <div style="display:flex;gap:8px;margin-top:6px">
-          <button onclick="selectResMoisStatut('paye')" id="rmBtnPaye"
-            style="flex:1;padding:10px;border-radius:var(--radius-sm);border:2px solid var(--green-border);background:var(--green-bg);color:var(--green-text);cursor:pointer;font-weight:600;font-size:12px;font-family:'DM Sans',sans-serif">
-            ✅ Payé
-          </button>
-          <button onclick="selectResMoisStatut('partiel')" id="rmBtnPartiel"
-            style="flex:1;padding:10px;border-radius:var(--radius-sm);border:2px solid var(--yellow-border);background:var(--surface);color:var(--yellow-text);cursor:pointer;font-weight:600;font-size:12px;font-family:'DM Sans',sans-serif">
-            ⚠️ Partiel
-          </button>
-          <button onclick="selectResMoisStatut('non_paye')" id="rmBtnNonPaye"
-            style="flex:1;padding:10px;border-radius:var(--radius-sm);border:2px solid var(--red-border);background:var(--surface);color:var(--red-text);cursor:pointer;font-weight:600;font-size:12px;font-family:'DM Sans',sans-serif">
-            ❌ Non payé
-          </button>
+      <input type="hidden" id="resMoisMode_Edit" value="saisie">
+
+      <!-- BANDEAU MODE CORRECTION (visible si paiement existant) -->
+      <div id="resMoisCorrectionBanner" style="display:none;background:linear-gradient(90deg,#fff7ed 0%,#fffbeb 100%);border:1px solid #fed7aa;border-left:4px solid #ea580c;border-radius:var(--radius-sm);padding:14px 16px;margin-bottom:16px">
+        <div style="display:flex;align-items:flex-start;gap:10px">
+          <div style="font-size:20px;line-height:1">✏️</div>
+          <div style="flex:1;min-width:0">
+            <div style="font-size:13px;font-weight:700;color:#9a3412;margin-bottom:4px">Mode correction</div>
+            <div style="font-size:12px;color:#9a3412;line-height:1.5;margin-bottom:10px">Vous modifiez un paiement déjà enregistré. Choisissez l'action :</div>
+
+            <div style="display:grid;grid-template-columns:1fr 1fr;gap:6px;margin-bottom:10px">
+              <button onclick="setCorrectionMode('edit')" id="correctionModeEdit" style="padding:8px;border:2px solid #2563eb;background:#eff6ff;color:#1d4ed8;border-radius:6px;cursor:pointer;font-weight:600;font-size:11px;font-family:'DM Sans',sans-serif;text-align:left;line-height:1.4">
+                ✏️ Modifier les valeurs<br>
+                <span style="font-size:10px;font-weight:400;opacity:.8">Corriger montant, date, mode…</span>
+              </button>
+              <button onclick="setCorrectionMode('delete')" id="correctionModeDelete" style="padding:8px;border:2px solid var(--border);background:var(--surface);color:var(--text);border-radius:6px;cursor:pointer;font-weight:600;font-size:11px;font-family:'DM Sans',sans-serif;text-align:left;line-height:1.4">
+                🗑️ Supprimer le paiement<br>
+                <span style="font-size:10px;font-weight:400;opacity:.8">Remettre le mois à "non payé"</span>
+              </button>
+            </div>
+          </div>
         </div>
-        <input type="hidden" id="resMoisStatut" value="paye">
-      </div>
-      <div class="fr2">
-        <div><label class="lbl">Montant payé (DH)</label><input type="number" id="resMoisMontant" placeholder="0" min="0" step="1"></div>
-        <div><label class="lbl">Date de paiement</label><input type="date" id="resMoisDate"></div>
-      </div>
-      <div class="fg">
-        <label class="lbl">Mode de paiement</label>
-        <select id="resMoisMode">
-          <option value="especes">💵 Espèces</option>
-          <option value="virement">🏦 Virement bancaire</option>
-          <option value="cheque">📄 Chèque</option>
-          <option value="mobile">📱 Paiement mobile</option>
-        </select>
-      </div>
-      <div class="fg">
-        <label class="lbl">Note / Référence</label>
-        <input type="text" id="resMoisNote" placeholder="Ex : Reçu n°123...">
-      </div>
-            <!-- PAIEMENT GLOBAL MULTI-MOIS -->
-      <div style="margin-top:16px;padding:14px;background:var(--blue-bg);border:1px solid var(--blue-border);border-radius:var(--radius-sm)">
-        <label class="lbl" style="color:var(--blue-text)">💰 Paiement global (plusieurs mois d'un coup)</label>
-        <div style="display:flex;gap:8px;margin-top:6px;align-items:center">
-          <input type="number" id="resMoisGlobalMontant" placeholder="Ex : 8400" min="0" step="1"
-            style="flex:1;border-color:var(--blue-border);font-weight:600">
-          <span style="font-size:12px;color:var(--blue-text);white-space:nowrap">DH total</span>
+
+        <!-- RÉCAP PAIEMENT ACTUEL -->
+        <div style="margin-top:10px;padding-top:10px;border-top:1px solid #fed7aa">
+          <div style="font-size:10px;font-weight:600;color:#9a3412;text-transform:uppercase;letter-spacing:.05em;margin-bottom:6px">📌 Paiement actuellement enregistré</div>
+          <div id="resMoisCurrentInfo" style="font-size:12px;color:#7c2d12;line-height:1.7;font-family:'DM Mono',monospace"></div>
         </div>
-        <div id="resMoisNbMois" style="font-size:12px;color:var(--muted);margin-top:6px;font-weight:600">
-          0 mois couverts
+      </div>
+
+      <!-- FORMULAIRE (visible en mode saisie ou correction-edit) -->
+      <div id="resMoisFormFields">
+        <div style="margin-bottom:16px">
+          <label class="lbl">Statut du paiement</label>
+          <div style="display:flex;gap:8px;margin-top:6px">
+            <button onclick="selectResMoisStatut('paye')" id="rmBtnPaye"
+              style="flex:1;padding:10px;border-radius:var(--radius-sm);border:2px solid var(--green-border);background:var(--green-bg);color:var(--green-text);cursor:pointer;font-weight:600;font-size:12px;font-family:'DM Sans',sans-serif">
+              ✅ Payé
+            </button>
+            <button onclick="selectResMoisStatut('partiel')" id="rmBtnPartiel"
+              style="flex:1;padding:10px;border-radius:var(--radius-sm);border:2px solid var(--yellow-border);background:var(--surface);color:var(--yellow-text);cursor:pointer;font-weight:600;font-size:12px;font-family:'DM Sans',sans-serif">
+              ⚠️ Partiel
+            </button>
+            <button onclick="selectResMoisStatut('non_paye')" id="rmBtnNonPaye"
+              style="flex:1;padding:10px;border-radius:var(--radius-sm);border:2px solid var(--red-border);background:var(--surface);color:var(--red-text);cursor:pointer;font-weight:600;font-size:12px;font-family:'DM Sans',sans-serif">
+              ❌ Non payé
+            </button>
+          </div>
+          <input type="hidden" id="resMoisStatut" value="paye">
         </div>
-        <div id="resMoisGlobalInfo" style="font-size:11px;color:var(--blue-text);margin-top:6px;line-height:1.6;display:none"></div>
-        <div style="font-size:11px;color:var(--muted);margin-top:6px">
-          💡 Laissez vide pour enregistrer un seul mois
+        <div class="fr2">
+          <div><label class="lbl">Montant payé (DH)</label><input type="number" id="resMoisMontant" placeholder="0" min="0" step="1"></div>
+          <div><label class="lbl">Date de paiement</label><input type="date" id="resMoisDate"></div>
+        </div>
+        <div class="fg">
+          <label class="lbl">Mode de paiement</label>
+          <select id="resMoisMode">
+            <option value="especes">💵 Espèces</option>
+            <option value="virement">🏦 Virement bancaire</option>
+            <option value="cheque">📄 Chèque</option>
+            <option value="mobile">📱 Paiement mobile</option>
+          </select>
+        </div>
+        <div class="fg">
+          <label class="lbl">Note / Référence</label>
+          <input type="text" id="resMoisNote" placeholder="Ex : Reçu n°123...">
+        </div>
+
+        <!-- PAIEMENT GLOBAL MULTI-MOIS (uniquement en mode saisie) -->
+        <div id="resMoisGlobalSection" style="margin-top:16px;padding:14px;background:var(--blue-bg);border:1px solid var(--blue-border);border-radius:var(--radius-sm)">
+          <label class="lbl" style="color:var(--blue-text)">💰 Paiement global (plusieurs mois d'un coup)</label>
+          <div style="display:flex;gap:8px;margin-top:6px;align-items:center">
+            <input type="number" id="resMoisGlobalMontant" placeholder="Ex : 8400" min="0" step="1"
+              style="flex:1;border-color:var(--blue-border);font-weight:600">
+            <span style="font-size:12px;color:var(--blue-text);white-space:nowrap">DH total</span>
+          </div>
+          <div id="resMoisNbMois" style="font-size:12px;color:var(--muted);margin-top:6px;font-weight:600">
+            0 mois couverts
+          </div>
+          <div id="resMoisGlobalInfo" style="font-size:11px;color:var(--blue-text);margin-top:6px;line-height:1.6;display:none"></div>
+          <div style="font-size:11px;color:var(--muted);margin-top:6px">
+            💡 Laissez vide pour enregistrer un seul mois
+          </div>
+        </div>
+      </div>
+
+      <!-- CONFIRMATION SUPPRESSION (visible en mode correction-delete) -->
+      <div id="resMoisDeleteConfirm" style="display:none;background:var(--red-bg);border:1px solid var(--red-border);border-radius:var(--radius-sm);padding:14px 16px">
+        <div style="display:flex;align-items:flex-start;gap:10px">
+          <div style="font-size:24px;line-height:1">⚠️</div>
+          <div>
+            <div style="font-size:13px;font-weight:700;color:var(--red-text);margin-bottom:4px">Confirmer la suppression</div>
+            <div style="font-size:12px;color:var(--red-text);line-height:1.6">
+              Le paiement sera <strong>définitivement supprimé</strong>. Le mois repassera en statut "non payé" dans le tableau annuel.
+              <br><br>
+              <strong>Cette action est irréversible.</strong>
+            </div>
+          </div>
         </div>
       </div>
 
       <div class="alert alert-error" id="resMoisErr"></div>
       <div class="alert alert-success" id="resMoisOk"></div>
-      <div class="btn-row" style="gap:6px">
+
+      <div class="btn-row" style="gap:6px;margin-top:16px">
         <button class="btn btn-ghost" onclick="closeResMoisModal()" style="flex:1">Annuler</button>
-        <button class="btn" style="width:auto;background:var(--red-bg);color:var(--red-text);border:1px solid var(--red-border);display:none" id="resMoisDeleteBtn" onclick="deleteResMoisPaiement()">🗑️ Supprimer</button>
-        <button class="btn btn-primary" style="width:auto;flex:1" onclick="saveResMoisPaiement()">💾 Enregistrer →</button>
+        <button class="btn btn-primary" id="resMoisSaveBtn" style="width:auto;flex:2" onclick="saveResMoisPaiement()">💾 Enregistrer →</button>
+        <button class="btn" id="resMoisConfirmDeleteBtn" style="display:none;width:auto;flex:2;background:var(--red-text);color:white;border:none" onclick="deleteResMoisPaiement()">🗑️ Confirmer la suppression</button>
       </div>
     </div>
   </div>
@@ -1077,34 +1126,25 @@
 
 <!-- MODAL DATE DEBUT -->
 <div class="modal-overlay" id="dateDebutModal" onclick="if(event.target===this)closeDateDebutModal()">
-  <div class="modal-box" style="max-width:440px">
+  <div class="modal-box" style="max-width:400px">
     <div class="modal-header">
-      <div>
-        <div class="modal-title">📅 Date d'arrivée du résident</div>
-        <div style="font-size:12px;color:var(--muted);margin-top:3px">Surcharge la date par défaut pour ce résident</div>
-      </div>
+      <div class="modal-title">📅 Date de début des charges</div>
       <button class="modal-close" onclick="closeDateDebutModal()">×</button>
     </div>
     <div class="modal-body">
       <input type="hidden" id="dateDebutResId">
-      <div style="font-size:14px;font-weight:600;margin-bottom:12px" id="dateDebutNom"></div>
-
-      <div style="background:var(--blue-bg);border:1px solid var(--blue-border);border-radius:var(--radius-sm);padding:12px 14px;margin-bottom:14px;font-size:12px;color:var(--blue-text);line-height:1.6">
-        💡 <strong>À utiliser uniquement si ce résident a une date différente</strong> de la date par défaut de la résidence (ex : acquisition récente, arrivée en cours d'année).<br>
-        Les mois avant cette date seront marqués <strong>"—"</strong> (non dus) dans le tableau.
+      <div style="font-size:14px;font-weight:600;margin-bottom:16px" id="dateDebutNom"></div>
+      <div style="background:var(--blue-bg);border:1px solid var(--blue-border);border-radius:var(--radius-sm);padding:12px 14px;margin-bottom:16px;font-size:12px;color:var(--blue-text)">
+        💡 Les mois avant cette date seront considérés comme non dus.
       </div>
-
-      <div style="background:var(--bg);border:1px solid var(--border);border-radius:var(--radius-sm);padding:10px 12px;margin-bottom:14px;font-size:11px;color:var(--muted)" id="dateDebutCurrentInfo"></div>
-
       <div class="fg">
-        <label class="lbl">Date d'arrivée dans la résidence <span class="req">*</span></label>
+        <label class="lbl">Date de première exigibilité <span class="req">*</span></label>
         <input type="date" id="dateDebutValue">
       </div>
       <div class="alert alert-error" id="dateDebutErr"></div>
-      <div class="btn-row" style="gap:6px">
-        <button class="btn btn-ghost" onclick="closeDateDebutModal()" style="flex:1">Annuler</button>
-        <button class="btn" style="width:auto;background:var(--red-bg);color:var(--red-text);border:1px solid var(--red-border);display:none" id="dateDebutResetBtn" onclick="resetDateDebut()">🔄 Utiliser la date par défaut</button>
-        <button class="btn btn-primary" style="width:auto;flex:1" onclick="confirmerDateDebut()">📅 Enregistrer</button>
+      <div class="btn-row">
+        <button class="btn btn-ghost" onclick="closeDateDebutModal()">Annuler</button>
+        <button class="btn btn-primary" style="width:auto" onclick="confirmerDateDebut()">📅 Enregistrer</button>
       </div>
     </div>
   </div>
@@ -1114,7 +1154,7 @@
 <div id="resActionsMenu" style="display:none;position:fixed;background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);box-shadow:var(--shadow);z-index:500;min-width:180px;overflow:hidden">
   <div id="resMenuNom" style="padding:10px 14px;font-size:12px;font-weight:600;color:var(--muted);border-bottom:1px solid var(--border);background:var(--bg)"></div>
   <button onclick="event.stopPropagation();resMenuAction('edit')" style="display:flex;align-items:center;gap:8px;width:100%;padding:10px 14px;border:none;background:none;cursor:pointer;font-size:13px;font-family:'DM Sans',sans-serif;color:var(--text)">✏️ Modifier infos</button>
-  <button onclick="event.stopPropagation();resMenuAction('date')" style="display:flex;align-items:center;gap:8px;width:100%;padding:10px 14px;border:none;background:none;cursor:pointer;font-size:13px;font-family:'DM Sans',sans-serif;color:var(--text)">📅 Date d'arrivée du résident</button>
+  <button onclick="event.stopPropagation();resMenuAction('date')" style="display:flex;align-items:center;gap:8px;width:100%;padding:10px 14px;border:none;background:none;cursor:pointer;font-size:13px;font-family:'DM Sans',sans-serif;color:var(--text)">📅 Date début charges</button>
   <div id="resMenuSuspendreBtn">
     <button onclick="event.stopPropagation();resMenuAction('suspendre')" style="display:flex;align-items:center;gap:8px;width:100%;padding:10px 14px;border:none;background:none;cursor:pointer;font-size:13px;font-family:'DM Sans',sans-serif;color:var(--orange-text)">⏸ Suspendre</button>
   </div>
@@ -4583,32 +4623,8 @@ function resMenuAction(action) {
 
   if (action === 'date') {
     document.getElementById('dateDebutResId').value  = r.id;
-    document.getElementById('dateDebutNom').textContent = (r.nom || r.email || '') + (r.appartement ? ' · Apt ' + r.appartement : '');
-
-    const resSpecificDate = r.date_debut_charges || null;
-    const globalDate = resConfigRes.date_debut_charges || null;
-
-    const fmtDate = (d) => {
-      if (!d) return 'non définie';
-      try { return new Date(d).toLocaleDateString('fr-FR', {day:'numeric',month:'long',year:'numeric'}); }
-      catch { return d; }
-    };
-
-    const infoEl = document.getElementById('dateDebutCurrentInfo');
-    const resetBtn = document.getElementById('dateDebutResetBtn');
-
-    if (resSpecificDate) {
-      infoEl.innerHTML = '📌 Date spécifique actuelle : <strong>' + fmtDate(resSpecificDate) + '</strong><br>'
-                       + '📅 Date par défaut de la résidence : ' + fmtDate(globalDate);
-      if (resetBtn) resetBtn.style.display = 'inline-block';
-    } else {
-      infoEl.innerHTML = '📅 Actuellement : date par défaut de la résidence ('
-                       + '<strong>' + fmtDate(globalDate) + '</strong>)<br>'
-                       + '<span style="color:var(--muted)">Aucune date spécifique définie pour ce résident.</span>';
-      if (resetBtn) resetBtn.style.display = 'none';
-    }
-
-    document.getElementById('dateDebutValue').value  = resSpecificDate || globalDate || '';
+    document.getElementById('dateDebutNom').textContent = r.nom || r.email || '';
+    document.getElementById('dateDebutValue').value  = r.date_debut_charges || resConfigRes.date_debut_charges || '';
     document.getElementById('dateDebutErr').style.display = 'none';
     document.getElementById('dateDebutModal').classList.add('open');
   }
@@ -4644,37 +4660,81 @@ function openResMoisModal(resId, periode, nom, apt) {
 
   document.getElementById('resMoisResId').value   = resId;
   document.getElementById('resMoisPeriode').value = periode;
-  document.getElementById('resMoisModalTitle').textContent =
-    `💳 ${moisLabel} ${annee}`;
   document.getElementById('resMoisModalSub').textContent =
     `${nom}${apt ? ' · Apt ' + apt : ''}`;
 
-  // Pré-remplir avec paiement existant
+  // Détection paiement existant
   const existing = (resAllPaiements[resId] || {})[periode];
+  const banner   = document.getElementById('resMoisCorrectionBanner');
+  const globalSection = document.getElementById('resMoisGlobalSection');
+  const titleEl  = document.getElementById('resMoisModalTitle');
+  const header   = document.getElementById('resMoisHeader');
+
+  if (existing) {
+    // ── MODE CORRECTION ────────────────────────────────────
+    document.getElementById('resMoisMode_Edit').value = 'edit';
+    if (titleEl)  titleEl.textContent = `✏️ Correction — ${moisLabel} ${annee}`;
+    if (banner)   banner.style.display = 'block';
+    if (globalSection) globalSection.style.display = 'none';
+    if (header) header.style.background = 'linear-gradient(90deg,#fff7ed 0%,transparent 100%)';
+
+    // Formatage des infos actuelles
+    const statutLabels = { paye: '✅ Payé', partiel: '⚠️ Partiel', non_paye: '❌ Non payé' };
+    const modeLabels = {
+      especes:  '💵 Espèces',
+      virement: '🏦 Virement bancaire',
+      cheque:   '📄 Chèque',
+      mobile:   '📱 Paiement mobile'
+    };
+    const fmtDate = (d) => {
+      if (!d) return '—';
+      try { return new Date(d).toLocaleDateString('fr-FR', {day:'numeric',month:'short',year:'numeric'}); }
+      catch { return d; }
+    };
+    const infoEl = document.getElementById('resMoisCurrentInfo');
+    if (infoEl) {
+      infoEl.innerHTML =
+        `Statut : <strong>${statutLabels[existing.statut] || existing.statut}</strong><br>` +
+        `Montant : <strong>${parseFloat(existing.montant_paye || 0).toFixed(0)} DH</strong><br>` +
+        `Mode : <strong>${modeLabels[existing.mode_paiement] || existing.mode_paiement || '—'}</strong><br>` +
+        `Date de paiement : <strong>${fmtDate(existing.date_paiement)}</strong>` +
+        (existing.note ? `<br>Note : <em>${String(existing.note).replace(/</g,'&lt;')}</em>` : '');
+    }
+
+    // Par défaut : mode "édition des valeurs"
+    setCorrectionMode('edit');
+  } else {
+    // ── MODE SAISIE (nouveau paiement) ─────────────────────
+    document.getElementById('resMoisMode_Edit').value = 'saisie';
+    if (titleEl)  titleEl.textContent = `💳 Nouveau paiement — ${moisLabel} ${annee}`;
+    if (banner)   banner.style.display = 'none';
+    if (globalSection) globalSection.style.display = 'block';
+    if (header) header.style.background = '';
+
+    // Afficher les bons boutons
+    document.getElementById('resMoisFormFields').style.display = 'block';
+    document.getElementById('resMoisDeleteConfirm').style.display = 'none';
+    document.getElementById('resMoisSaveBtn').style.display = 'inline-block';
+    document.getElementById('resMoisConfirmDeleteBtn').style.display = 'none';
+  }
+
+  // Pré-remplissage des champs
   document.getElementById('resMoisMontant').value = existing?.montant_paye || montantM;
   document.getElementById('resMoisDate').value    = existing?.date_paiement || new Date().toISOString().split('T')[0];
   document.getElementById('resMoisMode').value    = existing?.mode_paiement || 'especes';
   document.getElementById('resMoisNote').value    = existing?.note || '';
-
   selectResMoisStatut(existing?.statut || 'paye');
-
-  // Afficher bouton Supprimer SEULEMENT si un paiement existe déjà
-  const deleteBtn = document.getElementById('resMoisDeleteBtn');
-  if (deleteBtn) {
-    deleteBtn.style.display = existing ? 'inline-block' : 'none';
-  }
 
   // ── PAIEMENT GLOBAL MULTI-MOIS ──────────────────────────
   const montantParMois = montantM;
   const globalEl = document.getElementById('resMoisGlobalMontant');
   const nbMoisEl = document.getElementById('resMoisNbMois');
-  const infoEl   = document.getElementById('resMoisGlobalInfo');
+  const infoGlobalEl = document.getElementById('resMoisGlobalInfo');
 
   if (globalEl) globalEl.value = '';
   if (nbMoisEl) nbMoisEl.textContent = '0 mois couverts';
-  if (infoEl)   infoEl.style.display = 'none';
+  if (infoGlobalEl)   infoGlobalEl.style.display = 'none';
 
-  // Calcul dynamique nb mois couverts
   if (globalEl) {
     globalEl.oninput = function() {
       const total = parseFloat(this.value) || 0;
@@ -4686,22 +4746,19 @@ function openResMoisModal(resId, periode, nom, apt) {
           : '0 mois couverts';
         nbMoisEl.style.color = nb > 0 ? 'var(--green-text)' : 'var(--muted)';
       }
-      if (infoEl) {
+      if (infoGlobalEl) {
         if (nb > 0) {
-          // Calculer les mois couverts
           const moisCouverts = [];
           let a = parseInt(annee), m2 = parseInt(mois);
           for (let i = 0; i < nb; i++) {
-            moisCouverts.push(
-              moisNoms[m2 - 1] + ' ' + a
-            );
+            moisCouverts.push(moisNoms[m2 - 1] + ' ' + a);
             m2++;
             if (m2 > 12) { m2 = 1; a++; }
           }
-          infoEl.innerHTML = `📅 Mois couverts : <strong>${moisCouverts.join(', ')}</strong>`;
-          infoEl.style.display = 'block';
+          infoGlobalEl.innerHTML = `📅 Mois couverts : <strong>${moisCouverts.join(', ')}</strong>`;
+          infoGlobalEl.style.display = 'block';
         } else {
-          infoEl.style.display = 'none';
+          infoGlobalEl.style.display = 'none';
         }
       }
     };
@@ -4711,6 +4768,61 @@ function openResMoisModal(resId, periode, nom, apt) {
   document.getElementById('resMoisOk').style.display  = 'none';
   document.getElementById('resMoisModal').classList.add('open');
 }
+
+// ── SETTING CORRECTION MODE (edit vs delete) ────────────────
+function setCorrectionMode(mode) {
+  const modeEl     = document.getElementById('resMoisMode_Edit');
+  const formFields = document.getElementById('resMoisFormFields');
+  const deleteConfirm = document.getElementById('resMoisDeleteConfirm');
+  const saveBtn    = document.getElementById('resMoisSaveBtn');
+  const confirmDelBtn = document.getElementById('resMoisConfirmDeleteBtn');
+  const btnEdit    = document.getElementById('correctionModeEdit');
+  const btnDelete  = document.getElementById('correctionModeDelete');
+
+  if (modeEl) modeEl.value = mode;
+
+  if (mode === 'delete') {
+    // Masquer le formulaire, afficher la confirmation
+    if (formFields)    formFields.style.display = 'none';
+    if (deleteConfirm) deleteConfirm.style.display = 'block';
+    if (saveBtn)       saveBtn.style.display = 'none';
+    if (confirmDelBtn) confirmDelBtn.style.display = 'inline-block';
+
+    // Toggle visuel des boutons
+    if (btnEdit) {
+      btnEdit.style.border = '2px solid var(--border)';
+      btnEdit.style.background = 'var(--surface)';
+      btnEdit.style.color = 'var(--text)';
+    }
+    if (btnDelete) {
+      btnDelete.style.border = '2px solid #dc2626';
+      btnDelete.style.background = '#fef2f2';
+      btnDelete.style.color = '#991b1b';
+    }
+  } else {
+    // Mode édition (par défaut)
+    if (formFields)    formFields.style.display = 'block';
+    if (deleteConfirm) deleteConfirm.style.display = 'none';
+    if (saveBtn)       saveBtn.style.display = 'inline-block';
+    if (confirmDelBtn) confirmDelBtn.style.display = 'none';
+
+    // En mode correction-edit : masquer la section paiement global
+    const globalSection = document.getElementById('resMoisGlobalSection');
+    if (globalSection) globalSection.style.display = 'none';
+
+    if (btnEdit) {
+      btnEdit.style.border = '2px solid #2563eb';
+      btnEdit.style.background = '#eff6ff';
+      btnEdit.style.color = '#1d4ed8';
+    }
+    if (btnDelete) {
+      btnDelete.style.border = '2px solid var(--border)';
+      btnDelete.style.background = 'var(--surface)';
+      btnDelete.style.color = 'var(--text)';
+    }
+  }
+}
+
 function selectResMoisStatut(statut) {
   document.getElementById('resMoisStatut').value = statut;
   const styles = {
@@ -5037,46 +5149,6 @@ async function confirmerReactiver() {
 // ── DATE DÉBUT RÉSIDENT ──────────────────────────────────────
 function closeDateDebutModal() {
   document.getElementById('dateDebutModal').classList.remove('open');
-}
-
-async function resetDateDebut() {
-  const resId = document.getElementById('dateDebutResId').value;
-  const errEl = document.getElementById('dateDebutErr');
-  errEl.style.display = 'none';
-
-  if (!resId) {
-    errEl.textContent   = '❌ ID résident manquant';
-    errEl.style.display = 'block';
-    return;
-  }
-
-  if (!confirm('Ce résident utilisera la date par défaut de la résidence.\n\nContinuer ?')) return;
-
-  const btn = document.getElementById('dateDebutResetBtn');
-  if (btn) { btn.disabled = true; btn.textContent = '⏳...'; }
-
-  try {
-    const result = await callEdge({
-      type:          'update_user_metadata',
-      admin_user_id: resId,
-      metadata:      { date_debut_charges: null }
-    });
-
-    if (!result || !result.success) {
-      errEl.textContent   = '❌ ' + (result?.error || 'Erreur');
-      errEl.style.display = 'block';
-      return;
-    }
-
-    closeDateDebutModal();
-    showToast('🔄 Date spécifique supprimée — date par défaut appliquée', 'success');
-    await loadAndRenderResidents();
-  } catch(e) {
-    errEl.textContent   = '❌ ' + e.message;
-    errEl.style.display = 'block';
-  } finally {
-    if (btn) { btn.disabled = false; btn.textContent = '🔄 Utiliser la date par défaut'; }
-  }
 }
 
 async function confirmerDateDebut() {
