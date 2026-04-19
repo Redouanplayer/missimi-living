@@ -1606,12 +1606,72 @@ document.getElementById('kpiResidents').textContent =
   total.toLocaleString('fr-FR');
 }
 function loadDashboard() {
+  console.log('[loadDashboard] Chargement stats réelles...');
+
+  // Placeholders en attendant
+  ['dTickets','dComments','dCompta','dPros','dResidences','dUsers'].forEach(function(id) {
+    var el = document.getElementById(id);
+    if (el) el.textContent = '…';
+  });
+
+  callEdge({ type: 'get_admin_stats' })
+    .then(function(data) {
+      if (!data || !data.success) {
+        console.warn('[loadDashboard] ❌ Edge indisponible, fallback sur comptages:', data?.error);
+        loadDashboardFallback();
+        return;
+      }
+
+      console.log('[loadDashboard] ✅ Stats reçues:', data);
+
+      // ── Compteurs tables ──
+      var counts = data.counts || {};
+      var mapping = {
+        dTickets:    counts.tickets     || 0,
+        dComments:   counts.commentaires || 0,
+        dCompta:     counts.comptabilite || 0,
+        dPros:       counts.professionnels || 0,
+        dResidences: counts.residences   || 0,
+        dUsers:      (data.users && data.users.admins) || 0
+      };
+      Object.keys(mapping).forEach(function(id) {
+        var el = document.getElementById(id);
+        if (el) el.textContent = mapping[id].toLocaleString('fr-FR');
+      });
+
+      // ── Taille DB réelle ──
+      var dbMb    = data.db_size_mb || 0;
+      var dbLimit = data.db_limit_mb || 500;
+      var dbPct   = Math.min((dbMb / dbLimit) * 100, 100);
+      setStorageBar('db', dbMb, dbLimit, dbPct);
+
+      // ── Taille storage réelle ──
+      var storMb    = data.storage_mb || 0;
+      var storLimit = data.storage_limit_mb || 1024;
+      var storPct   = Math.min((storMb / storLimit) * 100, 100);
+      setStorageBar('stor', storMb, storLimit, storPct);
+
+      // ── Infos supplémentaires (buckets + tailles tables) ──
+      console.log('[loadDashboard] Buckets:', data.buckets);
+      console.log('[loadDashboard] Tailles tables (Mo):', data.tables_size);
+      console.log('[loadDashboard] Utilisateurs:', data.users);
+    })
+    .catch(function(e) {
+      console.error('[loadDashboard] Exception:', e);
+      loadDashboardFallback();
+    });
+}
+
+// Fallback en cas d'indisponibilité de l'Edge (anciennes estimations)
+function loadDashboardFallback() {
+  console.warn('[loadDashboardFallback] Utilisation estimations');
+
   var tables = [
     { id: 'dTickets',    t: 'tickets' },
     { id: 'dComments',   t: 'commentaires' },
     { id: 'dCompta',     t: 'comptabilite' },
     { id: 'dPros',       t: 'professionnels' },
-    { id: 'dResidences', t: 'residences' },
+    { id: 'dResidences', t: 'residences' }
   ];
   tables.forEach(function(item) {
     db.from(item.t).select('*', { count:'exact', head:true }).then(function(res) {
@@ -1620,13 +1680,12 @@ function loadDashboard() {
     });
   });
 
-  // Users (admins liés)
   db.from('residences').select('admin_id').then(function(res) {
     var el = document.getElementById('dUsers');
     if (el) el.textContent = (res.data||[]).filter(function(r){ return r.admin_id; }).length;
   });
 
-  // Estimation DB
+  // Estimations (comme avant)
   Promise.all([
     db.from('tickets').select('*',{count:'exact',head:true}),
     db.from('commentaires').select('*',{count:'exact',head:true}),
@@ -1642,7 +1701,6 @@ function loadDashboard() {
     setStorageBar('db', estMB, 500, Math.min((estMB/500)*100, 100));
   });
 
-  // Estimation fichiers
   db.from('tickets').select('pieces_jointes').then(function(res) {
     var count = 0;
     (res.data||[]).forEach(function(row) {
