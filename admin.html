@@ -1507,7 +1507,19 @@ function confirmReactivate(id, nom) {
 function confirmViderArchive(id, nom) {
   showModal('🗑', 'Vider l\'archive',
     'Supprimer <strong>toutes les données</strong> de <strong>' + nom + '</strong> ?<br><br>' +
-    '• Tous les tickets et commentaires<br>• Toute la comptabilité<br>• Tous les professionnels<br><br>' +
+    '<strong>Seront définitivement supprimés :</strong><br>' +
+    '• Tous les tickets et leurs pièces jointes (fichiers)<br>' +
+    '• Tous les commentaires<br>' +
+    '• Toute la comptabilité<br>' +
+    '• Tout l\'annuaire (professionnels)<br>' +
+    '• Tous les documents (incluant les fichiers stockés)<br>' +
+    '• Tous les appels de fonds et leurs lignes<br>' +
+    '• Tous les paiements, relances, quotes-parts<br>' +
+    '• Le recouvrement mensuel<br>' +
+    '• Les actualités<br><br>' +
+    '<strong>NE sera PAS supprimé :</strong><br>' +
+    '• La résidence elle-même<br>' +
+    '• Le compte admin et les résidents<br><br>' +
     '<span style="color:var(--red);font-weight:600">⚠️ Action irréversible.</span>',
     'Vider l\'archive', 'mbtn-warn',
     function() { viderArchive(id, nom); }
@@ -1515,18 +1527,37 @@ function confirmViderArchive(id, nom) {
 }
 
 function viderArchive(id, nom) {
-  toast('⏳ Vidage en cours...');
-  var tables = ['commentaires', 'tickets', 'comptabilite', 'professionnels'];
-  var i = 0;
-  function next() {
-    if (i >= tables.length) {
+  toast('⏳ Vidage en cours (cela peut prendre 10-30s)...');
+
+  callEdge({
+    type:         'vider_archive',
+    residence_id: id,
+    nom:          nom
+  }).then(function(data) {
+    if (data.success) {
+      var d = data.details || {};
+      var resume =
+        (d.tickets_supprimes || 0)         + ' tickets (' +
+        (d.fichiers_tickets_supprimes || 0) + ' fichiers), ' +
+        (d.commentaires_supprimes || 0)    + ' commentaires, ' +
+        (d.compta_supprimee || 0)          + ' compta, ' +
+        (d.pros_supprimes || 0)            + ' pros, ' +
+        (d.documents_supprimes || 0)       + ' docs (' +
+        (d.fichiers_documents_supprimes || 0) + ' fichiers), ' +
+        (d.recouvrement_supprime || 0)     + ' paiements mensuels';
+
       toast('🗑 Archive de ' + nom + ' vidée');
+      console.log('[viderArchive] Détails:', d);
+      console.log('[viderArchive] Résumé:', resume);
       loadStats(); loadClients(); loadDashboard();
-      return;
+    } else {
+      toast('❌ ' + JSON.stringify(data.error || data).substring(0, 100));
+      console.error('[viderArchive] Erreur:', data);
     }
-    db.from(tables[i]).delete().eq('residence_id', id).then(function() { i++; next(); });
-  }
-  next();
+  }).catch(function(e) {
+    toast('❌ Exception : ' + e.message);
+    console.error('[viderArchive] Exception:', e);
+  });
 }
 
 function confirmDelete(id, nom, adminId) {
