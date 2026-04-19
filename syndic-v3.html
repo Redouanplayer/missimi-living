@@ -825,6 +825,7 @@
       <thead>
         <tr style="background:var(--bg)">
           <th style="padding:10px 14px;text-align:left;font-size:11px;font-weight:600;color:var(--muted);border-bottom:1px solid var(--border);white-space:nowrap;min-width:160px">Résident</th>
+          <th style="padding:10px 14px;text-align:left;font-size:11px;font-weight:600;color:var(--muted);border-bottom:1px solid var(--border);white-space:nowrap;min-width:180px">Email</th>
           <th style="padding:8px 4px;text-align:center;font-size:10px;font-weight:600;color:var(--muted);border-bottom:1px solid var(--border);min-width:34px">Jan</th>
           <th style="padding:8px 4px;text-align:center;font-size:10px;font-weight:600;color:var(--muted);border-bottom:1px solid var(--border);min-width:34px">Fév</th>
           <th style="padding:8px 4px;text-align:center;font-size:10px;font-weight:600;color:var(--muted);border-bottom:1px solid var(--border);min-width:34px">Mar</th>
@@ -843,6 +844,7 @@
         </tr>
         <tr id="resTotalRow" style="background:var(--blue-bg);border-bottom:2px solid var(--blue-border)">
           <td style="padding:8px 14px;font-size:11px;font-weight:700;color:var(--blue-text)">📊 TOTAL</td>
+          <td style="padding:8px 14px"></td>
           <td id="tot-1"  style="padding:6px 4px;text-align:center;font-size:11px;font-weight:700;color:var(--blue-text)">—</td>
           <td id="tot-2"  style="padding:6px 4px;text-align:center;font-size:11px;font-weight:700;color:var(--blue-text)">—</td>
           <td id="tot-3"  style="padding:6px 4px;text-align:center;font-size:11px;font-weight:700;color:var(--blue-text)">—</td>
@@ -1101,16 +1103,16 @@
 <!-- MENU ACTIONS RESIDENTS -->
 <div id="resActionsMenu" style="display:none;position:fixed;background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);box-shadow:var(--shadow);z-index:500;min-width:180px;overflow:hidden">
   <div id="resMenuNom" style="padding:10px 14px;font-size:12px;font-weight:600;color:var(--muted);border-bottom:1px solid var(--border);background:var(--bg)"></div>
-  <button onclick="event.stopPropagation();resMenuAction('edit')" style="display:flex;align-items:center;gap:8px;width:100%;padding:10px 14px;border:none;background:none;cursor:pointer;font-size:13px;font-family:'DM Sans',sans-serif;color:var(--text)">✏️ Modifier infos</button>
-  <button onclick="event.stopPropagation();resMenuAction('date')" style="display:flex;align-items:center;gap:8px;width:100%;padding:10px 14px;border:none;background:none;cursor:pointer;font-size:13px;font-family:'DM Sans',sans-serif;color:var(--text)">📅 Date début charges</button>
+  <button type="button" data-menu-action="edit" style="display:flex;align-items:center;gap:8px;width:100%;padding:10px 14px;border:none;background:none;cursor:pointer;font-size:13px;font-family:'DM Sans',sans-serif;color:var(--text);text-align:left">✏️ Modifier infos</button>
+  <button type="button" data-menu-action="date" style="display:flex;align-items:center;gap:8px;width:100%;padding:10px 14px;border:none;background:none;cursor:pointer;font-size:13px;font-family:'DM Sans',sans-serif;color:var(--text);text-align:left">📅 Date début charges</button>
   <div id="resMenuSuspendreBtn">
-    <button onclick="event.stopPropagation();resMenuAction('suspendre')" style="display:flex;align-items:center;gap:8px;width:100%;padding:10px 14px;border:none;background:none;cursor:pointer;font-size:13px;font-family:'DM Sans',sans-serif;color:var(--orange-text)">⏸ Suspendre</button>
+    <button type="button" data-menu-action="suspendre" style="display:flex;align-items:center;gap:8px;width:100%;padding:10px 14px;border:none;background:none;cursor:pointer;font-size:13px;font-family:'DM Sans',sans-serif;color:var(--orange-text);text-align:left">⏸ Suspendre</button>
   </div>
   <div id="resMenuReactiverBtn" style="display:none">
-    <button onclick="event.stopPropagation();resMenuAction('reactiver')" style="display:flex;align-items:center;gap:8px;width:100%;padding:10px 14px;border:none;background:none;cursor:pointer;font-size:13px;font-family:'DM Sans',sans-serif;color:var(--green-text)">▶️ Réactiver</button>
+    <button type="button" data-menu-action="reactiver" style="display:flex;align-items:center;gap:8px;width:100%;padding:10px 14px;border:none;background:none;cursor:pointer;font-size:13px;font-family:'DM Sans',sans-serif;color:var(--green-text);text-align:left">▶️ Réactiver</button>
   </div>
   <div style="height:1px;background:var(--border);margin:2px 0"></div>
-  <button onclick="event.stopPropagation();resMenuAction('delete')" style="display:flex;align-items:center;gap:8px;width:100%;padding:10px 14px;border:none;background:none;cursor:pointer;font-size:13px;font-family:'DM Sans',sans-serif;color:var(--red-text)">🗑️ Supprimer</button>
+  <button type="button" data-menu-action="delete" style="display:flex;align-items:center;gap:8px;width:100%;padding:10px 14px;border:none;background:none;cursor:pointer;font-size:13px;font-family:'DM Sans',sans-serif;color:var(--red-text);text-align:left">🗑️ Supprimer</button>
 </div>
 
 <!-- MES CHARGES (espace résident - lecture seule) -->
@@ -4310,7 +4312,7 @@ function getMontantPourMois(annee, mois) {
 async function loadAndRenderResidents() {
   const tbody = document.getElementById('residentsList');
   if (tbody) tbody.innerHTML =
-    '<tr><td colspan="16" class="empty-state" style="padding:32px;text-align:center">⏳ Chargement...</td></tr>';
+    '<tr><td colspan="17" class="empty-state" style="padding:32px;text-align:center">⏳ Chargement...</td></tr>';
 
   initResAnneeFilter();
   await loadResConfig();
@@ -4323,7 +4325,7 @@ async function loadAndRenderResidents() {
 
     if (!myRes) {
       if (tbody) tbody.innerHTML =
-        '<tr><td colspan="16" style="padding:32px;text-align:center;color:var(--red-text)">❌ Résidence introuvable</td></tr>';
+        '<tr><td colspan="17" style="padding:32px;text-align:center;color:var(--red-text)">❌ Résidence introuvable</td></tr>';
       return;
     }
 
@@ -4334,7 +4336,7 @@ async function loadAndRenderResidents() {
 });
     if (!result.success) {
       if (tbody) tbody.innerHTML =
-        `<tr><td colspan="16" style="padding:32px;text-align:center;color:var(--red-text)">❌ ${result.error}</td></tr>`;
+        `<tr><td colspan="17" style="padding:32px;text-align:center;color:var(--red-text)">❌ ${result.error}</td></tr>`;
       return;
     }
 
@@ -4374,7 +4376,7 @@ async function loadAndRenderResidents() {
 
   } catch(e) {
     if (tbody) tbody.innerHTML =
-      `<tr><td colspan="16" style="padding:32px;text-align:center;color:var(--red-text)">❌ ${e.message}</td></tr>`;
+      `<tr><td colspan="17" style="padding:32px;text-align:center;color:var(--red-text)">❌ ${e.message}</td></tr>`;
   }
 }
 
@@ -4399,7 +4401,7 @@ function renderResAnnuel() {
 
   if (!validated.length) {
     tbody.innerHTML =
-      '<tr><td colspan="16" style="padding:32px;text-align:center;color:var(--muted)">👥 Aucun résident trouvé</td></tr>';
+      '<tr><td colspan="17" style="padding:32px;text-align:center;color:var(--muted)">👥 Aucun résident trouvé</td></tr>';
     updateTotauxAnnuel([], anneeNow, moisActuel);
     return;
   }
@@ -4544,6 +4546,11 @@ function renderResAnnuel() {
           </div>
         </div>
       </td>
+      <td style="padding:8px 14px;font-size:12px;color:var(--text);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:220px" title="${r.email || ''}">
+        <a href="mailto:${r.email || ''}" style="color:var(--blue-text);text-decoration:none" onclick="event.stopPropagation()">
+          ${r.email || '—'}
+        </a>
+      </td>
       ${cellules.join('')}
       <td style="padding:6px 10px;text-align:right;font-size:12px;font-weight:700;color:var(--green-text);white-space:nowrap">
         ${totalPaye.toLocaleString('fr-MA')} DH
@@ -4553,7 +4560,9 @@ function renderResAnnuel() {
       </td>
             <td style="padding:6px 10px;text-align:center;position:relative">
         <button
-          onclick="openResMenu(event,'${r.id}')"
+          type="button"
+          data-action="open-res-menu"
+          data-res-id="${r.id}"
           style="background:var(--bg);border:1px solid var(--border2);border-radius:6px;padding:4px 10px;cursor:pointer;font-size:16px;color:var(--muted);font-family:'DM Sans',sans-serif">
           ⋯
         </button>
@@ -4662,9 +4671,21 @@ function filterResidents(query) {
 }
 
 // ── MENU ⋯ ACTIONS ───────────────────────────────────────────
+// ========================================================
+// MENU ACTIONS RÉSIDENTS — Délégation d'événement robuste
+// ========================================================
+// On attache UN SEUL listener sur document.body qui capture
+// tous les clics. On regarde ensuite le data-attribute pour
+// décider de l'action. Cette approche évite les problèmes
+// de binding, de currentTarget null, et de re-render.
+// ========================================================
+
 function openResMenu(event, resId) {
-  event.stopPropagation();
-  event.preventDefault();
+  // Fonction conservée pour compat si appelée ailleurs (ex : demandes pending)
+  if (event) {
+    event.stopPropagation();
+    event.preventDefault();
+  }
 
   console.log('[openResMenu] clicked for resId:', resId, '| allResidents.length:', allResidents.length);
 
@@ -4673,7 +4694,7 @@ function openResMenu(event, resId) {
 
   if (!resMenuCurrentData) {
     console.error('[openResMenu] ❌ Résident introuvable dans allResidents:', resId);
-    alert('⚠️ Impossible d\'ouvrir le menu. Veuillez recharger la page.');
+    alert('⚠️ Impossible d\'ouvrir le menu. Veuillez recharger la page (F5).');
     return;
   }
 
@@ -4693,34 +4714,24 @@ function openResMenu(event, resId) {
   if (suspBtn)  suspBtn.style.display  = suspendu ? 'none'  : 'block';
   if (reactBtn) reactBtn.style.display = suspendu ? 'block' : 'none';
 
-  // Capture immédiate du bouton cliqué (currentTarget peut être null dans setTimeout)
-  const btn = event.currentTarget || event.target;
-  const rect = btn.getBoundingClientRect();
-
+  // Position : sous le bouton ⋯ cliqué
+  const btn = (event && (event.currentTarget || event.target)) || null;
+  if (btn && btn.getBoundingClientRect) {
+    const rect = btn.getBoundingClientRect();
+    menu.style.top  = (rect.bottom + 4) + 'px';
+    menu.style.left = Math.min(rect.left, window.innerWidth - 220) + 'px';
+  } else {
+    menu.style.top  = '100px';
+    menu.style.left = '100px';
+  }
   menu.style.display = 'block';
-  menu.style.top     = (rect.bottom + window.scrollY + 4) + 'px';
-  menu.style.left    = Math.min(rect.left, window.innerWidth - 220) + 'px';
 
-  // Fermer au clic EXTÉRIEUR uniquement (pas sur le menu lui-même)
-  // Délai pour éviter que le clic actuel soit capté
-  setTimeout(() => {
-    document.addEventListener('click', handleOutsideClickResMenu, { once: false });
-  }, 50);
-}
-
-function handleOutsideClickResMenu(e) {
-  const menu = document.getElementById('resActionsMenu');
-  if (!menu) return;
-  // Si le clic est dans le menu, ne rien faire (laisser l'action se faire)
-  if (menu.contains(e.target)) return;
-  // Sinon fermer
-  closeResMenu();
+  console.log('[openResMenu] ✅ Menu ouvert pour', resMenuCurrentData.nom || resMenuCurrentData.email);
 }
 
 function closeResMenu() {
   const menu = document.getElementById('resActionsMenu');
   if (menu) menu.style.display = 'none';
-  document.removeEventListener('click', handleOutsideClickResMenu);
 }
 
 function resMenuAction(action) {
@@ -4771,6 +4782,58 @@ function resMenuAction(action) {
     deleteResident(r.id, r.email);
   }
 }
+
+// ── DÉLÉGATION D'ÉVÉNEMENT GLOBALE ──────────────────────────
+// Attaché UNE SEULE FOIS au chargement de la page
+// Gère : ouverture menu via data-action="open-res-menu",
+//        choix action via data-menu-action="...",
+//        fermeture clic extérieur.
+// ────────────────────────────────────────────────────────────
+(function() {
+  if (window._resMenuDelegateInstalled) return;
+  window._resMenuDelegateInstalled = true;
+
+  document.addEventListener('click', function(e) {
+    // 1. Clic sur le bouton ⋯ ?
+    const openBtn = e.target.closest('[data-action="open-res-menu"]');
+    if (openBtn) {
+      e.preventDefault();
+      e.stopPropagation();
+      const resId = openBtn.getAttribute('data-res-id');
+      if (resId) {
+        // Recréer un évènement synthétique avec currentTarget
+        const syntheticEvent = {
+          currentTarget: openBtn,
+          target: openBtn,
+          stopPropagation: () => {},
+          preventDefault: () => {}
+        };
+        openResMenu(syntheticEvent, resId);
+      }
+      return;
+    }
+
+    // 2. Clic sur une action du menu ?
+    const actionBtn = e.target.closest('[data-menu-action]');
+    if (actionBtn) {
+      e.preventDefault();
+      e.stopPropagation();
+      const action = actionBtn.getAttribute('data-menu-action');
+      resMenuAction(action);
+      return;
+    }
+
+    // 3. Clic en dehors du menu → fermer
+    const menu = document.getElementById('resActionsMenu');
+    if (menu && menu.style.display === 'block') {
+      if (!menu.contains(e.target)) {
+        closeResMenu();
+      }
+    }
+  }, true); // capture phase pour être sûr d'intercepter en premier
+
+  console.log('[ResMenu] ✅ Délégation d\'événement installée');
+})();
 
 // ── MODAL PAIEMENT MOIS ──────────────────────────────────────
 function openResMoisModal(resId, periode, nom, apt) {
