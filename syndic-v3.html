@@ -561,6 +561,7 @@
       <span class="tab-badge" id="unreadBadge" style="display:none">0</span>
     </div>
     <div class="tab" data-tab="services" onclick="showTab('services',this)" id="tabServices" style="display:none">Annuaire</div>
+    <div class="tab" data-tab="mescharges" onclick="showTab('mescharges',this)" id="tabMesCharges" style="display:none">💳 Mes charges</div>
     <div class="tab" data-tab="documents" onclick="showTab('documents',this)" id="tabDocuments" style="display:none">📁 Documents</div>
     <div class="tab" data-tab="compta" onclick="showTab('compta',this)" id="tabCompta" style="display:none">Comptabilité</div>
     <div class="tab" data-tab="residents" onclick="showTab('residents',this)" id="tabResidents" style="display:none">👥 Résidents</div>
@@ -1110,6 +1111,72 @@
   </div>
   <div style="height:1px;background:var(--border);margin:2px 0"></div>
   <button onclick="event.stopPropagation();resMenuAction('delete')" style="display:flex;align-items:center;gap:8px;width:100%;padding:10px 14px;border:none;background:none;cursor:pointer;font-size:13px;font-family:'DM Sans',sans-serif;color:var(--red-text)">🗑️ Supprimer</button>
+</div>
+
+<!-- MES CHARGES (espace résident - lecture seule) -->
+<div class="section" id="sec-mescharges">
+
+  <div class="card" style="margin-bottom:16px;border-left:4px solid var(--blue)">
+    <div style="display:flex;justify-content:space-between;align-items:flex-start;flex-wrap:wrap;gap:12px">
+      <div>
+        <div class="card-title">💳 Mes charges</div>
+        <div class="card-sub" style="margin-bottom:0">Suivi de vos paiements mensuels enregistrés par le syndic</div>
+      </div>
+      <div style="display:flex;gap:8px;align-items:center">
+        <select id="mcAnneeFilter" onchange="onMesChargesAnneeChange()" style="width:auto;min-width:90px"></select>
+      </div>
+    </div>
+  </div>
+
+  <div id="mcResidenceInfo" class="card" style="margin-bottom:16px;background:var(--blue-bg);border-color:var(--blue-border);display:none">
+    <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:12px">
+      <div>
+        <div style="font-size:10px;font-weight:600;color:var(--blue-text);text-transform:uppercase;letter-spacing:.05em;margin-bottom:4px">💰 Montant mensuel</div>
+        <div style="font-size:18px;font-weight:700;color:var(--blue-text)" id="mcMontantMensuel">—</div>
+      </div>
+      <div>
+        <div style="font-size:10px;font-weight:600;color:var(--blue-text);text-transform:uppercase;letter-spacing:.05em;margin-bottom:4px">📅 Date de début</div>
+        <div style="font-size:14px;font-weight:600;color:var(--blue-text)" id="mcDateDebut">—</div>
+      </div>
+      <div>
+        <div style="font-size:10px;font-weight:600;color:var(--blue-text);text-transform:uppercase;letter-spacing:.05em;margin-bottom:4px">🏠 Appartement</div>
+        <div style="font-size:14px;font-weight:600;color:var(--blue-text)" id="mcAppartement">—</div>
+      </div>
+    </div>
+  </div>
+
+  <div class="stats-grid" style="margin-bottom:16px">
+    <div class="stat-card" style="border-left:4px solid var(--green-text)">
+      <div class="stat-num" id="mcNbPayes" style="color:var(--green-text)">0</div>
+      <div class="stat-label">✅ Mois payés</div>
+    </div>
+    <div class="stat-card" style="border-left:4px solid var(--red-text)">
+      <div class="stat-num" id="mcNbNonPayes" style="color:var(--red-text)">0</div>
+      <div class="stat-label">❌ Mois dus</div>
+    </div>
+    <div class="stat-card" style="border-left:4px solid var(--blue)">
+      <div class="stat-num" id="mcTotalPaye" style="color:var(--blue-text);font-size:18px">0 DH</div>
+      <div class="stat-label">💵 Total réglé</div>
+    </div>
+    <div class="stat-card" style="border-left:4px solid var(--orange-text)">
+      <div class="stat-num" id="mcReste" style="color:var(--orange-text);font-size:18px">0 DH</div>
+      <div class="stat-label">⏳ Reste à payer</div>
+    </div>
+  </div>
+
+  <div class="card" style="margin-bottom:16px">
+    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:12px">
+      <div style="font-size:14px;font-weight:700">📋 Détail mensuel <span id="mcAnneeLabel" style="color:var(--muted);font-weight:400"></span></div>
+      <div style="font-size:11px;color:var(--muted);font-style:italic">🔒 Lecture seule — Seul le syndic peut modifier</div>
+    </div>
+    <div id="mcMoisList" style="display:grid;grid-template-columns:repeat(auto-fill,minmax(180px,1fr));gap:10px"></div>
+  </div>
+
+  <div class="card">
+    <div style="font-size:14px;font-weight:700;margin-bottom:12px">📜 Historique de mes paiements</div>
+    <div id="mcHistorique"></div>
+  </div>
+
 </div>
 
     <div class="section" id="sec-documents">
@@ -2674,7 +2741,7 @@ async function doRegister() {
   // Utiliser maybeSingle() pour éviter l'erreur 406 si aucun résultat
   const { data: resCheck, error: resCheckErr } = await db
     .from('residences')
-    .select('id, nom, secteur, code_residence, actif')
+    .select('id, nom, secteur, code_residence, actif, email_admin, admin_id')
     .eq('code_residence', resCode)
     .maybeSingle();
 
@@ -2762,40 +2829,85 @@ async function doRegister() {
   ['regNom','regEmail','regResidence','regApt','regTel','regPwd','regPwdConfirm'].forEach(id => { const el=document.getElementById(id); if(el) el.value=''; });
 
   // Notifier l'admin de la résidence par email
+  // Utilise les données déjà récupérées (resCheck) pour éviter un 2ᵉ select qui pourrait échouer en RLS
+  console.log('[doRegister] Préparation notification admin...');
+  console.log('[doRegister] email_admin:', resData.email_admin, '| admin_id:', resData.admin_id);
+
   try {
-    const { data: res } = await db.from('residences')
-      .select('email_admin, nom')
-      .eq('id', resData.id)
-      .single();
-    if (res && res.email_admin) {
-      const notifResp = await fetch('https://nwusjraxjfirsonbndfy.supabase.co/functions/v1/clever-handler', {
-        method: 'POST',
-        headers: {
-          'Content-Type':   'application/json',
-          'x-internal-key': 'RT-2026-xK9mP2vL7nQ4rZ8sW3jY6bV1cX5mA2pE0',
-          'Authorization':  'Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im53dXNqcmF4amZpcnNvbmJuZGZ5Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzM2ODI5NjcsImV4cCI6MjA4OTI1ODk2N30.wqVBvGwrLv8bJfGuHJTWj1Upao63aTYQMcH-IIN7OGw'
-        },
-        body: JSON.stringify({
-          type:              'nouvelle_inscription',
-          email:             res.email_admin,
-          nom:               res.nom,
-          resident_nom:      nom,
-          resident_email:    email,
-          resident_apt:      apt,
-          resident_tel:      tel,
-          code_residence:    resData.code_residence
-        })
-      });
-      const notifData = await notifResp.json();
-      if (notifData.success) {
-        console.log('✅ Email admin envoyé à', res.email_admin);
-      } else {
-        console.warn('⚠️ Email admin échoué:', JSON.stringify(notifData));
+    let emailAdmin = resData.email_admin || '';
+
+    // Fallback : si email_admin vide dans la table, chercher via admin_id dans auth.users
+    if (!emailAdmin && resData.admin_id) {
+      console.log('[doRegister] email_admin vide, fallback via Edge...');
+      // Appel Edge Function qui a les droits service pour lire auth.users
+      try {
+        const lookupResp = await fetch('https://nwusjraxjfirsonbndfy.supabase.co/functions/v1/clever-handler', {
+          method: 'POST',
+          headers: {
+            'Content-Type':   'application/json',
+            'x-internal-key': 'RT-2026-xK9mP2vL7nQ4rZ8sW3jY6bV1cX5mA2pE0',
+            'Authorization':  'Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im53dXNqcmF4amZpcnNvbmJuZGZ5Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzM2ODI5NjcsImV4cCI6MjA4OTI1ODk2N30.wqVBvGwrLv8bJfGuHJTWj1Upao63aTYQMcH-IIN7OGw'
+          },
+          body: JSON.stringify({
+            type:              'nouvelle_inscription',
+            email:             'lookup',
+            nom:               resData.nom,
+            admin_id_lookup:   resData.admin_id,
+            residence_id:      resData.id,
+            resident_nom:      nom,
+            resident_email:    email,
+            resident_apt:      apt,
+            resident_tel:      tel,
+            code_residence:    resData.code_residence
+          })
+        });
+        const lookupData = await lookupResp.json();
+        console.log('[doRegister] Fallback réponse:', lookupData);
+        if (lookupData.success) {
+          console.log('✅ Email admin envoyé via fallback admin_id');
+        } else {
+          console.warn('⚠️ Fallback admin_id échoué:', lookupData.error);
+        }
+      } catch(e) {
+        console.warn('[doRegister] Fallback exception:', e.message);
       }
-    } else {
-      console.warn('⚠️ Pas d\'email_admin pour cette résidence');
+      return;
     }
-  } catch(e) { console.warn('Notif admin erreur:', e.message); }
+
+    if (!emailAdmin) {
+      console.warn('⚠️ Impossible de notifier l\'admin : aucun email disponible pour cette résidence');
+      return;
+    }
+
+    // Envoi direct (cas normal)
+    const notifResp = await fetch('https://nwusjraxjfirsonbndfy.supabase.co/functions/v1/clever-handler', {
+      method: 'POST',
+      headers: {
+        'Content-Type':   'application/json',
+        'x-internal-key': 'RT-2026-xK9mP2vL7nQ4rZ8sW3jY6bV1cX5mA2pE0',
+        'Authorization':  'Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im53dXNqcmF4amZpcnNvbmJuZGZ5Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzM2ODI5NjcsImV4cCI6MjA4OTI1ODk2N30.wqVBvGwrLv8bJfGuHJTWj1Upao63aTYQMcH-IIN7OGw'
+      },
+      body: JSON.stringify({
+        type:              'nouvelle_inscription',
+        email:             emailAdmin,
+        nom:               resData.nom,
+        resident_nom:      nom,
+        resident_email:    email,
+        resident_apt:      apt,
+        resident_tel:      tel,
+        code_residence:    resData.code_residence
+      })
+    });
+    const notifData = await notifResp.json();
+    console.log('[doRegister] Notif réponse:', notifData);
+    if (notifData.success) {
+      console.log('✅ Email admin envoyé à', emailAdmin);
+    } else {
+      console.warn('⚠️ Email admin échoué:', JSON.stringify(notifData));
+    }
+  } catch(e) {
+    console.error('[doRegister] Notif admin erreur:', e);
+  }
 }
 
 async function doLogout() {
@@ -2877,10 +2989,18 @@ document.getElementById('tabFinances').style.display =
     document.getElementById('tabAdmin').style.display        = 'none';
     document.getElementById('tabResidents').style.display    = 'none';
     document.getElementById('tabCompta').style.display       = 'none';
+    document.getElementById('tabFinances').style.display     = 'none';
     document.getElementById('tabServices').style.display     = 'block';
     document.getElementById('tabDocuments').style.display    = 'block';
     document.getElementById('tabNouveau').style.display      = 'block';
     document.getElementById('tabSuivi').style.display        = 'block';
+
+    // Mes charges : uniquement pour secteur résidence
+    const mcTab = document.getElementById('tabMesCharges');
+    if (mcTab) {
+      const isResidence = (currentUserMeta.secteur || 'residence') === 'residence';
+      mcTab.style.display = isResidence ? 'block' : 'none';
+    }
 
     // Pré-remplir appartement
     const fAptEl = document.getElementById('fApt');
@@ -2899,7 +3019,7 @@ function showTab(tab, el) {
   document.getElementById('sec-'+tab).classList.add('active');
 
   // Largeur page : les onglets avec gros tableaux utilisent la version large
-  const wideTabs = ['residents', 'finances', 'compta', 'admin', 'documents'];
+  const wideTabs = ['residents', 'finances', 'compta', 'admin', 'documents', 'mescharges'];
   const pageEl = document.querySelector('.page');
   if (pageEl) {
     pageEl.classList.toggle('wide', wideTabs.includes(tab));
@@ -2912,6 +3032,7 @@ function showTab(tab, el) {
   if(tab==='compta') loadAndRenderCompta();
   if(tab==='residents') loadAndRenderResidents();
 if(tab==='finances') loadAndRenderFinances();
+if(tab==='mescharges') loadAndRenderMesCharges();
 }
 
 async function loadTickets() {
@@ -5503,6 +5624,314 @@ function togglePwd(inputId, btn) {
     input.type = 'password';
     btn.textContent = '👁';
   }
+}
+
+// ============================================================
+// MES CHARGES (espace résident - lecture seule)
+// ============================================================
+let mcAnneeActive = new Date().getFullYear();
+let mcPaiements   = [];
+let mcMontantMensuel = 0;
+let mcDateDebutResidence = null;
+let mcDateDebutResident  = null;
+
+function initMesChargesAnneeFilter() {
+  const sel = document.getElementById('mcAnneeFilter');
+  if (!sel) return;
+  const now = new Date().getFullYear();
+  sel.innerHTML = '';
+
+  const years = new Set();
+  for (let y = now + 1; y >= now - 5; y--) years.add(y);
+  if (mcAnneeActive) years.add(mcAnneeActive);
+
+  [...years].sort((a,b)=>b-a).forEach(y => {
+    const label = y > now ? `${y} (à venir)` : y === now ? `${y} (en cours)` : `${y}`;
+    sel.innerHTML += `<option value="${y}">${label}</option>`;
+  });
+
+  sel.innerHTML += `<option value="__custom__" style="font-weight:600;color:#2563eb">➕ Autre année…</option>`;
+  sel.value = mcAnneeActive;
+}
+
+function onMesChargesAnneeChange() {
+  const sel = document.getElementById('mcAnneeFilter');
+  const val = sel.value;
+
+  if (val === '__custom__') {
+    const now = new Date().getFullYear();
+    const saisie = prompt(`Saisissez l'année (entre ${now - 30} et ${now + 30}) :`, String(mcAnneeActive));
+    if (!saisie || isNaN(parseInt(saisie))) { sel.value = mcAnneeActive; return; }
+    const a = parseInt(saisie);
+    if (a < now - 30 || a > now + 30) { alert('⚠️ Année hors limites'); sel.value = mcAnneeActive; return; }
+    mcAnneeActive = a;
+    initMesChargesAnneeFilter();
+  } else {
+    mcAnneeActive = parseInt(val);
+  }
+  loadAndRenderMesCharges();
+}
+
+async function loadAndRenderMesCharges() {
+  const moisContainer = document.getElementById('mcMoisList');
+
+  if (!currentUser || !currentUserMeta.residence_id) {
+    if (moisContainer) moisContainer.innerHTML =
+      '<div class="empty-state" style="padding:24px;text-align:center;grid-column:1/-1">❌ Résidence introuvable</div>';
+    return;
+  }
+
+  initMesChargesAnneeFilter();
+
+  try {
+    // Charger la config de la résidence
+    const { data: res, error: resErr } = await db.from('residences')
+      .select('montant_mensuel, date_debut_charges, nom, historique_montants')
+      .eq('id', currentUserMeta.residence_id)
+      .maybeSingle();
+
+    if (resErr) {
+      console.error('[loadAndRenderMesCharges] Erreur résidence:', resErr);
+    }
+
+    if (res) {
+      mcMontantMensuel = parseFloat(res.montant_mensuel) || 0;
+      mcDateDebutResidence = res.date_debut_charges || null;
+    }
+
+    // Date spécifique au résident ou date globale
+    mcDateDebutResident = currentUserMeta.date_debut_charges || mcDateDebutResidence;
+
+    // Afficher les infos résidence
+    const infoPanel = document.getElementById('mcResidenceInfo');
+    if (infoPanel) infoPanel.style.display = 'block';
+
+    const montantEl = document.getElementById('mcMontantMensuel');
+    const dateEl    = document.getElementById('mcDateDebut');
+    const aptEl     = document.getElementById('mcAppartement');
+
+    if (montantEl) montantEl.textContent = mcMontantMensuel > 0
+      ? `${mcMontantMensuel.toLocaleString('fr-MA')} DH` : '—';
+    if (dateEl) {
+      if (mcDateDebutResident) {
+        try {
+          dateEl.textContent = new Date(mcDateDebutResident).toLocaleDateString('fr-FR', {day:'numeric',month:'long',year:'numeric'});
+        } catch { dateEl.textContent = mcDateDebutResident; }
+      } else {
+        dateEl.textContent = 'Non définie';
+      }
+    }
+    if (aptEl) aptEl.textContent = currentUserMeta.appartement || '—';
+
+    // Charger les paiements de l'année sélectionnée
+    const { data: paiements, error: paiErr } = await db.from('recouvrement')
+      .select('*')
+      .eq('residence_id', currentUserMeta.residence_id)
+      .eq('resident_id', currentUser.id)
+      .like('periode', `${mcAnneeActive}-%`)
+      .order('periode', { ascending: true });
+
+    if (paiErr) {
+      console.error('[loadAndRenderMesCharges] Erreur paiements:', paiErr);
+      if (moisContainer) moisContainer.innerHTML =
+        `<div class="empty-state" style="padding:24px;text-align:center;grid-column:1/-1;color:var(--red-text)">❌ Erreur : ${paiErr.message}</div>`;
+      return;
+    }
+
+    mcPaiements = paiements || [];
+    console.log('[loadAndRenderMesCharges] ✅', mcPaiements.length, 'paiement(s) pour', mcAnneeActive);
+
+    renderMesChargesMois();
+    renderMesChargesHistorique();
+  } catch(e) {
+    console.error('[loadAndRenderMesCharges] Exception:', e);
+    if (moisContainer) moisContainer.innerHTML =
+      `<div class="empty-state" style="padding:24px;text-align:center;grid-column:1/-1;color:var(--red-text)">❌ ${e.message}</div>`;
+  }
+}
+
+function getMcMontantPourMois(annee, mois) {
+  // Reprend la logique de getMontantPourMois côté admin, mais lit depuis mcHistorique indisponible côté résident
+  // → on utilise juste le montant de base. Le montant historique pourra être enrichi plus tard.
+  return mcMontantMensuel || 0;
+}
+
+function renderMesChargesMois() {
+  const container = document.getElementById('mcMoisList');
+  const labelEl   = document.getElementById('mcAnneeLabel');
+  if (!container) return;
+
+  if (labelEl) labelEl.textContent = `· ${mcAnneeActive}`;
+
+  const moisNoms = ['Janvier','Février','Mars','Avril','Mai','Juin',
+                    'Juillet','Août','Septembre','Octobre','Novembre','Décembre'];
+  const now       = new Date();
+  const anneeNow  = now.getFullYear();
+  const moisNow   = now.getMonth() + 1;
+
+  const dateDebut = mcDateDebutResident ? new Date(mcDateDebutResident) : null;
+  const debutAnnee = dateDebut ? dateDebut.getFullYear() : null;
+  const debutMois  = dateDebut ? dateDebut.getMonth() + 1 : null;
+
+  // Index paiements par mois
+  const paiementsMap = {};
+  mcPaiements.forEach(p => {
+    const mois = parseInt(p.periode.split('-')[1]);
+    paiementsMap[mois] = p;
+  });
+
+  let nbPayes = 0, nbNonPayes = 0, totalPaye = 0, totalDu = 0;
+  const cells = [];
+
+  const modeLabels = {
+    especes:  '💵 Espèces',
+    virement: '🏦 Virement',
+    cheque:   '📄 Chèque',
+    mobile:   '📱 Mobile',
+    carte:    '💳 Carte',
+    autre:    '❓ Autre'
+  };
+
+  for (let m = 1; m <= 12; m++) {
+    const p = paiementsMap[m];
+    const estFutur = mcAnneeActive > anneeNow || (mcAnneeActive === anneeNow && m > moisNow);
+
+    // Avant la date de début
+    let avantDebut = false;
+    if (dateDebut) {
+      if (mcAnneeActive < debutAnnee || (mcAnneeActive === debutAnnee && m < debutMois)) {
+        avantDebut = true;
+      }
+    }
+
+    let bgColor, borderColor, icon, statutText, montantText, dateText, modeText;
+
+    if (avantDebut && !p) {
+      bgColor = 'var(--bg)'; borderColor = 'var(--border)';
+      icon = '—'; statutText = 'Non dû';
+      montantText = 'Avant votre arrivée'; dateText = ''; modeText = '';
+    } else if (p) {
+      if (p.statut === 'paye') {
+        bgColor = 'var(--green-bg)'; borderColor = 'var(--green-border)';
+        icon = '✅'; statutText = 'Payé';
+        nbPayes++;
+        totalPaye += parseFloat(p.montant_paye) || 0;
+      } else if (p.statut === 'partiel') {
+        bgColor = '#fef3c7'; borderColor = '#fcd34d';
+        icon = '⚠️'; statutText = 'Paiement partiel';
+        nbPayes++;
+        totalPaye += parseFloat(p.montant_paye) || 0;
+      } else {
+        bgColor = 'var(--red-bg)'; borderColor = 'var(--red-border)';
+        icon = '❌'; statutText = 'Non payé';
+        if (!estFutur) nbNonPayes++;
+      }
+      montantText = `${parseFloat(p.montant_paye || 0).toLocaleString('fr-MA')} DH`;
+      dateText = p.date_paiement
+        ? new Date(p.date_paiement).toLocaleDateString('fr-FR',{day:'numeric',month:'short'})
+        : '';
+      modeText = modeLabels[p.mode_paiement] || '';
+      if (!avantDebut) totalDu += getMcMontantPourMois(mcAnneeActive, m);
+    } else if (estFutur) {
+      bgColor = 'var(--bg)'; borderColor = 'var(--border)';
+      icon = '⏳'; statutText = 'À venir';
+      montantText = `${getMcMontantPourMois(mcAnneeActive, m).toLocaleString('fr-MA')} DH`;
+      dateText = ''; modeText = '';
+    } else {
+      // Passé non payé
+      bgColor = 'var(--red-bg)'; borderColor = 'var(--red-border)';
+      icon = '❌'; statutText = 'Non payé';
+      montantText = `${getMcMontantPourMois(mcAnneeActive, m).toLocaleString('fr-MA')} DH dû`;
+      dateText = ''; modeText = '';
+      nbNonPayes++;
+      totalDu += getMcMontantPourMois(mcAnneeActive, m);
+    }
+
+    cells.push(`
+      <div style="background:${bgColor};border:1px solid ${borderColor};border-radius:var(--radius-sm);padding:10px 12px;transition:transform .1s" onmouseover="this.style.transform='translateY(-2px)'" onmouseout="this.style.transform='translateY(0)'">
+        <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:4px">
+          <div style="font-size:12px;font-weight:600;color:var(--text)">${moisNoms[m-1]}</div>
+          <div style="font-size:14px">${icon}</div>
+        </div>
+        <div style="font-size:11px;font-weight:600;margin-bottom:2px">${statutText}</div>
+        <div style="font-size:11px;color:var(--muted);line-height:1.4">${montantText}</div>
+        ${dateText ? `<div style="font-size:10px;color:var(--muted);margin-top:2px">📅 ${dateText}</div>` : ''}
+        ${modeText ? `<div style="font-size:10px;color:var(--muted);margin-top:1px">${modeText}</div>` : ''}
+      </div>
+    `);
+  }
+
+  container.innerHTML = cells.join('');
+
+  // Stats
+  const nbPayesEl   = document.getElementById('mcNbPayes');
+  const nbNonEl     = document.getElementById('mcNbNonPayes');
+  const totalPayeEl = document.getElementById('mcTotalPaye');
+  const resteEl     = document.getElementById('mcReste');
+
+  if (nbPayesEl)   nbPayesEl.textContent = nbPayes;
+  if (nbNonEl)     nbNonEl.textContent   = nbNonPayes;
+  if (totalPayeEl) totalPayeEl.textContent = totalPaye.toLocaleString('fr-MA') + ' DH';
+  const reste = Math.max(0, totalDu - totalPaye);
+  if (resteEl)     resteEl.textContent   = reste.toLocaleString('fr-MA') + ' DH';
+}
+
+function renderMesChargesHistorique() {
+  const container = document.getElementById('mcHistorique');
+  if (!container) return;
+
+  const paiementsEffectifs = mcPaiements
+    .filter(p => p.statut === 'paye' || p.statut === 'partiel')
+    .sort((a, b) => (b.date_paiement || '').localeCompare(a.date_paiement || ''));
+
+  if (!paiementsEffectifs.length) {
+    container.innerHTML = `
+      <div style="padding:24px;text-align:center;color:var(--muted);font-size:13px">
+        Aucun paiement enregistré pour ${mcAnneeActive}.
+      </div>`;
+    return;
+  }
+
+  const moisNoms = ['Janvier','Février','Mars','Avril','Mai','Juin',
+                    'Juillet','Août','Septembre','Octobre','Novembre','Décembre'];
+  const statutLabels = {
+    paye:     { icon: '✅', color: 'var(--green-text)', bg: 'var(--green-bg)', label: 'Payé' },
+    partiel:  { icon: '⚠️', color: '#a16207',           bg: '#fef3c7',          label: 'Partiel' }
+  };
+  const modeLabels = {
+    especes:  '💵 Espèces',
+    virement: '🏦 Virement bancaire',
+    cheque:   '📄 Chèque',
+    mobile:   '📱 Paiement mobile',
+    carte:    '💳 Carte',
+    autre:    '❓ Autre'
+  };
+
+  const rows = paiementsEffectifs.map(p => {
+    const [a, m] = p.periode.split('-').map(Number);
+    const st = statutLabels[p.statut] || { icon: '•', color: 'var(--muted)', bg: 'var(--bg)', label: p.statut };
+    const dateFmt = p.date_paiement
+      ? new Date(p.date_paiement).toLocaleDateString('fr-FR',{day:'numeric',month:'short',year:'numeric'})
+      : '—';
+    const noteStr = p.note ? String(p.note).replace(/</g,'&lt;').substring(0,60) : '';
+    return `
+      <div style="display:grid;grid-template-columns:40px 1fr auto auto;gap:12px;align-items:center;padding:12px;border:1px solid var(--border);border-radius:var(--radius-sm);margin-bottom:6px;background:var(--surface)">
+        <div style="font-size:20px;text-align:center">${st.icon}</div>
+        <div>
+          <div style="font-size:13px;font-weight:600">${moisNoms[m-1]} ${a}</div>
+          <div style="font-size:11px;color:var(--muted);margin-top:2px">
+            📅 Payé le ${dateFmt}
+            ${p.mode_paiement ? ' · ' + (modeLabels[p.mode_paiement] || p.mode_paiement) : ''}
+            ${noteStr ? ' · ' + noteStr : ''}
+          </div>
+        </div>
+        <div style="font-size:13px;font-weight:700;color:${st.color}">${parseFloat(p.montant_paye || 0).toLocaleString('fr-MA')} DH</div>
+        <div style="font-size:11px;color:${st.color};font-weight:600;padding:3px 8px;border-radius:4px;background:${st.bg}">${st.label}</div>
+      </div>
+    `;
+  }).join('');
+
+  container.innerHTML = rows;
 }
 
 init();
