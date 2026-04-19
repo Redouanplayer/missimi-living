@@ -3152,19 +3152,41 @@ async function loadAndRenderAdmin() {
 }
 
 async function loadPendingResidents() {
-  const { data, error } = await db.rpc('get_pending_residents');
-  if (error || !data) {
+  console.log('[loadPendingResidents] Démarrage (via list_residents)...');
+
+  if (!currentUser || !currentUserMeta.residence_id) {
+    console.warn('[loadPendingResidents] ⚠️ Pas de residence_id en session');
     renderPending([]);
     return;
   }
-  // Filtrer uniquement les demandes pour la résidence de cet admin
-  const { data: myRes } = await db.from('residences')
-    .select('id, nom, code_residence')
-    .eq('admin_id', currentUser.id)
-    .single();
-  if (!myRes) { renderPending([]); return; }
-  const filtered = data.filter(u => u.residence_id === myRes.id);
-  renderPending(filtered);
+
+  // Utiliser list_residents (Edge Function) qui retourne TOUS les comptes de la résidence
+  // y compris les resident_pending. Évite la RPC get_pending_residents qui a des soucis de permissions.
+  try {
+    const result = await callEdge({
+      type:         'list_residents',
+      residence_id: currentUserMeta.residence_id
+    });
+
+    console.log('[loadPendingResidents] Résultat:', result);
+
+    if (!result || !result.success) {
+      console.error('[loadPendingResidents] ❌ Erreur Edge:', result?.error);
+      renderPending([]);
+      return;
+    }
+
+    // Filtrer uniquement les resident_pending
+    const allUsers = result.residents || [];
+    const pending  = allUsers.filter(u => u.role === 'resident_pending');
+
+    console.log('[loadPendingResidents] ✅ Total résidents:', allUsers.length, '| Pending:', pending.length);
+
+    renderPending(pending);
+  } catch(e) {
+    console.error('[loadPendingResidents] Exception:', e);
+    renderPending([]);
+  }
 }
 
 function renderPending(list) {
@@ -4642,15 +4664,28 @@ function filterResidents(query) {
 // ── MENU ⋯ ACTIONS ───────────────────────────────────────────
 function openResMenu(event, resId) {
   event.stopPropagation();
+  event.preventDefault();
+
+  console.log('[openResMenu] clicked for resId:', resId, '| allResidents.length:', allResidents.length);
+
   resMenuCurrentId   = resId;
   resMenuCurrentData = allResidents.find(r => r.id === resId) || null;
 
-  if (!resMenuCurrentData) return;
+  if (!resMenuCurrentData) {
+    console.error('[openResMenu] ❌ Résident introuvable dans allResidents:', resId);
+    alert('⚠️ Impossible d\'ouvrir le menu. Veuillez recharger la page.');
+    return;
+  }
 
   const menu    = document.getElementById('resActionsMenu');
   const nomEl   = document.getElementById('resMenuNom');
   const suspBtn = document.getElementById('resMenuSuspendreBtn');
   const reactBtn= document.getElementById('resMenuReactiverBtn');
+
+  if (!menu) {
+    console.error('[openResMenu] ❌ Menu HTML introuvable (#resActionsMenu)');
+    return;
+  }
 
   if (nomEl) nomEl.textContent = resMenuCurrentData.nom || resMenuCurrentData.email || 'Résident';
 
@@ -4658,26 +4693,45 @@ function openResMenu(event, resId) {
   if (suspBtn)  suspBtn.style.display  = suspendu ? 'none'  : 'block';
   if (reactBtn) reactBtn.style.display = suspendu ? 'block' : 'none';
 
-  // Positionner le menu
-  const rect = event.currentTarget.getBoundingClientRect();
+  // Capture immédiate du bouton cliqué (currentTarget peut être null dans setTimeout)
+  const btn = event.currentTarget || event.target;
+  const rect = btn.getBoundingClientRect();
+
   menu.style.display = 'block';
   menu.style.top     = (rect.bottom + window.scrollY + 4) + 'px';
-  menu.style.left    = Math.min(rect.left, window.innerWidth - 200) + 'px';
+  menu.style.left    = Math.min(rect.left, window.innerWidth - 220) + 'px';
 
-  // Fermer au clic extérieur
+  // Fermer au clic EXTÉRIEUR uniquement (pas sur le menu lui-même)
+  // Délai pour éviter que le clic actuel soit capté
   setTimeout(() => {
-    document.addEventListener('click', closeResMenu, { once: true });
-  }, 10);
+    document.addEventListener('click', handleOutsideClickResMenu, { once: false });
+  }, 50);
 }
+
+function handleOutsideClickResMenu(e) {
+  const menu = document.getElementById('resActionsMenu');
+  if (!menu) return;
+  // Si le clic est dans le menu, ne rien faire (laisser l'action se faire)
+  if (menu.contains(e.target)) return;
+  // Sinon fermer
+  closeResMenu();
+}
+
 function closeResMenu() {
   const menu = document.getElementById('resActionsMenu');
   if (menu) menu.style.display = 'none';
+  document.removeEventListener('click', handleOutsideClickResMenu);
 }
 
 function resMenuAction(action) {
-  closeResMenu();
+  console.log('[resMenuAction]', action, '| data:', resMenuCurrentData?.email);
+
   const r = resMenuCurrentData;
-  if (!r) return;
+  closeResMenu();
+  if (!r) {
+    console.error('[resMenuAction] Pas de résident sélectionné');
+    return;
+  }
 
   if (action === 'edit') {
     document.getElementById('editResId').value  = r.id;
@@ -5723,23 +5777,60 @@ async function loadAndRenderMesCharges() {
     }
     if (aptEl) aptEl.textContent = currentUserMeta.appartement || '—';
 
-    // Charger les paiements de l'année sélectionnée
-    const { data: paiements, error: paiErr } = await db.from('recouvrement')
-      .select('*')
-      .eq('residence_id', currentUserMeta.residence_id)
-      .eq('resident_id', currentUser.id)
-      .like('periode', `${mcAnneeActive}-%`)
-      .order('periode', { ascending: true });
+    // Charger les paiements via RPC (bypass RLS, avec security definer)
+    // Fallback sur lecture directe si la RPC n'existe pas
+    let paiements = null;
+    let paiErr    = null;
 
-    if (paiErr) {
-      console.error('[loadAndRenderMesCharges] Erreur paiements:', paiErr);
-      if (moisContainer) moisContainer.innerHTML =
-        `<div class="empty-state" style="padding:24px;text-align:center;grid-column:1/-1;color:var(--red-text)">❌ Erreur : ${paiErr.message}</div>`;
-      return;
+    try {
+      const { data: rpcData, error: rpcErr } = await db.rpc('get_mes_paiements', {
+        p_annee: mcAnneeActive
+      });
+      if (!rpcErr && rpcData) {
+        paiements = rpcData;
+        console.log('[loadAndRenderMesCharges] ✅ Via RPC:', paiements.length);
+      } else if (rpcErr) {
+        console.warn('[loadAndRenderMesCharges] RPC indisponible, fallback:', rpcErr.message);
+      }
+    } catch(e) {
+      console.warn('[loadAndRenderMesCharges] RPC exception:', e.message);
     }
 
-    mcPaiements = paiements || [];
-    console.log('[loadAndRenderMesCharges] ✅', mcPaiements.length, 'paiement(s) pour', mcAnneeActive);
+    // Fallback : lecture directe (peut échouer si RLS restrictif)
+    if (paiements === null) {
+      const r = await db.from('recouvrement')
+        .select('*')
+        .eq('residence_id', currentUserMeta.residence_id)
+        .eq('resident_id', currentUser.id)
+        .like('periode', `${mcAnneeActive}-%`)
+        .order('periode', { ascending: true });
+      paiements = r.data;
+      paiErr    = r.error;
+
+      if (paiErr) {
+        console.error('[loadAndRenderMesCharges] ❌ Erreur lecture directe:', paiErr);
+        if (moisContainer) moisContainer.innerHTML =
+          `<div class="empty-state" style="padding:24px;text-align:center;grid-column:1/-1;color:var(--red-text)">
+            ❌ <strong>Impossible de charger vos paiements</strong><br>
+            <span style="font-size:11px">${paiErr.message}</span><br>
+            <span style="font-size:11px;color:var(--muted);margin-top:8px;display:block">
+              ⚠️ Le syndic doit activer les permissions de lecture pour les résidents.<br>
+              Créez la fonction SQL <code>get_mes_paiements</code> dans Supabase.
+            </span>
+          </div>`;
+        return;
+      }
+      console.log('[loadAndRenderMesCharges] ✅ Via lecture directe:', (paiements || []).length);
+    }
+
+    // Filtrer sur l'année si RPC retourne toutes les années
+    mcPaiements = (paiements || []).filter(p =>
+      p.residence_id === currentUserMeta.residence_id &&
+      p.resident_id  === currentUser.id &&
+      p.periode && p.periode.startsWith(`${mcAnneeActive}-`)
+    );
+
+    console.log('[loadAndRenderMesCharges] 📊', mcPaiements.length, 'paiement(s) pour', mcAnneeActive);
 
     renderMesChargesMois();
     renderMesChargesHistorique();
