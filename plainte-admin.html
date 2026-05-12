@@ -1,0 +1,422 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Admin — Dossiers de plainte</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@500;600;700&family=Inter:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<style>
+:root{
+  --navy:#0a1f3d;
+  --navy-deep:#061528;
+  --gold:#c9a96e;
+  --cream:#faf7f0;
+  --paper:#f5efe1;
+  --ink:#1a1a1a;
+  --muted:#6b6b6b;
+  --danger:#a83232;
+  --success:#2d6a4f;
+  --border:rgba(10,31,61,.12);
+}
+*{margin:0;padding:0;box-sizing:border-box}
+body{background:var(--cream);color:var(--ink);font-family:'Inter',sans-serif;line-height:1.5;-webkit-font-smoothing:antialiased}
+
+/* Top bar */
+.topbar{
+  background:var(--navy);color:var(--cream);
+  padding:16px 32px;
+  display:flex;justify-content:space-between;align-items:center;
+  border-bottom:2px solid var(--gold);
+}
+.topbar .brand{font-family:'Cormorant Garamond',serif;font-size:20px;letter-spacing:.08em;color:var(--gold)}
+.topbar .brand span{color:var(--cream);font-size:13px;letter-spacing:.15em;margin-left:14px;font-family:'Inter',sans-serif;font-weight:500}
+.logout-btn{
+  background:transparent;border:1px solid var(--gold-soft);
+  color:var(--cream);padding:6px 14px;font-size:12px;
+  letter-spacing:.1em;cursor:pointer;text-transform:uppercase;
+  font-family:inherit;transition:all .2s;
+}
+.logout-btn:hover{background:var(--gold);color:var(--navy)}
+
+/* Login screen */
+.login-wrap{
+  min-height:80vh;display:flex;align-items:center;justify-content:center;
+  padding:32px;
+}
+.login-card{
+  background:var(--paper);width:100%;max-width:420px;
+  padding:44px 36px;border:1px solid var(--border);
+  box-shadow:0 24px 60px -20px rgba(10,31,61,.18);
+  position:relative;
+}
+.login-card::before{
+  content:"";position:absolute;top:0;left:0;right:0;height:4px;
+  background:linear-gradient(90deg,var(--gold) 0%,var(--gold) 100%);
+}
+.login-card h1{
+  font-family:'Cormorant Garamond',serif;font-weight:600;
+  font-size:30px;color:var(--navy);margin-bottom:6px;
+}
+.login-card .sub{color:var(--muted);font-size:13px;margin-bottom:28px}
+.login-card label{
+  display:block;font-size:11px;font-weight:600;
+  letter-spacing:.15em;text-transform:uppercase;
+  color:var(--navy);margin-bottom:6px;
+}
+.login-card input{
+  width:100%;padding:12px 14px;margin-bottom:18px;
+  background:var(--cream);border:1px solid var(--border);
+  font-family:inherit;font-size:14px;
+}
+.login-card input:focus{outline:none;border-color:var(--gold);box-shadow:0 0 0 3px rgba(201,169,110,.15)}
+.login-card button{
+  width:100%;padding:14px;background:var(--navy);color:var(--cream);
+  border:none;font-family:inherit;font-size:13px;
+  letter-spacing:.2em;text-transform:uppercase;font-weight:600;
+  cursor:pointer;transition:all .3s;
+}
+.login-card button:hover{background:var(--gold);color:var(--navy)}
+.login-error{color:var(--danger);font-size:13px;margin-bottom:14px;display:none}
+.login-error.show{display:block}
+
+/* Dashboard */
+.dashboard{padding:32px;max-width:1400px;margin:0 auto}
+.page-title{
+  font-family:'Cormorant Garamond',serif;font-weight:600;
+  font-size:36px;color:var(--navy);margin-bottom:6px;
+}
+.page-sub{color:var(--muted);font-size:14px;margin-bottom:28px}
+
+.stats{
+  display:grid;grid-template-columns:repeat(auto-fit,minmax(180px,1fr));
+  gap:16px;margin-bottom:28px;
+}
+.stat{
+  background:var(--paper);padding:20px 22px;
+  border-left:3px solid var(--gold);
+  box-shadow:0 4px 12px -4px rgba(10,31,61,.08);
+}
+.stat-label{font-size:11px;letter-spacing:.15em;text-transform:uppercase;color:var(--muted);font-weight:600}
+.stat-value{font-family:'Cormorant Garamond',serif;font-size:34px;font-weight:600;color:var(--navy);margin-top:4px;line-height:1}
+
+.toolbar{
+  display:flex;gap:12px;margin-bottom:18px;flex-wrap:wrap;
+}
+.search-input{
+  flex:1;min-width:240px;
+  padding:11px 14px;background:#fff;
+  border:1px solid var(--border);font-family:inherit;font-size:14px;
+}
+.search-input:focus{outline:none;border-color:var(--gold)}
+.refresh-btn,.export-btn{
+  padding:11px 18px;background:var(--navy);color:var(--cream);
+  border:none;font-family:inherit;font-size:12px;
+  letter-spacing:.12em;text-transform:uppercase;font-weight:600;
+  cursor:pointer;transition:all .2s;
+}
+.refresh-btn:hover,.export-btn:hover{background:var(--gold);color:var(--navy)}
+
+/* Table */
+.table-wrap{
+  background:#fff;border:1px solid var(--border);
+  overflow-x:auto;box-shadow:0 4px 12px -4px rgba(10,31,61,.08);
+}
+table{width:100%;border-collapse:collapse;font-size:13px;min-width:900px}
+thead{background:var(--navy);color:var(--cream)}
+th{
+  padding:14px 16px;text-align:left;
+  font-size:11px;letter-spacing:.12em;text-transform:uppercase;
+  font-weight:600;white-space:nowrap;
+}
+td{padding:14px 16px;border-bottom:1px solid var(--border);vertical-align:middle}
+tr:hover td{background:#faf7f0}
+.cell-name{font-weight:600;color:var(--navy)}
+.cell-meta{font-size:12px;color:var(--muted);margin-top:2px}
+.cell-mono{font-family:'JetBrains Mono',monospace;font-size:12px}
+.badge{
+  display:inline-block;padding:3px 8px;background:var(--gold);color:var(--navy);
+  font-size:11px;font-weight:600;letter-spacing:.05em;
+}
+
+.dl-btn{
+  display:inline-block;padding:7px 12px;
+  background:transparent;color:var(--navy);
+  border:1px solid var(--navy);font-size:11px;
+  text-transform:uppercase;letter-spacing:.08em;font-weight:600;
+  cursor:pointer;text-decoration:none;font-family:inherit;
+  transition:all .15s;margin-right:6px;
+}
+.dl-btn:hover{background:var(--navy);color:var(--cream)}
+.dl-btn.gold{border-color:var(--gold);color:var(--gold);background:transparent}
+.dl-btn.gold:hover{background:var(--gold);color:var(--navy)}
+
+.empty{
+  text-align:center;padding:60px 20px;color:var(--muted);
+}
+.empty-icon{font-size:48px;color:var(--gold);margin-bottom:12px}
+
+.hidden{display:none!important}
+
+.loading-overlay{
+  position:fixed;inset:0;background:rgba(250,247,240,.85);
+  display:flex;align-items:center;justify-content:center;z-index:100;
+}
+.loading-spinner{
+  width:40px;height:40px;border:3px solid var(--border);
+  border-top-color:var(--gold);border-radius:50%;
+  animation:spin .8s linear infinite;
+}
+@keyframes spin{to{transform:rotate(360deg)}}
+</style>
+</head>
+<body>
+
+<div class="topbar">
+  <div class="brand">MISSIMI LIVING <span>· ADMIN — PLAINTE</span></div>
+  <button class="logout-btn hidden" id="logout-btn" onclick="logout()">Déconnexion</button>
+</div>
+
+<!-- LOGIN -->
+<div class="login-wrap" id="login-view">
+  <div class="login-card">
+    <h1>Accès administrateur</h1>
+    <p class="sub">Connectez-vous pour accéder aux dossiers.</p>
+    <div class="login-error" id="login-error">Identifiants incorrects.</div>
+    <form id="login-form">
+      <label for="email">Email</label>
+      <input type="email" id="email" required autocomplete="email">
+      <label for="password">Mot de passe</label>
+      <input type="password" id="password" required autocomplete="current-password">
+      <button type="submit">Se connecter</button>
+    </form>
+  </div>
+</div>
+
+<!-- DASHBOARD -->
+<div class="dashboard hidden" id="dashboard-view">
+  <h1 class="page-title">Dossiers de plainte</h1>
+  <p class="page-sub">Pièces transmises par les copropriétaires de la Résidence Missimi.</p>
+
+  <div class="stats">
+    <div class="stat">
+      <div class="stat-label">Dossiers reçus</div>
+      <div class="stat-value" id="stat-total">—</div>
+    </div>
+    <div class="stat">
+      <div class="stat-label">Immeubles concernés</div>
+      <div class="stat-value" id="stat-buildings">—</div>
+    </div>
+    <div class="stat">
+      <div class="stat-label">Dernier dépôt</div>
+      <div class="stat-value" id="stat-last" style="font-size:18px;font-family:'Inter',sans-serif;padding-top:8px">—</div>
+    </div>
+  </div>
+
+  <div class="toolbar">
+    <input type="text" class="search-input" id="search" placeholder="Rechercher par nom, immeuble, appartement...">
+    <button class="refresh-btn" onclick="loadDossiers()">↻ Actualiser</button>
+    <button class="export-btn" onclick="exportCSV()">⬇ Exporter CSV</button>
+  </div>
+
+  <div class="table-wrap">
+    <table id="dossiers-table">
+      <thead>
+        <tr>
+          <th>#</th>
+          <th>Nom &amp; prénom</th>
+          <th>Téléphone</th>
+          <th>Immeuble</th>
+          <th>Appt</th>
+          <th>Date</th>
+          <th>Documents</th>
+        </tr>
+      </thead>
+      <tbody id="tbody"></tbody>
+    </table>
+    <div class="empty hidden" id="empty">
+      <div class="empty-icon">∅</div>
+      <p>Aucun dossier pour le moment.</p>
+    </div>
+  </div>
+</div>
+
+<div class="loading-overlay hidden" id="loading">
+  <div class="loading-spinner"></div>
+</div>
+
+<script>
+// ============ CONFIG ============
+const SUPABASE_URL = 'https://YOUR_PROJECT.supabase.co';
+const SUPABASE_ANON_KEY = 'YOUR_ANON_KEY';
+const supa = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+
+let allDossiers = [];
+
+// ============ AUTH ============
+async function checkAuth(){
+  const { data:{ session } } = await supa.auth.getSession();
+  if(session){ showDashboard(); }
+  else { showLogin(); }
+}
+
+function showLogin(){
+  document.getElementById('login-view').classList.remove('hidden');
+  document.getElementById('dashboard-view').classList.add('hidden');
+  document.getElementById('logout-btn').classList.add('hidden');
+}
+
+function showDashboard(){
+  document.getElementById('login-view').classList.add('hidden');
+  document.getElementById('dashboard-view').classList.remove('hidden');
+  document.getElementById('logout-btn').classList.remove('hidden');
+  loadDossiers();
+}
+
+document.getElementById('login-form').addEventListener('submit', async (e) => {
+  e.preventDefault();
+  document.getElementById('login-error').classList.remove('show');
+  const email = document.getElementById('email').value;
+  const password = document.getElementById('password').value;
+  const { error } = await supa.auth.signInWithPassword({ email, password });
+  if(error){
+    document.getElementById('login-error').textContent = 'Identifiants incorrects ou accès refusé.';
+    document.getElementById('login-error').classList.add('show');
+  } else {
+    showDashboard();
+  }
+});
+
+async function logout(){
+  await supa.auth.signOut();
+  showLogin();
+}
+
+// ============ DOSSIERS ============
+async function loadDossiers(){
+  document.getElementById('loading').classList.remove('hidden');
+  try {
+    const { data, error } = await supa
+      .from('plainte_dossiers')
+      .select('*')
+      .order('created_at', { ascending: false });
+    if(error) throw error;
+    allDossiers = data || [];
+    renderDossiers(allDossiers);
+    updateStats(allDossiers);
+  } catch(err){
+    console.error(err);
+    alert('Erreur de chargement : ' + err.message);
+  } finally {
+    document.getElementById('loading').classList.add('hidden');
+  }
+}
+
+function updateStats(rows){
+  document.getElementById('stat-total').textContent = rows.length;
+  const buildings = new Set(rows.map(r => r.immeuble?.trim().toUpperCase()).filter(Boolean));
+  document.getElementById('stat-buildings').textContent = buildings.size;
+  if(rows.length){
+    const last = new Date(rows[0].created_at);
+    document.getElementById('stat-last').textContent = last.toLocaleDateString('fr-FR',{day:'2-digit',month:'short',year:'numeric'});
+  } else {
+    document.getElementById('stat-last').textContent = '—';
+  }
+}
+
+function renderDossiers(rows){
+  const tbody = document.getElementById('tbody');
+  const empty = document.getElementById('empty');
+  tbody.innerHTML = '';
+  if(!rows.length){
+    empty.classList.remove('hidden');
+    return;
+  }
+  empty.classList.add('hidden');
+  rows.forEach((r,i) => {
+    const tr = document.createElement('tr');
+    const date = new Date(r.created_at).toLocaleDateString('fr-FR',{day:'2-digit',month:'2-digit',year:'numeric'});
+    const time = new Date(r.created_at).toLocaleTimeString('fr-FR',{hour:'2-digit',minute:'2-digit'});
+    tr.innerHTML = `
+      <td class="cell-mono">${String(i+1).padStart(3,'0')}</td>
+      <td>
+        <div class="cell-name">${escapeHtml(r.nom)} ${escapeHtml(r.prenom)}</div>
+      </td>
+      <td class="cell-mono">${escapeHtml(r.telephone)}</td>
+      <td><span class="badge">${escapeHtml(r.immeuble)}</span></td>
+      <td class="cell-mono">${escapeHtml(r.appartement)}</td>
+      <td>${date}<div class="cell-meta">${time}</div></td>
+      <td>
+        <button class="dl-btn" onclick="downloadFile('${r.cin_path}', this)">CIN</button>
+        <button class="dl-btn gold" onclick="downloadFile('${r.titre_path}', this)">Titre</button>
+      </td>
+    `;
+    tbody.appendChild(tr);
+  });
+}
+
+async function downloadFile(path, btn){
+  const originalText = btn.textContent;
+  btn.textContent = '...';
+  btn.disabled = true;
+  try {
+    const { data, error } = await supa.storage
+      .from('plainte-documents')
+      .createSignedUrl(path, 60);
+    if(error) throw error;
+    window.open(data.signedUrl, '_blank');
+  } catch(err){
+    alert('Erreur : ' + err.message);
+  } finally {
+    btn.textContent = originalText;
+    btn.disabled = false;
+  }
+}
+
+function exportCSV(){
+  if(!allDossiers.length){ alert('Aucune donnée à exporter.'); return; }
+  const headers = ['N°','Nom','Prénom','Téléphone','Immeuble','Appartement','Date de dépôt'];
+  const rows = allDossiers.map((r,i) => [
+    i+1, r.nom, r.prenom, r.telephone, r.immeuble, r.appartement,
+    new Date(r.created_at).toLocaleString('fr-FR')
+  ]);
+  const csv = [headers, ...rows]
+    .map(row => row.map(c => `"${String(c ?? '').replace(/"/g,'""')}"`).join(','))
+    .join('\n');
+  const blob = new Blob(['\uFEFF'+csv], {type:'text/csv;charset=utf-8'});
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = `plainte-missimi-${new Date().toISOString().slice(0,10)}.csv`;
+  a.click();
+  URL.revokeObjectURL(url);
+}
+
+// ============ SEARCH ============
+document.getElementById('search').addEventListener('input', (e) => {
+  const q = e.target.value.toLowerCase().trim();
+  if(!q){ renderDossiers(allDossiers); return; }
+  const filtered = allDossiers.filter(r =>
+    (r.nom||'').toLowerCase().includes(q) ||
+    (r.prenom||'').toLowerCase().includes(q) ||
+    (r.immeuble||'').toLowerCase().includes(q) ||
+    (r.appartement||'').toLowerCase().includes(q) ||
+    (r.telephone||'').toLowerCase().includes(q)
+  );
+  renderDossiers(filtered);
+});
+
+// ============ ESCAPE ============
+function escapeHtml(s){
+  if(s == null) return '';
+  return String(s).replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+}
+
+// ============ INIT ============
+checkAuth();
+</script>
+
+</body>
+</html>

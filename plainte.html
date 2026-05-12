@@ -1,0 +1,478 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Plainte Collective — Résidence Missimi</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@400;500;600;700&family=Inter:wght@300;400;500;600;700&family=Noto+Kufi+Arabic:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<style>
+:root{
+  --navy:#0a1f3d;
+  --navy-deep:#061528;
+  --gold:#c9a96e;
+  --gold-soft:#e6d4a8;
+  --cream:#faf7f0;
+  --paper:#f5efe1;
+  --ink:#1a1a1a;
+  --muted:#6b6b6b;
+  --danger:#a83232;
+  --success:#2d6a4f;
+  --border:rgba(10,31,61,.12);
+}
+*{margin:0;padding:0;box-sizing:border-box}
+html,body{background:var(--cream);color:var(--ink);font-family:'Inter',sans-serif;line-height:1.6;-webkit-font-smoothing:antialiased}
+body[dir="rtl"]{font-family:'Noto Kufi Arabic',sans-serif}
+
+/* Top bar */
+.lang-bar{
+  position:sticky;top:0;z-index:50;
+  background:var(--navy);color:var(--cream);
+  display:flex;justify-content:space-between;align-items:center;
+  padding:14px 32px;
+  border-bottom:2px solid var(--gold);
+}
+.lang-bar .brand{font-family:'Cormorant Garamond',serif;font-size:20px;letter-spacing:.08em;color:var(--gold)}
+.lang-toggle{display:flex;gap:8px}
+.lang-toggle button{
+  background:transparent;border:1px solid var(--gold-soft);color:var(--cream);
+  padding:6px 14px;font-size:13px;cursor:pointer;letter-spacing:.05em;
+  transition:all .2s;font-family:inherit;
+}
+.lang-toggle button.active,.lang-toggle button:hover{background:var(--gold);color:var(--navy)}
+
+/* Hero */
+.hero{
+  background:linear-gradient(135deg,var(--navy) 0%,var(--navy-deep) 100%);
+  color:var(--cream);
+  padding:64px 32px 80px;
+  position:relative;overflow:hidden;
+  border-bottom:3px solid var(--gold);
+}
+.hero::before{
+  content:"";position:absolute;inset:0;
+  background-image:radial-gradient(circle at 20% 30%,rgba(201,169,110,.08) 0%,transparent 50%),radial-gradient(circle at 80% 70%,rgba(201,169,110,.06) 0%,transparent 50%);
+  pointer-events:none;
+}
+.hero-inner{max-width:780px;margin:0 auto;position:relative;z-index:1}
+.hero .eyebrow{
+  font-size:12px;letter-spacing:.3em;text-transform:uppercase;
+  color:var(--gold);margin-bottom:20px;font-weight:500;
+}
+body[dir="rtl"] .hero .eyebrow{letter-spacing:.1em}
+.hero h1{
+  font-family:'Cormorant Garamond',serif;font-weight:600;
+  font-size:clamp(34px,5vw,52px);line-height:1.15;letter-spacing:-.01em;
+  margin-bottom:24px;
+}
+body[dir="rtl"] .hero h1{font-family:'Noto Kufi Arabic',sans-serif;font-weight:700}
+.hero p.lede{
+  font-size:17px;line-height:1.7;color:rgba(250,247,240,.85);
+  max-width:620px;
+}
+.hero .gold-line{width:60px;height:2px;background:var(--gold);margin:32px 0}
+
+/* Form container */
+.container{max-width:780px;margin:-40px auto 80px;padding:0 32px;position:relative;z-index:2}
+.card{
+  background:var(--paper);
+  border:1px solid var(--border);
+  padding:48px 44px;
+  box-shadow:0 24px 60px -20px rgba(10,31,61,.18);
+  position:relative;
+}
+.card::before{
+  content:"";position:absolute;top:0;left:0;right:0;height:4px;
+  background:linear-gradient(90deg,var(--gold) 0%,var(--gold-soft) 50%,var(--gold) 100%);
+}
+
+.section-title{
+  font-family:'Cormorant Garamond',serif;
+  font-size:24px;font-weight:600;color:var(--navy);
+  margin-bottom:8px;letter-spacing:-.005em;
+}
+body[dir="rtl"] .section-title{font-family:'Noto Kufi Arabic',sans-serif;font-weight:600}
+.section-desc{color:var(--muted);font-size:14px;margin-bottom:28px}
+
+.divider{
+  display:flex;align-items:center;gap:12px;
+  margin:36px 0 24px;color:var(--gold);
+}
+.divider::before,.divider::after{content:"";flex:1;height:1px;background:var(--border)}
+.divider span{font-size:11px;letter-spacing:.25em;text-transform:uppercase;color:var(--navy);font-weight:600}
+
+/* Form fields */
+.field{margin-bottom:22px}
+.field-row{display:grid;grid-template-columns:1fr 1fr;gap:18px}
+@media (max-width:600px){.field-row{grid-template-columns:1fr}}
+label{
+  display:block;font-size:12px;font-weight:600;
+  letter-spacing:.08em;text-transform:uppercase;
+  color:var(--navy);margin-bottom:8px;
+}
+body[dir="rtl"] label{letter-spacing:.02em}
+.required{color:var(--danger);margin-left:3px}
+input[type="text"],input[type="tel"],select{
+  width:100%;padding:13px 16px;
+  background:var(--cream);
+  border:1px solid var(--border);border-radius:0;
+  font-family:inherit;font-size:15px;color:var(--ink);
+  transition:all .2s;
+}
+input:focus,select:focus{
+  outline:none;border-color:var(--gold);
+  box-shadow:0 0 0 3px rgba(201,169,110,.15);
+  background:#fff;
+}
+
+/* File upload */
+.file-upload{
+  display:block;position:relative;cursor:pointer;
+  padding:24px 20px;
+  background:var(--cream);
+  border:2px dashed var(--border);
+  text-align:center;
+  transition:all .2s;
+}
+.file-upload:hover{border-color:var(--gold);background:#fff}
+.file-upload.has-file{border-color:var(--success);border-style:solid;background:#f0f7f3}
+.file-upload input[type="file"]{position:absolute;inset:0;opacity:0;cursor:pointer}
+.file-upload-icon{font-size:24px;color:var(--gold);margin-bottom:8px}
+.file-upload-text{font-size:14px;color:var(--navy);font-weight:500}
+.file-upload-hint{font-size:12px;color:var(--muted);margin-top:4px}
+.file-name{font-size:13px;color:var(--success);font-weight:500;margin-top:8px;word-break:break-all}
+
+/* Consent */
+.consent{
+  display:flex;gap:12px;align-items:flex-start;
+  padding:16px;background:rgba(201,169,110,.08);
+  border-left:3px solid var(--gold);
+  margin:24px 0;
+}
+body[dir="rtl"] .consent{border-left:none;border-right:3px solid var(--gold)}
+.consent input{margin-top:4px;flex-shrink:0;accent-color:var(--navy)}
+.consent label{
+  font-size:13px;text-transform:none;letter-spacing:normal;
+  font-weight:400;color:var(--ink);line-height:1.6;margin:0;cursor:pointer;
+}
+
+/* Button */
+.btn-submit{
+  width:100%;padding:18px;
+  background:var(--navy);color:var(--cream);
+  border:none;font-family:inherit;font-size:14px;
+  letter-spacing:.2em;text-transform:uppercase;font-weight:600;
+  cursor:pointer;transition:all .3s;
+  margin-top:12px;position:relative;
+}
+.btn-submit:hover:not(:disabled){background:var(--gold);color:var(--navy)}
+.btn-submit:disabled{opacity:.6;cursor:not-allowed}
+.btn-submit .spinner{
+  display:none;width:16px;height:16px;
+  border:2px solid rgba(250,247,240,.3);border-top-color:var(--cream);
+  border-radius:50%;animation:spin .8s linear infinite;
+  vertical-align:middle;margin-left:8px;
+}
+.btn-submit.loading .spinner{display:inline-block}
+.btn-submit.loading .btn-text{opacity:.6}
+@keyframes spin{to{transform:rotate(360deg)}}
+
+/* Messages */
+.alert{
+  padding:16px 20px;margin-bottom:24px;
+  border-left:4px solid;font-size:14px;
+  display:none;
+}
+body[dir="rtl"] .alert{border-left:none;border-right:4px solid}
+.alert.show{display:block;animation:slideIn .3s ease-out}
+.alert-success{background:#f0f7f3;border-color:var(--success);color:var(--success)}
+.alert-error{background:#faf0f0;border-color:var(--danger);color:var(--danger)}
+@keyframes slideIn{from{opacity:0;transform:translateY(-8px)}to{opacity:1;transform:translateY(0)}}
+
+/* Success screen */
+.success-screen{
+  display:none;text-align:center;padding:40px 20px;
+}
+.success-screen.show{display:block}
+.success-icon{
+  width:80px;height:80px;border-radius:50%;
+  background:var(--success);color:#fff;
+  display:flex;align-items:center;justify-content:center;
+  margin:0 auto 24px;font-size:40px;
+}
+.success-screen h2{
+  font-family:'Cormorant Garamond',serif;
+  font-size:32px;color:var(--navy);margin-bottom:12px;
+}
+body[dir="rtl"] .success-screen h2{font-family:'Noto Kufi Arabic',sans-serif}
+.success-screen p{color:var(--muted);font-size:15px;max-width:480px;margin:0 auto}
+
+/* Footer */
+footer{
+  text-align:center;padding:32px;
+  background:var(--navy);color:rgba(250,247,240,.6);
+  font-size:12px;letter-spacing:.1em;
+}
+footer .gold{color:var(--gold)}
+
+.hidden{display:none!important}
+</style>
+</head>
+<body lang="fr" dir="ltr">
+
+<div class="lang-bar">
+  <div class="brand" data-fr="MISSIMI LIVING" data-ar="ميسيمي ليفينغ">MISSIMI LIVING</div>
+  <div class="lang-toggle">
+    <button id="btn-fr" class="active" onclick="setLang('fr')">FR</button>
+    <button id="btn-ar" onclick="setLang('ar')">ع</button>
+  </div>
+</div>
+
+<section class="hero">
+  <div class="hero-inner">
+    <div class="eyebrow" data-fr="Action collective des copropriétaires" data-ar="إجراء جماعي للملاك">Action collective des copropriétaires</div>
+    <h1 data-fr="Constitution du dossier de plainte contre le promoteur" data-ar="تشكيل ملف الشكوى ضد المنعش العقاري">Constitution du dossier de plainte contre le promoteur</h1>
+    <div class="gold-line"></div>
+    <p class="lede" data-fr="Conformément aux exigences de l'avocat mandaté, chaque copropriétaire participant doit fournir une copie de sa CIN et de son titre de propriété. Vos documents sont stockés de manière sécurisée et confidentielle, et ne seront utilisés que dans le cadre strict de cette action en justice." data-ar="وفقًا لمتطلبات المحامي المُكلَّف، يجب على كل مالك مشارك تقديم نسخة من بطاقته الوطنية وسند الملكية الخاص به. يتم تخزين مستنداتك بشكل آمن وسري، ولن تُستخدم إلا في إطار هذا الإجراء القانوني حصرًا.">Conformément aux exigences de l'avocat mandaté, chaque copropriétaire participant doit fournir une copie de sa CIN et de son titre de propriété.</p>
+  </div>
+</section>
+
+<div class="container">
+  <div class="card" id="form-card">
+
+    <div class="alert alert-error" id="alert-error"></div>
+
+    <form id="plainte-form" novalidate>
+
+      <!-- Identité -->
+      <h2 class="section-title" data-fr="Identité du copropriétaire" data-ar="هوية المالك">Identité du copropriétaire</h2>
+      <p class="section-desc" data-fr="Telle qu'elle figure sur le titre de propriété." data-ar="كما تظهر في سند الملكية.">Telle qu'elle figure sur le titre de propriété.</p>
+
+      <div class="field-row">
+        <div class="field">
+          <label for="prenom" data-fr="Prénom" data-ar="الاسم الشخصي">Prénom<span class="required">*</span></label>
+          <input type="text" id="prenom" name="prenom" required autocomplete="given-name">
+        </div>
+        <div class="field">
+          <label for="nom" data-fr="Nom" data-ar="الاسم العائلي">Nom<span class="required">*</span></label>
+          <input type="text" id="nom" name="nom" required autocomplete="family-name">
+        </div>
+      </div>
+
+      <div class="field">
+        <label for="telephone" data-fr="Téléphone" data-ar="الهاتف">Téléphone<span class="required">*</span></label>
+        <input type="tel" id="telephone" name="telephone" required autocomplete="tel" placeholder="06 XX XX XX XX">
+      </div>
+
+      <!-- Bien -->
+      <div class="divider"><span data-fr="Le bien concerné" data-ar="العقار المعني">Le bien concerné</span></div>
+
+      <div class="field-row">
+        <div class="field">
+          <label for="immeuble" data-fr="Immeuble" data-ar="العمارة">Immeuble<span class="required">*</span></label>
+          <input type="text" id="immeuble" name="immeuble" required placeholder="Ex : A, B, C...">
+        </div>
+        <div class="field">
+          <label for="appartement" data-fr="N° d'appartement" data-ar="رقم الشقة">N° d'appartement<span class="required">*</span></label>
+          <input type="text" id="appartement" name="appartement" required placeholder="Ex : 12">
+        </div>
+      </div>
+
+      <!-- Documents -->
+      <div class="divider"><span data-fr="Pièces justificatives" data-ar="الوثائق المطلوبة">Pièces justificatives</span></div>
+
+      <div class="field">
+        <label data-fr="Carte d'identité nationale (CIN)" data-ar="بطاقة التعريف الوطنية">CIN — recto/verso<span class="required">*</span></label>
+        <div class="file-upload" id="upload-cin">
+          <input type="file" id="cin-file" accept="image/*,.pdf" required>
+          <div class="file-upload-icon">⬆</div>
+          <div class="file-upload-text" data-fr="Cliquez ou déposez votre fichier" data-ar="انقر أو أفلت ملفك هنا">Cliquez ou déposez votre fichier</div>
+          <div class="file-upload-hint" data-fr="JPG, PNG ou PDF — max 10 Mo" data-ar="JPG، PNG أو PDF — بحد أقصى 10 ميغابايت">JPG, PNG ou PDF — max 10 Mo</div>
+          <div class="file-name" id="cin-filename"></div>
+        </div>
+      </div>
+
+      <div class="field">
+        <label data-fr="Titre de propriété" data-ar="سند الملكية">Titre de propriété<span class="required">*</span></label>
+        <div class="file-upload" id="upload-titre">
+          <input type="file" id="titre-file" accept="image/*,.pdf" required>
+          <div class="file-upload-icon">⬆</div>
+          <div class="file-upload-text" data-fr="Cliquez ou déposez votre fichier" data-ar="انقر أو أفلت ملفك هنا">Cliquez ou déposez votre fichier</div>
+          <div class="file-upload-hint" data-fr="JPG, PNG ou PDF — max 10 Mo" data-ar="JPG، PNG أو PDF — بحد أقصى 10 ميغابايت">JPG, PNG ou PDF — max 10 Mo</div>
+          <div class="file-name" id="titre-filename"></div>
+        </div>
+      </div>
+
+      <!-- Consentement -->
+      <div class="consent">
+        <input type="checkbox" id="consent" required>
+        <label for="consent" data-fr="J'autorise la transmission de ces pièces à l'avocat mandaté par les copropriétaires de la Résidence Missimi, dans le cadre exclusif de la plainte collective contre le promoteur. Mes données ne seront partagées avec aucun tiers." data-ar="أُذِنُ بإحالة هذه المستندات إلى المحامي المُكلَّف من قِبل ملاك إقامة ميسيمي، في الإطار الحصري للشكوى الجماعية ضد المنعش العقاري. لن تُشارَك بياناتي مع أي طرف ثالث.">J'autorise la transmission de ces pièces à l'avocat mandaté par les copropriétaires de la Résidence Missimi, dans le cadre exclusif de la plainte collective contre le promoteur. Mes données ne seront partagées avec aucun tiers.</label>
+      </div>
+
+      <button type="submit" class="btn-submit" id="submit-btn">
+        <span class="btn-text" data-fr="Soumettre mon dossier" data-ar="إرسال ملفي">Soumettre mon dossier</span>
+        <span class="spinner"></span>
+      </button>
+    </form>
+
+    <!-- Success -->
+    <div class="success-screen" id="success-screen">
+      <div class="success-icon">✓</div>
+      <h2 data-fr="Dossier enregistré" data-ar="تم تسجيل الملف">Dossier enregistré</h2>
+      <p data-fr="Merci pour votre participation. Votre dossier a bien été transmis. Vous serez tenu(e) informé(e) des prochaines étapes de la procédure." data-ar="شكراً على مشاركتكم. تم إرسال ملفكم بنجاح. ستتم إفادتكم بالخطوات المقبلة للإجراء.">Merci pour votre participation. Votre dossier a bien été transmis.</p>
+    </div>
+
+  </div>
+</div>
+
+<footer>
+  <span data-fr="Résidence Missimi — Action des copropriétaires" data-ar="إقامة ميسيمي — إجراء الملاك">Résidence Missimi — Action des copropriétaires</span>
+  &nbsp;·&nbsp; <span class="gold">2026</span>
+</footer>
+
+<script>
+// ============ CONFIG SUPABASE ============
+// Remplacer par tes vraies clés Supabase (mêmes que Missimi Living)
+const SUPABASE_URL = 'https://YOUR_PROJECT.supabase.co';
+const SUPABASE_ANON_KEY = 'YOUR_ANON_KEY';
+
+const supa = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+
+// ============ I18N ============
+function setLang(lang){
+  document.body.lang = lang;
+  document.body.dir = lang === 'ar' ? 'rtl' : 'ltr';
+  document.getElementById('btn-fr').classList.toggle('active', lang === 'fr');
+  document.getElementById('btn-ar').classList.toggle('active', lang === 'ar');
+  document.querySelectorAll('[data-fr]').forEach(el => {
+    const txt = el.dataset[lang];
+    if(txt) el.textContent = txt;
+  });
+  document.querySelectorAll('input[placeholder]').forEach(el => {
+    const phFr = el.getAttribute('data-ph-fr');
+    const phAr = el.getAttribute('data-ph-ar');
+    if(phFr && phAr) el.placeholder = lang === 'ar' ? phAr : phFr;
+  });
+}
+
+// ============ FILE UPLOAD UI ============
+function bindFileUpload(uploadId, inputId, nameId){
+  const upload = document.getElementById(uploadId);
+  const input = document.getElementById(inputId);
+  const nameEl = document.getElementById(nameId);
+  input.addEventListener('change', () => {
+    if(input.files && input.files[0]){
+      const f = input.files[0];
+      if(f.size > 10 * 1024 * 1024){
+        showError(document.body.lang === 'ar' ? 'الملف يتجاوز 10 ميغابايت' : 'Le fichier dépasse 10 Mo');
+        input.value = '';
+        return;
+      }
+      nameEl.textContent = f.name;
+      upload.classList.add('has-file');
+    } else {
+      nameEl.textContent = '';
+      upload.classList.remove('has-file');
+    }
+  });
+}
+bindFileUpload('upload-cin','cin-file','cin-filename');
+bindFileUpload('upload-titre','titre-file','titre-filename');
+
+// ============ ALERTS ============
+function showError(msg){
+  const a = document.getElementById('alert-error');
+  a.textContent = msg;
+  a.classList.add('show');
+  window.scrollTo({top:a.offsetTop-80,behavior:'smooth'});
+}
+function hideError(){ document.getElementById('alert-error').classList.remove('show'); }
+
+// ============ HELPERS ============
+function slugify(s){
+  return s.normalize('NFD').replace(/[\u0300-\u036f]/g,'')
+    .replace(/[^a-zA-Z0-9]+/g,'-').replace(/^-+|-+$/g,'').toLowerCase();
+}
+
+async function uploadFile(file, folder, baseName){
+  const ext = file.name.split('.').pop().toLowerCase();
+  const ts = Date.now();
+  const path = `${folder}/${baseName}-${ts}.${ext}`;
+  const { data, error } = await supa.storage
+    .from('plainte-documents')
+    .upload(path, file, { cacheControl:'3600', upsert:false });
+  if(error) throw error;
+  return data.path;
+}
+
+// ============ SUBMIT ============
+document.getElementById('plainte-form').addEventListener('submit', async (e) => {
+  e.preventDefault();
+  hideError();
+
+  const lang = document.body.lang;
+  const t = (fr, ar) => lang === 'ar' ? ar : fr;
+
+  const prenom = document.getElementById('prenom').value.trim();
+  const nom = document.getElementById('nom').value.trim();
+  const telephone = document.getElementById('telephone').value.trim();
+  const immeuble = document.getElementById('immeuble').value.trim();
+  const appartement = document.getElementById('appartement').value.trim();
+  const cinFile = document.getElementById('cin-file').files[0];
+  const titreFile = document.getElementById('titre-file').files[0];
+  const consent = document.getElementById('consent').checked;
+
+  if(!prenom || !nom || !telephone || !immeuble || !appartement){
+    showError(t('Veuillez remplir tous les champs obligatoires.', 'يرجى ملء جميع الحقول المطلوبة.'));
+    return;
+  }
+  if(!cinFile || !titreFile){
+    showError(t('Veuillez joindre la CIN et le titre de propriété.', 'يرجى إرفاق بطاقة التعريف الوطنية وسند الملكية.'));
+    return;
+  }
+  if(!consent){
+    showError(t('Veuillez accepter les conditions de traitement des données.', 'يرجى قبول شروط معالجة البيانات.'));
+    return;
+  }
+
+  const btn = document.getElementById('submit-btn');
+  btn.disabled = true;
+  btn.classList.add('loading');
+
+  try {
+    const baseName = `${slugify(nom)}-${slugify(prenom)}-imm${slugify(immeuble)}-apt${slugify(appartement)}`;
+
+    // Upload files
+    const cinPath = await uploadFile(cinFile, 'cin', `cin-${baseName}`);
+    const titrePath = await uploadFile(titreFile, 'titres', `titre-${baseName}`);
+
+    // Insert row
+    const { error: dbError } = await supa.from('plainte_dossiers').insert({
+      prenom, nom, telephone, immeuble, appartement,
+      cin_path: cinPath,
+      titre_path: titrePath,
+      consent: true,
+      lang
+    });
+    if(dbError) throw dbError;
+
+    document.getElementById('plainte-form').classList.add('hidden');
+    document.getElementById('success-screen').classList.add('show');
+    window.scrollTo({top:0,behavior:'smooth'});
+
+  } catch(err){
+    console.error(err);
+    showError(t(
+      'Une erreur est survenue. Veuillez réessayer ou contacter l\'administrateur.',
+      'حدث خطأ. يرجى المحاولة مرة أخرى أو الاتصال بالمسؤول.'
+    ));
+    btn.disabled = false;
+    btn.classList.remove('loading');
+  }
+});
+</script>
+
+</body>
+</html>
