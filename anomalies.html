@@ -257,7 +257,7 @@ function renderGallery() {
   grid.innerHTML = items.map(function(a) {
     var date = a.date_detection ? new Date(a.date_detection).toLocaleDateString('fr-FR',{day:'numeric',month:'long',year:'numeric'}) : '—';
     var imgHtml = a.photo_url
-      ? '<div class="card-img"><img src="'+a.photo_url+'" alt="'+a.titre+'" onerror="this.parentElement.innerHTML=\'📷\'"></div>'
+      ? '<div class="card-img"><img src="'+a.photo_url+'" alt="'+a.titre+'" onerror="console.error(\'[anomalies] image introuvable:\', this.src); this.parentElement.innerHTML=\'📷\'"></div>'
       : '<div class="card-img">📷</div>';
     var excerpt = (a.description||'').length > 110 ? a.description.substring(0,110)+'...' : (a.description||'');
     return '<div class="card" onclick="openItem(\''+a.id+'\')">' +

@@ -307,10 +307,21 @@ async function doCreate() {
     var ext = file.name.split('.').pop();
     var path = 'anomalies/' + Date.now() + '_' + Math.random().toString(36).substr(2,6) + '.' + ext;
     var up = await db.storage.from('attachments').upload(path, file, { cacheControl: '3600', upsert: false });
-    if (!up.error) {
-      var urlData = db.storage.from('attachments').getPublicUrl(path);
-      photoUrl = urlData.data ? urlData.data.publicUrl : null;
+    if (up.error) {
+      console.error('[upload-anomalie] Échec upload storage:', up.error);
+      btn.disabled = false; btn.textContent = '🚀 Publier l\'entrée';
+      showErr(errEl, '❌ Échec de l\'upload de la photo : ' + up.error.message + ' (entrée non publiée — corrigez puis réessayez)');
+      return;
     }
+    var urlData = db.storage.from('attachments').getPublicUrl(path);
+    photoUrl = urlData.data ? urlData.data.publicUrl : null;
+    if (!photoUrl) {
+      console.error('[upload-anomalie] getPublicUrl a renvoyé vide', urlData);
+      btn.disabled = false; btn.textContent = '🚀 Publier l\'entrée';
+      showErr(errEl, '❌ Upload réussi mais impossible de générer l\'URL publique. Vérifiez que le bucket "attachments" est public.');
+      return;
+    }
+    console.log('[upload-anomalie] Photo uploadée avec succès :', photoUrl);
   }
 
   btn.textContent = '⏳ Publication...';
