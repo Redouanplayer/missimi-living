@@ -1,0 +1,423 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>RedTech — Gestion Anomalies</title>
+<link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.39.3/dist/umd/supabase.min.js"></script>
+<style>
+:root{
+  --red:#e63946;--red-dark:#c1121f;--red-bg:#fee2e2;--red-border:#fecaca;
+  --bg:#f0f2f5;--surface:#fff;--navy:#0d1b2a;
+  --border:#e2e8f0;--text:#0f172a;--muted:#64748b;
+  --green:#16a34a;--green-bg:#dcfce7;--green-border:#bbf7d0;
+  --orange:#ea580c;--orange-bg:#fff7ed;--orange-border:#fed7aa;
+  --blue:#1d4ed8;--blue-bg:#dbeafe;--blue-border:#bfdbfe;
+  --radius:6px;--radius-md:10px;--radius-lg:14px;--radius-xl:20px;
+  --shadow:0 1px 3px rgba(0,0,0,.08),0 4px 16px rgba(0,0,0,.06);
+  --shadow-lg:0 8px 32px rgba(0,0,0,.12);
+}
+*,*::before,*::after{margin:0;padding:0;box-sizing:border-box;}
+body{font-family:"Plus Jakarta Sans",sans-serif;background:var(--bg);color:var(--text);min-height:100vh;}
+
+/* LOGIN */
+#loginScreen{min-height:100vh;display:flex;align-items:center;justify-content:center;padding:20px;background:var(--navy);position:relative;overflow:hidden;}
+.login-card{background:var(--surface);border-radius:var(--radius-xl);padding:40px;width:100%;max-width:400px;box-shadow:var(--shadow-lg);}
+.login-logo{display:flex;align-items:center;gap:10px;margin-bottom:28px;}
+.ll-icon{width:44px;height:44px;background:var(--red);border-radius:12px;display:flex;align-items:center;justify-content:center;color:white;font-weight:800;font-size:20px;}
+.ll-text{font-size:20px;font-weight:800;letter-spacing:-.03em;}
+.ll-text span{color:var(--red);}
+.ll-sub{font-size:11px;color:var(--muted);font-weight:500;text-transform:uppercase;letter-spacing:.06em;}
+h2{font-size:20px;font-weight:700;margin-bottom:6px;}
+.login-sub{font-size:13px;color:var(--muted);margin-bottom:24px;}
+.fg{margin-bottom:14px;}
+label{font-size:12px;font-weight:600;color:var(--muted);display:block;margin-bottom:5px;}
+input,select,textarea{width:100%;padding:11px 14px;border:1.5px solid var(--border);border-radius:var(--radius-md);font-family:"Plus Jakarta Sans",sans-serif;font-size:13px;color:var(--text);outline:none;transition:border-color .2s;}
+input:focus,select:focus,textarea:focus{border-color:var(--red);}
+textarea{resize:vertical;min-height:90px;line-height:1.55;}
+.btn-login{width:100%;padding:13px;background:var(--red);color:white;border:none;border-radius:var(--radius-md);font-family:"Plus Jakarta Sans",sans-serif;font-size:14px;font-weight:700;cursor:pointer;margin-top:4px;}
+.btn-login:hover{background:var(--red-dark);}
+.btn-login:disabled{background:#94a3b8;cursor:not-allowed;}
+.login-err{display:none;margin-top:12px;padding:10px 14px;background:var(--red-bg);border:1px solid var(--red-border);border-radius:var(--radius);font-size:13px;color:var(--red);font-weight:500;}
+
+/* APP */
+#appScreen{display:none;min-height:100vh;flex-direction:column;}
+.topbar{background:var(--navy);padding:0 28px;height:56px;display:flex;align-items:center;justify-content:space-between;}
+.tb-logo{display:flex;align-items:center;gap:8px;}
+.tb-icon{width:30px;height:30px;background:var(--red);border-radius:7px;display:flex;align-items:center;justify-content:center;color:white;font-weight:800;font-size:14px;}
+.tb-name{font-size:14px;font-weight:800;color:white;}
+.tb-name span{color:var(--red);}
+.tb-badge{font-size:10px;font-weight:600;background:rgba(230,57,70,.2);color:#fca5a5;padding:2px 8px;border-radius:10px;margin-left:6px;}
+.tb-right{display:flex;align-items:center;gap:10px;}
+.tb-user{font-size:12px;color:rgba(255,255,255,.4);}
+.tb-out{background:rgba(255,255,255,.08);border:1px solid rgba(255,255,255,.12);color:rgba(255,255,255,.7);padding:5px 12px;border-radius:5px;font-size:12px;font-weight:600;cursor:pointer;font-family:"Plus Jakarta Sans",sans-serif;}
+.tb-view{background:var(--red);border:none;color:white;padding:5px 12px;border-radius:5px;font-size:12px;font-weight:600;cursor:pointer;text-decoration:none;font-family:"Plus Jakarta Sans",sans-serif;}
+
+.main{padding:24px;flex:1;max-width:1200px;margin:0 auto;width:100%;}
+.grid{display:grid;grid-template-columns:400px 1fr;gap:20px;align-items:start;}
+.card{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius-lg);overflow:hidden;}
+.card-hd{padding:16px 20px;border-bottom:1px solid var(--border);display:flex;align-items:center;gap:10px;background:var(--bg);}
+.card-icon{width:30px;height:30px;border-radius:7px;display:flex;align-items:center;justify-content:center;font-size:14px;}
+.ci-red{background:var(--red-bg);}
+.ci-blue{background:var(--blue-bg);}
+.card-title{font-size:14px;font-weight:700;flex:1;}
+.card-sub{font-size:11px;color:var(--muted);}
+.card-body{padding:20px;}
+
+.cat-grid{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:14px;}
+.cat-btn{padding:12px 8px;border:1.5px solid var(--border);border-radius:var(--radius-md);background:var(--bg);cursor:pointer;text-align:center;transition:all .2s;font-family:"Plus Jakarta Sans",sans-serif;}
+.cat-btn:hover,.cat-btn.active{border-color:var(--red);background:var(--red-bg);}
+.cat-btn .ico{font-size:18px;display:block;margin-bottom:4px;}
+.cat-btn .lbl{font-size:11px;font-weight:600;color:var(--muted);}
+.cat-btn.active .lbl{color:var(--red);}
+
+.stat-grid{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:14px;}
+.stat-btn{padding:10px 6px;border:1.5px solid var(--border);border-radius:var(--radius-md);background:var(--bg);cursor:pointer;text-align:center;transition:all .2s;font-family:"Plus Jakarta Sans",sans-serif;font-size:11px;font-weight:600;color:var(--muted);}
+.stat-btn.active{border-color:var(--blue);background:var(--blue-bg);color:var(--blue);}
+
+.upload-zone{border:1.5px dashed var(--border);border-radius:var(--radius-md);padding:20px 14px;text-align:center;cursor:pointer;color:var(--muted);font-size:13px;transition:all .15s;}
+.upload-zone:hover{border-color:var(--red);background:var(--red-bg);color:var(--red);}
+.photo-preview{width:100%;height:160px;object-fit:cover;border-radius:var(--radius-md);margin-top:10px;display:none;}
+
+.sub-btn{width:100%;padding:13px;background:var(--red);color:white;border:none;border-radius:var(--radius-md);font-family:"Plus Jakarta Sans",sans-serif;font-size:14px;font-weight:700;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:8px;transition:all .2s;margin-top:4px;}
+.sub-btn:hover{background:var(--red-dark);}
+.sub-btn:disabled{background:#94a3b8;cursor:not-allowed;}
+.form-err{display:none;margin-top:10px;padding:10px 14px;background:var(--red-bg);border:1px solid var(--red-border);border-radius:var(--radius);font-size:13px;color:var(--red);}
+.form-ok{display:none;margin-top:10px;padding:10px 14px;background:var(--green-bg);border:1px solid var(--green-border);border-radius:var(--radius);font-size:13px;color:var(--green);}
+
+/* LISTE */
+.item-list{display:flex;flex-direction:column;gap:10px;padding:20px;}
+.item-row{display:flex;gap:14px;padding:14px;border:1px solid var(--border);border-radius:var(--radius-md);align-items:flex-start;}
+.item-thumb{width:70px;height:70px;object-fit:cover;border-radius:var(--radius);flex-shrink:0;background:var(--bg);display:flex;align-items:center;justify-content:center;font-size:22px;}
+.item-thumb img{width:100%;height:100%;object-fit:cover;border-radius:var(--radius);}
+.item-info{flex:1;min-width:0;}
+.item-title{font-size:13px;font-weight:700;margin-bottom:4px;}
+.item-meta{display:flex;gap:6px;flex-wrap:wrap;margin-bottom:6px;}
+.badge{font-size:10px;font-weight:600;padding:2px 8px;border-radius:10px;}
+.b-travaux_promoteur{background:var(--orange-bg);color:var(--orange);}
+.b-anomalie_syndic{background:var(--red-bg);color:var(--red);}
+.b-signale{background:var(--orange-bg);color:var(--orange);}
+.b-en_cours{background:var(--blue-bg);color:var(--blue);}
+.b-resolu{background:var(--green-bg);color:var(--green);}
+.b-pub{background:var(--green-bg);color:var(--green);}
+.b-draft{background:#f1f5f9;color:#64748b;}
+.item-desc{font-size:12px;color:var(--muted);line-height:1.5;}
+.item-actions{display:flex;flex-direction:column;gap:6px;flex-shrink:0;}
+.act-btn{padding:5px 12px;border-radius:5px;font-size:11px;font-weight:600;cursor:pointer;border:1px solid var(--border);background:var(--bg);font-family:"Plus Jakarta Sans",sans-serif;white-space:nowrap;}
+.act-btn:hover{border-color:var(--red);color:var(--red);}
+.act-select{padding:5px 8px;border-radius:5px;font-size:11px;border:1px solid var(--border);background:var(--bg);font-family:"Plus Jakarta Sans",sans-serif;}
+.empty{text-align:center;padding:40px;color:var(--muted);font-size:13px;}
+.toast{position:fixed;bottom:20px;right:20px;background:#0f172a;color:white;padding:11px 18px;border-radius:var(--radius-md);font-size:13px;font-weight:600;z-index:999;opacity:0;transform:translateY(6px);transition:all .3s;pointer-events:none;}
+.toast.show{opacity:1;transform:translateY(0);}
+
+@media(max-width:900px){ .grid{grid-template-columns:1fr;} }
+</style>
+</head>
+<body>
+
+<!-- LOGIN -->
+<div id="loginScreen">
+  <div class="login-card">
+    <div class="login-logo">
+      <div class="ll-icon">R</div>
+      <div><div class="ll-text">Red<span>Tech</span></div><div class="ll-sub">Gestion Anomalies</div></div>
+    </div>
+    <h2>Accès restreint</h2>
+    <p class="login-sub">Connectez-vous avec votre compte RedTech owner</p>
+    <div class="fg"><label>Email</label><input type="email" id="loginEmail" placeholder="admin@redtech.ma"></div>
+    <div class="fg"><label>Mot de passe</label><input type="password" id="loginPwd" placeholder="••••••••"></div>
+    <div class="login-err" id="loginErr"></div>
+    <button class="btn-login" id="loginBtn">Se connecter →</button>
+  </div>
+</div>
+
+<!-- APP -->
+<div id="appScreen">
+  <div class="topbar">
+    <div class="tb-logo">
+      <div class="tb-icon">R</div>
+      <span class="tb-name">Red<span>Tech</span></span>
+      <span class="tb-badge">ANOMALIES</span>
+    </div>
+    <div class="tb-right">
+      <span class="tb-user" id="tbUser"></span>
+      <a href="anomalies.html" target="_blank" class="tb-view">👁 Voir la page publique</a>
+      <button class="tb-out" id="logoutBtn">Déconnexion</button>
+    </div>
+  </div>
+
+  <div class="main">
+    <div class="grid">
+
+      <!-- FORMULAIRE -->
+      <div class="card">
+        <div class="card-hd">
+          <div class="card-icon ci-red">➕</div>
+          <div><div class="card-title">Nouvelle entrée</div><div class="card-sub">Travaux ou anomalie</div></div>
+        </div>
+        <div class="card-body">
+
+          <label style="margin-bottom:8px">Catégorie</label>
+          <div class="cat-grid">
+            <button type="button" class="cat-btn active" data-cat="travaux_promoteur"><span class="ico">🏗️</span><span class="lbl">Travaux Promoteur</span></button>
+            <button type="button" class="cat-btn" data-cat="anomalie_syndic"><span class="ico">⚠️</span><span class="lbl">Anomalie Syndic</span></button>
+          </div>
+
+          <label style="margin-bottom:8px">Statut</label>
+          <div class="stat-grid">
+            <button type="button" class="stat-btn active" data-stat="signale">🟠 Signalé</button>
+            <button type="button" class="stat-btn" data-stat="en_cours">🔵 En cours</button>
+            <button type="button" class="stat-btn" data-stat="resolu" style="grid-column:1/-1">🟢 Résolu</button>
+          </div>
+
+          <div class="fg"><label>Titre *</label><input type="text" id="fTitre" placeholder="Ex : Peinture hall B non terminée"></div>
+          <div class="fg"><label>Description</label><textarea id="fDesc" placeholder="Détails, localisation précise, historique..."></textarea></div>
+          <div class="fg"><label>Localisation</label><input type="text" id="fLoc" placeholder="Ex : Immeuble 3 - Hall d'entrée"></div>
+          <div class="fg"><label>Date de constat</label><input type="date" id="fDate"></div>
+          <div class="fg">
+            <label>Photo</label>
+            <div class="upload-zone" onclick="document.getElementById('fPhoto').click()">📷 Cliquez pour choisir une photo</div>
+            <input type="file" id="fPhoto" accept="image/*" style="display:none">
+            <img id="photoPreview" class="photo-preview">
+          </div>
+
+          <div class="form-err" id="formErr"></div>
+          <div class="form-ok" id="formOk"></div>
+          <button class="sub-btn" id="submitBtn">🚀 Publier l'entrée</button>
+        </div>
+      </div>
+
+      <!-- LISTE -->
+      <div class="card">
+        <div class="card-hd">
+          <div class="card-icon ci-blue">📋</div>
+          <div><div class="card-title">Entrées existantes</div><div class="card-sub" id="listCount">—</div></div>
+          <button class="act-btn" id="refreshBtn">↻ Actualiser</button>
+        </div>
+        <div class="item-list" id="itemList">
+          <div class="empty">Chargement...</div>
+        </div>
+      </div>
+
+    </div>
+  </div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+const SB_URL = 'https://nwusjraxjfirsonbndfy.supabase.co';
+const SB_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im53dXNqcmF4amZpcnNvbmJuZGZ5Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzM2ODI5NjcsImV4cCI6MjA4OTI1ODk2N30.wqVBvGwrLv8bJfGuHJTWj1Upao63aTYQMcH-IIN7OGw';
+const OWNER_EMAILS = ['idberka@live.com', 'redouane.idberka@impbrands.com'];
+
+var db, currentCat = 'travaux_promoteur', currentStat = 'signale', allItems = [];
+
+window.addEventListener('load', function() {
+  db = supabase.createClient(SB_URL, SB_KEY);
+
+  document.getElementById('loginBtn').addEventListener('click', doLogin);
+  document.getElementById('loginPwd').addEventListener('keydown', function(e){ if (e.key==='Enter') doLogin(); });
+  document.getElementById('logoutBtn').addEventListener('click', function(){ db.auth.signOut().then(function(){ location.reload(); }); });
+  document.getElementById('submitBtn').addEventListener('click', doCreate);
+  document.getElementById('refreshBtn').addEventListener('click', loadItems);
+
+  document.getElementById('fDate').valueAsDate = new Date();
+
+  document.querySelectorAll('.cat-btn').forEach(function(b){
+    b.addEventListener('click', function(){
+      document.querySelectorAll('.cat-btn').forEach(function(x){ x.classList.remove('active'); });
+      b.classList.add('active'); currentCat = b.dataset.cat;
+    });
+  });
+  document.querySelectorAll('.stat-btn').forEach(function(b){
+    b.addEventListener('click', function(){
+      document.querySelectorAll('.stat-btn').forEach(function(x){ x.classList.remove('active'); });
+      b.classList.add('active'); currentStat = b.dataset.stat;
+    });
+  });
+
+  document.getElementById('fPhoto').addEventListener('change', function(){
+    var f = this.files[0];
+    var prev = document.getElementById('photoPreview');
+    if (f) { prev.src = URL.createObjectURL(f); prev.style.display = 'block'; }
+    else { prev.style.display = 'none'; }
+  });
+
+  db.auth.getSession().then(function(res){
+    var user = res.data && res.data.session && res.data.session.user;
+    if (user && isOwner(user)) enterApp(user);
+  });
+});
+
+function isOwner(user) {
+  var role = (user.user_metadata && user.user_metadata.role) || '';
+  return role === 'owner' || role === 'admin' || OWNER_EMAILS.indexOf(user.email.toLowerCase()) !== -1;
+}
+
+function enterApp(user) {
+  document.getElementById('tbUser').textContent = user.email;
+  document.getElementById('loginScreen').style.display = 'none';
+  document.getElementById('appScreen').style.display = 'flex';
+  loadItems();
+}
+
+function doLogin() {
+  var email = document.getElementById('loginEmail').value.trim();
+  var pwd = document.getElementById('loginPwd').value;
+  var errEl = document.getElementById('loginErr');
+  var btn = document.getElementById('loginBtn');
+  errEl.style.display = 'none';
+  if (!email || !pwd) { showErr(errEl, '⚠️ Remplissez email et mot de passe'); return; }
+  btn.disabled = true; btn.textContent = '⏳ Connexion...';
+  db.auth.signInWithPassword({ email: email, password: pwd }).then(function(res) {
+    btn.disabled = false; btn.textContent = 'Se connecter →';
+    if (res.error) { showErr(errEl, '❌ ' + res.error.message); return; }
+    var user = res.data.user;
+    if (!isOwner(user)) {
+      db.auth.signOut();
+      showErr(errEl, '⛔ Accès non autorisé pour ce compte');
+      return;
+    }
+    enterApp(user);
+  });
+}
+
+function showErr(el, msg) { el.textContent = msg; el.style.display = 'block'; }
+
+async function doCreate() {
+  var titre = document.getElementById('fTitre').value.trim();
+  var desc = document.getElementById('fDesc').value.trim();
+  var loc = document.getElementById('fLoc').value.trim();
+  var date = document.getElementById('fDate').value;
+  var errEl = document.getElementById('formErr');
+  var okEl = document.getElementById('formOk');
+  var btn = document.getElementById('submitBtn');
+  errEl.style.display = 'none'; okEl.style.display = 'none';
+
+  if (!titre) { showErr(errEl, '⚠️ Le titre est obligatoire'); return; }
+
+  btn.disabled = true; btn.textContent = '⏳ Enregistrement...';
+
+  var photoUrl = null;
+  var fileInput = document.getElementById('fPhoto');
+  if (fileInput.files && fileInput.files[0]) {
+    btn.textContent = '⏳ Upload photo...';
+    var file = fileInput.files[0];
+    var ext = file.name.split('.').pop();
+    var path = 'anomalies/' + Date.now() + '_' + Math.random().toString(36).substr(2,6) + '.' + ext;
+    var up = await db.storage.from('attachments').upload(path, file, { cacheControl: '3600', upsert: false });
+    if (!up.error) {
+      var urlData = db.storage.from('attachments').getPublicUrl(path);
+      photoUrl = urlData.data ? urlData.data.publicUrl : null;
+    }
+  }
+
+  btn.textContent = '⏳ Publication...';
+  var { data: sessionData } = await db.auth.getSession();
+  var userId = sessionData && sessionData.session ? sessionData.session.user.id : null;
+
+  var { error } = await db.from('anomalies').insert({
+    titre: titre,
+    description: desc,
+    categorie: currentCat,
+    statut: currentStat,
+    localisation: loc,
+    date_detection: date || null,
+    photo_url: photoUrl,
+    publie: true,
+    created_by: userId
+  });
+
+  btn.disabled = false; btn.textContent = '🚀 Publier l\'entrée';
+
+  if (error) { showErr(errEl, '❌ ' + error.message); return; }
+
+  okEl.textContent = '✅ Entrée publiée avec succès !';
+  okEl.style.display = 'block';
+  setTimeout(function(){ okEl.style.display = 'none'; }, 4000);
+
+  ['fTitre','fDesc','fLoc'].forEach(function(id){ document.getElementById(id).value = ''; });
+  fileInput.value = '';
+  document.getElementById('photoPreview').style.display = 'none';
+  loadItems();
+}
+
+function loadItems() {
+  var list = document.getElementById('itemList');
+  list.innerHTML = '<div class="empty">Chargement...</div>';
+  db.from('anomalies').select('*').order('created_at', { ascending: false }).then(function(res) {
+    allItems = res.data || [];
+    document.getElementById('listCount').textContent = allItems.length + ' entrée(s)';
+    renderList();
+  });
+}
+
+const CAT_LABELS = { travaux_promoteur: '🏗️ Travaux Promoteur', anomalie_syndic: '⚠️ Anomalie Syndic' };
+const STAT_LABELS = { signale: '🟠 Signalé', en_cours: '🔵 En cours', resolu: '🟢 Résolu' };
+
+function renderList() {
+  var list = document.getElementById('itemList');
+  if (!allItems.length) { list.innerHTML = '<div class="empty">Aucune entrée</div>'; return; }
+  list.innerHTML = allItems.map(function(a) {
+    var date = a.date_detection ? new Date(a.date_detection).toLocaleDateString('fr-FR',{day:'2-digit',month:'2-digit',year:'numeric'}) : '—';
+    var thumb = a.photo_url ? '<img src="'+a.photo_url+'">' : '📷';
+    var statOptions = ['signale','en_cours','resolu'].map(function(s){
+      return '<option value="'+s+'" '+(s===a.statut?'selected':'')+'>'+STAT_LABELS[s]+'</option>';
+    }).join('');
+    return '<div class="item-row">' +
+      '<div class="item-thumb">'+thumb+'</div>' +
+      '<div class="item-info">' +
+        '<div class="item-title">'+a.titre+'</div>' +
+        '<div class="item-meta">' +
+          '<span class="badge b-'+a.categorie+'">'+CAT_LABELS[a.categorie]+'</span>' +
+          '<span class="badge b-'+a.statut+'">'+STAT_LABELS[a.statut]+'</span>' +
+          '<span class="badge '+(a.publie?'b-pub':'b-draft')+'">'+(a.publie?'Publié':'Masqué')+'</span>' +
+          '<span style="font-size:11px;color:var(--muted)">📅 '+date+'</span>' +
+        '</div>' +
+        (a.description ? '<div class="item-desc">'+a.description.substring(0,140)+(a.description.length>140?'...':'')+'</div>' : '') +
+      '</div>' +
+      '<div class="item-actions">' +
+        '<select class="act-select" onchange="updateStatut(\''+a.id+'\',this.value)">'+statOptions+'</select>' +
+        '<button class="act-btn" onclick="togglePublish(\''+a.id+'\','+a.publie+')">'+(a.publie?'Masquer':'Publier')+'</button>' +
+        '<button class="act-btn" style="color:var(--red)" onclick="deleteItem(\''+a.id+'\')">🗑 Supprimer</button>' +
+      '</div>' +
+    '</div>';
+  }).join('');
+}
+
+function updateStatut(id, statut) {
+  db.from('anomalies').update({ statut: statut }).eq('id', id).then(function(res) {
+    if (res.error) { toast('❌ ' + res.error.message); return; }
+    toast('✅ Statut mis à jour');
+    loadItems();
+  });
+}
+
+function togglePublish(id, publie) {
+  db.from('anomalies').update({ publie: !publie }).eq('id', id).then(function(res) {
+    if (res.error) { toast('❌ ' + res.error.message); return; }
+    toast(publie ? '📥 Entrée masquée' : '🚀 Entrée publiée');
+    loadItems();
+  });
+}
+
+function deleteItem(id) {
+  if (!confirm('Supprimer définitivement cette entrée ?')) return;
+  db.from('anomalies').delete().eq('id', id).then(function(res) {
+    if (res.error) { toast('❌ ' + res.error.message); return; }
+    toast('🗑 Entrée supprimée');
+    loadItems();
+  });
+}
+
+var toastTimer;
+function toast(msg) {
+  var t = document.getElementById('toast');
+  t.textContent = msg; t.classList.add('show');
+  clearTimeout(toastTimer);
+  toastTimer = setTimeout(function(){ t.classList.remove('show'); }, 3000);
+}
+</script>
+</body>
+</html>

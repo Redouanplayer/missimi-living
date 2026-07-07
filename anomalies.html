@@ -1,0 +1,319 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Suivi Travaux &amp; Anomalies — Missimi Living</title>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.39.3/dist/umd/supabase.min.js"></script>
+<style>
+:root{--gold:#b8975a;--gold-light:#d4b483;--navy:#0d1b2a;--cream:#faf8f4;--warm:#f5f0e8;--border:#e3ddd4;--text:#1a1208;--muted:#6b5f4e;--radius:4px;--radius-md:8px;--radius-lg:16px;
+--orange-bg:#fff7ed;--orange-text:#c2410c;--orange-border:#fed7aa;
+--red-bg:#fef2f2;--red-text:#b91c1c;--red-border:#fecaca;
+--blue-bg:#eff6ff;--blue-text:#1d4ed8;--blue-border:#bfdbfe;
+--green-bg:#f0fdf4;--green-text:#15803d;--green-border:#bbf7d0;}
+*,*::before,*::after{margin:0;padding:0;box-sizing:border-box;}html{scroll-behavior:smooth;}
+body{font-family:"DM Sans",sans-serif;background:var(--cream);color:var(--text);}
+nav{position:fixed;top:0;left:0;right:0;z-index:100;padding:14px 60px;background:rgba(13,27,42,.97);backdrop-filter:blur(20px);box-shadow:0 1px 0 rgba(184,151,90,.2);display:flex;align-items:center;justify-content:space-between;}
+.nav-logo{display:flex;flex-direction:column;line-height:1;text-decoration:none;}
+.nl-main{font-family:"Cormorant Garamond",serif;font-size:20px;font-weight:500;color:white;letter-spacing:.12em;}
+.nl-sub{font-size:9px;letter-spacing:.25em;color:var(--gold);text-transform:uppercase;margin-top:2px;}
+.nav-links{display:flex;gap:22px;align-items:center;}
+.nav-links a{font-size:11px;font-weight:500;letter-spacing:.08em;text-transform:uppercase;color:rgba(255,255,255,.6);text-decoration:none;transition:color .2s;}
+.nav-links a:hover,.nav-links a.active{color:var(--gold);}
+.nav-cta{background:var(--gold)!important;color:var(--navy)!important;padding:8px 16px;border-radius:var(--radius);}
+.burger{display:none;background:none;border:1px solid rgba(255,255,255,.3);color:white;font-size:16px;padding:5px 10px;border-radius:4px;cursor:pointer;}
+.page-hero{background:var(--navy);padding:120px 60px 56px;position:relative;overflow:hidden;}
+.ph-pattern{position:absolute;inset:0;background-image:repeating-linear-gradient(45deg,transparent,transparent 40px,rgba(184,151,90,.03) 40px,rgba(184,151,90,.03) 80px);}
+.ph-glow{position:absolute;top:0;right:0;width:400px;height:300px;background:radial-gradient(ellipse,rgba(184,151,90,.1),transparent 70%);}
+.ph-content{position:relative;z-index:2;}
+.ph-eyebrow{display:flex;align-items:center;gap:14px;margin-bottom:16px;}
+.pe-line{width:28px;height:1px;background:var(--gold);}
+.pe-text{font-size:10px;letter-spacing:.25em;text-transform:uppercase;color:var(--gold);font-weight:500;}
+.ph-title{font-family:"Cormorant Garamond",serif;font-size:clamp(32px,4.5vw,52px);font-weight:300;color:white;line-height:1.1;margin-bottom:10px;}
+.ph-title em{font-style:italic;color:var(--gold);}
+.ph-sub{font-size:14px;color:rgba(255,255,255,.5);max-width:640px;line-height:1.8;font-weight:300;}
+.main{max-width:1180px;margin:0 auto;padding:44px 40px 80px;}
+
+/* STATS */
+.stats-row{display:grid;grid-template-columns:repeat(4,1fr);gap:12px;margin-bottom:32px;}
+.stat-card{background:white;border:1px solid var(--border);border-radius:var(--radius-lg);padding:18px 20px;text-align:center;}
+.stat-num{font-family:"Cormorant Garamond",serif;font-size:34px;font-weight:400;line-height:1;}
+.stat-lbl{font-size:11px;color:var(--muted);margin-top:5px;letter-spacing:.03em;}
+
+/* FILTERS */
+.filters{display:flex;gap:8px;margin-bottom:28px;flex-wrap:wrap;}
+.filter-btn{padding:8px 18px;border-radius:20px;font-size:12px;font-weight:600;cursor:pointer;border:1.5px solid var(--border);background:white;color:var(--muted);font-family:"DM Sans",sans-serif;transition:all .2s;}
+.filter-btn:hover{border-color:var(--gold);color:var(--gold);}
+.filter-btn.active{background:var(--navy);color:white;border-color:var(--navy);}
+
+/* GRID */
+.grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(300px,1fr));gap:22px;}
+.card{background:white;border-radius:var(--radius-lg);border:1px solid var(--border);overflow:hidden;transition:all .2s;cursor:pointer;}
+.card:hover{transform:translateY(-3px);box-shadow:0 8px 32px rgba(0,0,0,.1);border-color:var(--gold);}
+.card-img{width:100%;height:190px;object-fit:cover;background:linear-gradient(135deg,var(--navy),#1a2e42);display:flex;align-items:center;justify-content:center;font-size:40px;}
+.card-img img{width:100%;height:190px;object-fit:cover;display:block;}
+.card-body{padding:18px 20px;}
+.card-badges{display:flex;gap:6px;margin-bottom:10px;flex-wrap:wrap;}
+.badge{font-size:10px;font-weight:600;padding:3px 10px;border-radius:20px;letter-spacing:.02em;}
+.b-travaux_promoteur{background:var(--orange-bg);color:var(--orange-text);}
+.b-anomalie_syndic{background:var(--red-bg);color:var(--red-text);}
+.b-signale{background:var(--orange-bg);color:var(--orange-text);}
+.b-en_cours{background:var(--blue-bg);color:var(--blue-text);}
+.b-resolu{background:var(--green-bg);color:var(--green-text);}
+.card-title{font-size:15px;font-weight:600;margin-bottom:6px;line-height:1.4;}
+.card-loc{font-size:11px;color:var(--gold);margin-bottom:8px;font-weight:500;}
+.card-excerpt{font-size:13px;color:var(--muted);line-height:1.65;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden;}
+.card-footer{padding:12px 20px;border-top:1px solid var(--border);display:flex;align-items:center;justify-content:space-between;}
+.card-date{font-size:11px;color:var(--muted);}
+.read-more{font-size:11px;font-weight:600;color:var(--gold);}
+
+/* MODAL */
+.article-overlay{position:fixed;inset:0;background:rgba(13,27,42,.75);backdrop-filter:blur(6px);z-index:200;display:none;align-items:center;justify-content:center;padding:20px;}
+.article-overlay.open{display:flex;}
+.article-modal{background:white;border-radius:var(--radius-lg);max-width:680px;width:100%;max-height:90vh;overflow-y:auto;box-shadow:0 20px 60px rgba(0,0,0,.35);position:relative;}
+.am-img{width:100%;height:320px;object-fit:cover;background:linear-gradient(135deg,var(--navy),#1a2e42);display:flex;align-items:center;justify-content:center;font-size:56px;}
+.am-img img{width:100%;height:320px;object-fit:cover;display:block;}
+.am-body{padding:28px 32px;}
+.am-badges{display:flex;gap:8px;margin-bottom:14px;flex-wrap:wrap;}
+.am-title{font-family:"Cormorant Garamond",serif;font-size:26px;font-weight:400;margin-bottom:10px;line-height:1.25;}
+.am-meta{display:flex;gap:16px;flex-wrap:wrap;font-size:12px;color:var(--muted);margin-bottom:18px;padding-bottom:18px;border-bottom:1px solid var(--border);}
+.am-content{font-size:14px;color:#374151;line-height:1.85;white-space:pre-wrap;}
+.am-close{position:absolute;top:16px;right:16px;background:white;border:none;width:34px;height:34px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:17px;cursor:pointer;box-shadow:0 2px 8px rgba(0,0,0,.2);z-index:2;}
+
+.empty{text-align:center;padding:60px 20px;color:var(--muted);grid-column:1/-1;}
+.empty-icon{font-size:44px;margin-bottom:14px;}
+.loader{text-align:center;padding:60px;color:var(--muted);grid-column:1/-1;}
+.spinner{width:32px;height:32px;border:3px solid var(--border);border-top-color:var(--gold);border-radius:50%;animation:spin .8s linear infinite;margin:0 auto 10px;}
+@keyframes spin{to{transform:rotate(360deg);}}
+
+footer{background:var(--navy);padding:32px 60px;display:flex;align-items:center;justify-content:space-between;margin-top:60px;}
+.ftl{font-family:"Cormorant Garamond",serif;font-size:17px;color:white;letter-spacing:.1em;}
+.ftl span{color:var(--gold);}
+.ftc{font-size:11px;color:rgba(255,255,255,.25);}
+.ftlinks{display:flex;gap:18px;}
+.ftlinks a{font-size:11px;color:rgba(255,255,255,.35);text-decoration:none;letter-spacing:.06em;text-transform:uppercase;transition:color .2s;}
+.ftlinks a:hover{color:var(--gold);}
+
+#muteBtn{position:fixed;bottom:28px;right:28px;z-index:300;height:44px;border-radius:22px;border:1px solid rgba(184,151,90,.4);background:rgba(13,27,42,.88);backdrop-filter:blur(12px);color:white;font-size:15px;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:7px;padding:0 16px;transition:all .3s;box-shadow:0 4px 20px rgba(0,0,0,.3);font-family:"DM Sans",sans-serif;}
+#muteBtn:hover{background:rgba(184,151,90,.18);border-color:#b8975a;transform:translateY(-2px);}
+#muteBtn.playing .music-label{color:#b8975a;}
+@keyframes musicPulse{0%,100%{opacity:1;}50%{opacity:.4;}}
+#muteBtn.playing .music-icon{animation:musicPulse 2s ease-in-out infinite;}
+#muteBtn .music-label{font-size:10px;letter-spacing:.08em;color:rgba(255,255,255,.45);white-space:nowrap;}
+
+@media(max-width:900px){
+  nav{padding:12px 16px;}
+  .nav-links{display:none;flex-direction:column;position:fixed;top:0;left:0;right:0;bottom:0;background:rgba(13,27,42,.98);z-index:200;justify-content:center;align-items:center;gap:24px;}
+  .nav-links.open{display:flex;}
+  .nav-links a{font-size:15px;}
+  .burger{display:block;position:relative;z-index:300;}
+  .burger.open{position:fixed;top:12px;right:16px;}
+  .page-hero{padding:100px 20px 40px;}
+  .main{padding:32px 16px 60px;}
+  .stats-row{grid-template-columns:repeat(2,1fr);}
+  footer{flex-direction:column;gap:12px;text-align:center;padding:24px 16px;}
+  .ftlinks{flex-wrap:wrap;justify-content:center;}
+  .am-body{padding:20px;}
+}
+</style>
+<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,500;0,600;1,300;1,400&family=DM+Sans:wght@300;400;500;600&display=swap" rel="stylesheet">
+</head>
+<body>
+<button id="muteBtn" onclick="toggleMusic(event)" title="Chopin — Nocturne Op.9">
+  <span class="music-icon">🔇</span>
+  <span class="music-label">Chopin Op.9</span>
+</button>
+
+<nav>
+  <a href="index.html" class="nav-logo"><span class="nl-main">MISSIMI</span><span class="nl-sub">Living · Casablanca</span></a>
+  <div class="nav-links" id="navLinks">
+    <a href="index.html">Accueil</a>
+    <a href="projet.html">Le Projet</a>
+    <a href="association.html">Association</a>
+    <a href="reglement.html">Règlement</a>
+    <a href="actualites.html">Actualités</a>
+    <a href="anomalies.html" class="active">Suivi Travaux</a>
+    <a href="contact.html">Contact</a>
+    <a href="syndic-v3.html" class="nav-cta">Espace Résident</a>
+  </div>
+  <button class="burger" id="burger" onclick="toggleMenu()">&#9776;</button>
+</nav>
+
+<div class="page-hero">
+  <div class="ph-pattern"></div><div class="ph-glow"></div>
+  <div class="ph-content">
+    <div class="ph-eyebrow"><div class="pe-line"></div><span class="pe-text">Transparence &amp; Suivi</span></div>
+    <h1 class="ph-title">Suivi des <em>Travaux</em> &amp;<br>des Anomalies constatées</h1>
+    <p class="ph-sub">Registre photographique et daté des travaux non achevés par le promoteur ainsi que des anomalies constatées dans la prestation du syndic. Cette page vise à documenter objectivement l'état de la résidence pour un suivi transparent.</p>
+  </div>
+</div>
+
+<div class="main">
+
+  <div class="stats-row">
+    <div class="stat-card"><div class="stat-num" id="statTotal" style="color:var(--navy)">—</div><div class="stat-lbl">Total signalés</div></div>
+    <div class="stat-card"><div class="stat-num" id="statSignale" style="color:var(--orange-text)">—</div><div class="stat-lbl">Signalés</div></div>
+    <div class="stat-card"><div class="stat-num" id="statEnCours" style="color:var(--blue-text)">—</div><div class="stat-lbl">En cours</div></div>
+    <div class="stat-card"><div class="stat-num" id="statResolu" style="color:var(--green-text)">—</div><div class="stat-lbl">Résolus</div></div>
+  </div>
+
+  <div class="filters" id="filters">
+    <button class="filter-btn active" data-cat="all" onclick="setFilter('all',this)">Tous</button>
+    <button class="filter-btn" data-cat="travaux_promoteur" onclick="setFilter('travaux_promoteur',this)">🏗️ Travaux non achevés (Promoteur)</button>
+    <button class="filter-btn" data-cat="anomalie_syndic" onclick="setFilter('anomalie_syndic',this)">⚠️ Anomalies Syndic</button>
+  </div>
+
+  <div id="gallery" class="grid">
+    <div class="loader"><div class="spinner"></div>Chargement...</div>
+  </div>
+
+</div>
+
+<!-- MODAL -->
+<div class="article-overlay" id="articleOverlay">
+  <div class="article-modal">
+    <button class="am-close" id="closeArticle">×</button>
+    <div id="amImg" class="am-img">📷</div>
+    <div class="am-body">
+      <div class="am-badges" id="amBadges"></div>
+      <div class="am-title" id="amTitle">—</div>
+      <div class="am-meta" id="amMeta"></div>
+      <div class="am-content" id="amContent">—</div>
+    </div>
+  </div>
+</div>
+
+<footer>
+  <div class="ftl">MISSIMI <span>LIVING</span></div>
+  <div class="ftc">© 2026 Missimi Living · Casablanca</div>
+  <div class="ftlinks">
+    <a href="index.html">Accueil</a>
+    <a href="projet.html">Projet</a>
+    <a href="association.html">Association</a>
+    <a href="reglement.html">Règlement</a>
+    <a href="syndic-v3.html">Espace Résident</a>
+  </div>
+</footer>
+
+<script>
+const SB_URL = 'https://nwusjraxjfirsonbndfy.supabase.co';
+const SB_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im53dXNqcmF4amZpcnNvbmJuZGZ5Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzM2ODI5NjcsImV4cCI6MjA4OTI1ODk2N30.wqVBvGwrLv8bJfGuHJTWj1Upao63aTYQMcH-IIN7OGw';
+const db = supabase.createClient(SB_URL, SB_KEY);
+
+var allItems = [], currentFilter = 'all';
+
+const CAT_LABELS = {
+  travaux_promoteur: '🏗️ Travaux non achevés (Promoteur)',
+  anomalie_syndic: '⚠️ Anomalie Syndic'
+};
+const STAT_LABELS = {
+  signale: '🟠 Signalé',
+  en_cours: '🔵 En cours',
+  resolu: '🟢 Résolu'
+};
+
+window.addEventListener('load', function() {
+  loadItems();
+  document.getElementById('closeArticle').addEventListener('click', closeArticle);
+  document.getElementById('articleOverlay').addEventListener('click', function(e) {
+    if (e.target === this) closeArticle();
+  });
+  document.addEventListener('keydown', function(e) { if (e.key === 'Escape') closeArticle(); });
+});
+
+function loadItems() {
+  db.from('anomalies')
+    .select('*')
+    .eq('publie', true)
+    .order('created_at', { ascending: false })
+    .then(function(res) {
+      allItems = res.data || [];
+      updateStats();
+      renderGallery();
+    });
+}
+
+function updateStats() {
+  document.getElementById('statTotal').textContent    = allItems.length;
+  document.getElementById('statSignale').textContent  = allItems.filter(function(a){return a.statut==='signale';}).length;
+  document.getElementById('statEnCours').textContent  = allItems.filter(function(a){return a.statut==='en_cours';}).length;
+  document.getElementById('statResolu').textContent   = allItems.filter(function(a){return a.statut==='resolu';}).length;
+}
+
+function setFilter(cat, btn) {
+  currentFilter = cat;
+  document.querySelectorAll('#filters .filter-btn').forEach(function(b){ b.classList.remove('active'); });
+  btn.classList.add('active');
+  renderGallery();
+}
+
+function renderGallery() {
+  var items = currentFilter === 'all' ? allItems : allItems.filter(function(a){ return a.categorie === currentFilter; });
+  var grid = document.getElementById('gallery');
+  if (!items.length) {
+    grid.innerHTML = '<div class="empty"><div class="empty-icon">📭</div><div>Aucun élément dans cette catégorie</div></div>';
+    return;
+  }
+  grid.innerHTML = items.map(function(a) {
+    var date = a.date_detection ? new Date(a.date_detection).toLocaleDateString('fr-FR',{day:'numeric',month:'long',year:'numeric'}) : '—';
+    var imgHtml = a.photo_url
+      ? '<div class="card-img"><img src="'+a.photo_url+'" alt="'+a.titre+'" onerror="this.parentElement.innerHTML=\'📷\'"></div>'
+      : '<div class="card-img">📷</div>';
+    var excerpt = (a.description||'').length > 110 ? a.description.substring(0,110)+'...' : (a.description||'');
+    return '<div class="card" onclick="openItem(\''+a.id+'\')">' +
+      imgHtml +
+      '<div class="card-body">' +
+        '<div class="card-badges">' +
+          '<span class="badge b-'+a.categorie+'">'+CAT_LABELS[a.categorie]+'</span>' +
+          '<span class="badge b-'+a.statut+'">'+STAT_LABELS[a.statut]+'</span>' +
+        '</div>' +
+        '<div class="card-title">'+a.titre+'</div>' +
+        (a.localisation ? '<div class="card-loc">📍 '+a.localisation+'</div>' : '') +
+        '<div class="card-excerpt">'+excerpt+'</div>' +
+      '</div>' +
+      '<div class="card-footer">' +
+        '<span class="card-date">📅 '+date+'</span>' +
+        '<span class="read-more">Voir le détail →</span>' +
+      '</div>' +
+    '</div>';
+  }).join('');
+}
+
+function openItem(id) {
+  var a = allItems.find(function(x){ return x.id === id; });
+  if (!a) return;
+  var date = a.date_detection ? new Date(a.date_detection).toLocaleDateString('fr-FR',{day:'numeric',month:'long',year:'numeric'}) : '—';
+
+  document.getElementById('amImg').innerHTML = a.photo_url
+    ? '<img src="'+a.photo_url+'" alt="'+a.titre+'" onerror="this.parentElement.textContent=\'📷\'">'
+    : '📷';
+  document.getElementById('amBadges').innerHTML =
+    '<span class="badge b-'+a.categorie+'">'+CAT_LABELS[a.categorie]+'</span>' +
+    '<span class="badge b-'+a.statut+'">'+STAT_LABELS[a.statut]+'</span>';
+  document.getElementById('amTitle').textContent = a.titre;
+  document.getElementById('amMeta').innerHTML =
+    '<span>📅 Détecté le '+date+'</span>' +
+    (a.localisation ? '<span>📍 '+a.localisation+'</span>' : '');
+  document.getElementById('amContent').textContent = a.description || 'Aucune description.';
+  document.getElementById('articleOverlay').classList.add('open');
+  document.body.style.overflow = 'hidden';
+}
+
+function closeArticle() {
+  document.getElementById('articleOverlay').classList.remove('open');
+  document.body.style.overflow = '';
+}
+
+function toggleMenu(){
+  const l=document.getElementById('navLinks'),b=document.getElementById('burger');
+  l.classList.toggle('open');b.classList.toggle('open');
+  b.textContent=l.classList.contains('open')?'✕':'☰';
+}
+document.querySelectorAll('#navLinks a').forEach(function(a){ a.addEventListener('click', function(){
+  document.getElementById('navLinks').classList.remove('open');
+  var b=document.getElementById('burger'); b.classList.remove('open'); b.textContent='☰';
+});});
+</script>
+<script src="music.js"></script>
+</body>
+</html>
